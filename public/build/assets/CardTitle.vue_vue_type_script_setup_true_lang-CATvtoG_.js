@@ -1,0 +1,1 @@
+import{c as o}from"./index-VQlf4-eG.js";import{d as n,c as t,B as r,n as l,u as c,o as m}from"./app-CafA-tJO.js";const f=n({__name:"CardTitle",props:{class:{}},setup(s){const e=s;return(a,p)=>(m(),t("h3",{"data-slot":"card-title",class:l(c(o)("leading-none font-semibold",e.class))},[r(a.$slots,"default")],2))}});export{f as _};
