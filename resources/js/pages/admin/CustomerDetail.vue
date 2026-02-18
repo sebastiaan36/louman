@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import InputError from '@/components/InputError.vue';
 import {
     Table,
     TableBody,
@@ -32,6 +34,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { useForm } from '@inertiajs/vue3';
 
 interface Customer {
     id: number;
@@ -143,6 +146,45 @@ const updateCategoryAndDiscount = () => {
         }
     );
 };
+
+// General customer edit
+const editCustomerDialogOpen = ref(false);
+const form = useForm({
+    company_name: props.customer.company_name,
+    contact_person: props.customer.contact_person,
+    phone_number: props.customer.phone_number,
+    kvk_number: props.customer.kvk_number,
+    vat_number: props.customer.vat_number,
+    bank_account: props.customer.bank_account,
+    street_name: props.customer.street_name,
+    house_number: props.customer.house_number,
+    postal_code: props.customer.postal_code,
+    city: props.customer.city,
+});
+
+const openEditCustomerDialog = () => {
+    form.company_name = props.customer.company_name;
+    form.contact_person = props.customer.contact_person;
+    form.phone_number = props.customer.phone_number;
+    form.kvk_number = props.customer.kvk_number;
+    form.vat_number = props.customer.vat_number;
+    form.bank_account = props.customer.bank_account;
+    form.street_name = props.customer.street_name;
+    form.house_number = props.customer.house_number;
+    form.postal_code = props.customer.postal_code;
+    form.city = props.customer.city;
+    form.clearErrors();
+    editCustomerDialogOpen.value = true;
+};
+
+const updateCustomer = () => {
+    form.patch(`/admin/customers/${props.customer.id}`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            editCustomerDialogOpen.value = false;
+        },
+    });
+};
 </script>
 
 <template>
@@ -166,8 +208,20 @@ const updateCategoryAndDiscount = () => {
                 <!-- Contact Information -->
                 <Card>
                     <CardHeader>
-                        <CardTitle>Contactgegevens</CardTitle>
-                        <CardDescription>Primaire contact informatie</CardDescription>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Contactgegevens</CardTitle>
+                                <CardDescription>Primaire contact informatie</CardDescription>
+                            </div>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                @click="openEditCustomerDialog"
+                            >
+                                <Edit class="h-4 w-4 mr-2" />
+                                Bewerken
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent class="space-y-4">
                         <div class="flex items-start gap-3">
@@ -255,8 +309,20 @@ const updateCategoryAndDiscount = () => {
                 <!-- Address Information -->
                 <Card>
                     <CardHeader>
-                        <CardTitle>Adresgegevens</CardTitle>
-                        <CardDescription>Primair bedrijfsadres</CardDescription>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Adresgegevens</CardTitle>
+                                <CardDescription>Primair bedrijfsadres</CardDescription>
+                            </div>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                @click="openEditCustomerDialog"
+                            >
+                                <Edit class="h-4 w-4 mr-2" />
+                                Bewerken
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div class="flex items-start gap-3">
@@ -482,6 +548,184 @@ const updateCategoryAndDiscount = () => {
                         Opslaan
                     </Button>
                 </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Edit Customer Dialog -->
+        <Dialog v-model:open="editCustomerDialogOpen">
+            <DialogContent class="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Klantgegevens Bewerken</DialogTitle>
+                    <DialogDescription>
+                        Wijzig de klantgegevens. Het email adres kan niet worden gewijzigd.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form @submit.prevent="updateCustomer" class="space-y-6">
+                    <!-- Contact Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-sm font-semibold">Contactgegevens</h3>
+
+                        <div>
+                            <Label for="company_name">Bedrijfsnaam *</Label>
+                            <Input
+                                id="company_name"
+                                v-model="form.company_name"
+                                type="text"
+                                class="mt-1"
+                                required
+                            />
+                            <InputError :message="form.errors.company_name" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="contact_person">Contactpersoon *</Label>
+                            <Input
+                                id="contact_person"
+                                v-model="form.contact_person"
+                                type="text"
+                                class="mt-1"
+                                required
+                            />
+                            <InputError :message="form.errors.contact_person" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="email">Email adres (niet wijzigbaar)</Label>
+                            <Input
+                                id="email"
+                                :value="customer.email"
+                                type="email"
+                                class="mt-1"
+                                readonly
+                                disabled
+                            />
+                        </div>
+
+                        <div>
+                            <Label for="phone_number">Telefoonnummer *</Label>
+                            <Input
+                                id="phone_number"
+                                v-model="form.phone_number"
+                                type="text"
+                                class="mt-1"
+                                required
+                            />
+                            <InputError :message="form.errors.phone_number" class="mt-2" />
+                        </div>
+                    </div>
+
+                    <!-- Business Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-sm font-semibold">Bedrijfsgegevens</h3>
+
+                        <div>
+                            <Label for="kvk_number">KVK Nummer *</Label>
+                            <Input
+                                id="kvk_number"
+                                v-model="form.kvk_number"
+                                type="text"
+                                class="mt-1"
+                                required
+                            />
+                            <InputError :message="form.errors.kvk_number" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="vat_number">BTW Nummer *</Label>
+                            <Input
+                                id="vat_number"
+                                v-model="form.vat_number"
+                                type="text"
+                                class="mt-1"
+                                required
+                            />
+                            <InputError :message="form.errors.vat_number" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="bank_account">IBAN *</Label>
+                            <Input
+                                id="bank_account"
+                                v-model="form.bank_account"
+                                type="text"
+                                class="mt-1"
+                                required
+                            />
+                            <InputError :message="form.errors.bank_account" class="mt-2" />
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div class="space-y-4">
+                        <h3 class="text-sm font-semibold">Adresgegevens</h3>
+
+                        <div>
+                            <Label for="street_name">Straatnaam *</Label>
+                            <Input
+                                id="street_name"
+                                v-model="form.street_name"
+                                type="text"
+                                class="mt-1"
+                                required
+                            />
+                            <InputError :message="form.errors.street_name" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="house_number">Huisnummer *</Label>
+                            <Input
+                                id="house_number"
+                                v-model="form.house_number"
+                                type="text"
+                                class="mt-1"
+                                required
+                            />
+                            <InputError :message="form.errors.house_number" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="postal_code">Postcode *</Label>
+                            <Input
+                                id="postal_code"
+                                v-model="form.postal_code"
+                                type="text"
+                                class="mt-1"
+                                required
+                            />
+                            <InputError :message="form.errors.postal_code" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="city">Plaats *</Label>
+                            <Input
+                                id="city"
+                                v-model="form.city"
+                                type="text"
+                                class="mt-1"
+                                required
+                            />
+                            <InputError :message="form.errors.city" class="mt-2" />
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            @click="editCustomerDialogOpen = false"
+                            :disabled="form.processing"
+                        >
+                            Annuleren
+                        </Button>
+                        <Button
+                            type="submit"
+                            :disabled="form.processing"
+                        >
+                            Opslaan
+                        </Button>
+                    </DialogFooter>
+                </form>
             </DialogContent>
         </Dialog>
     </AppLayout>

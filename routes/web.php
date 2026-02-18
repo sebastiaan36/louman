@@ -62,6 +62,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.customers.approve');
     Route::patch('/customers/{customer}/category-discount', [CustomerApprovalController::class, 'updateCategoryAndDiscount'])
         ->name('admin.customers.update-category-discount');
+    Route::patch('/customers/{customer}', [CustomerApprovalController::class, 'update'])
+        ->name('admin.customers.update');
 
     Route::resource('categories', CategoryController::class)
         ->except(['show', 'create', 'edit'])

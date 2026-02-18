@@ -171,4 +171,38 @@ class CustomerApprovalController extends Controller
 
         return back()->with('success', "Klantgegevens bijgewerkt.");
     }
+
+    /**
+     * Update customer information.
+     */
+    public function update(Request $request, Customer $customer): RedirectResponse
+    {
+        $validated = $request->validate([
+            'company_name' => ['required', 'string', 'max:255'],
+            'contact_person' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'string', 'max:20'],
+            'kvk_number' => ['required', 'string', 'max:8'],
+            'vat_number' => ['required', 'string', 'max:14'],
+            'bank_account' => ['required', 'string', 'max:34'],
+            'street_name' => ['required', 'string', 'max:255'],
+            'house_number' => ['required', 'string', 'max:10'],
+            'postal_code' => ['required', 'string', 'max:7'],
+            'city' => ['required', 'string', 'max:255'],
+        ], [
+            'company_name.required' => 'Bedrijfsnaam is verplicht.',
+            'contact_person.required' => 'Contactpersoon is verplicht.',
+            'phone_number.required' => 'Telefoonnummer is verplicht.',
+            'kvk_number.required' => 'KVK nummer is verplicht.',
+            'vat_number.required' => 'BTW nummer is verplicht.',
+            'bank_account.required' => 'IBAN is verplicht.',
+            'street_name.required' => 'Straatnaam is verplicht.',
+            'house_number.required' => 'Huisnummer is verplicht.',
+            'postal_code.required' => 'Postcode is verplicht.',
+            'city.required' => 'Plaats is verplicht.',
+        ]);
+
+        $customer->update($validated);
+
+        return back()->with('success', "Klantgegevens bijgewerkt.");
+    }
 }
