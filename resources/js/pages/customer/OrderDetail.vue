@@ -15,6 +15,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { computed } from 'vue';
+import { Download } from 'lucide-vue-next';
 
 interface OrderItem {
     product_title: string;
@@ -96,6 +97,16 @@ const backToOrders = () => {
                         Geplaatst op {{ order.created_at }}
                     </p>
                 </div>
+                <a
+                    v-if="order.status === 'completed'"
+                    :href="`/customer/orders/${order.id}/invoice`"
+                    target="_blank"
+                >
+                    <Button variant="outline">
+                        <Download class="h-4 w-4 mr-2" />
+                        Factuur downloaden
+                    </Button>
+                </a>
                 <Button variant="outline" @click="backToOrders">
                     ← Terug naar bestellingen
                 </Button>

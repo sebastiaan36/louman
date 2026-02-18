@@ -27,6 +27,8 @@ class Customer extends Model
         'kvk_number',
         'bank_account',
         'vat_number',
+        'packing_slip_email',
+        'invoice_email',
         'approved_at',
         'approved_by',
         'customer_category',

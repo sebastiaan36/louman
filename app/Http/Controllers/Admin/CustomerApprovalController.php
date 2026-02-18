@@ -83,6 +83,8 @@ class CustomerApprovalController extends Controller
             'house_number' => $customer->house_number,
             'postal_code' => $customer->postal_code,
             'city' => $customer->city,
+            'packing_slip_email' => $customer->packing_slip_email,
+            'invoice_email' => $customer->invoice_email,
             'customer_category' => $customer->customer_category,
             'customer_category_label' => $customer->getCategoryLabel(),
             'discount_percentage' => $customer->discount_percentage,
@@ -188,6 +190,8 @@ class CustomerApprovalController extends Controller
             'house_number' => ['required', 'string', 'max:10'],
             'postal_code' => ['required', 'string', 'max:7'],
             'city' => ['required', 'string', 'max:255'],
+            'packing_slip_email' => ['nullable', 'email', 'max:255'],
+            'invoice_email' => ['nullable', 'email', 'max:255'],
         ], [
             'company_name.required' => 'Bedrijfsnaam is verplicht.',
             'contact_person.required' => 'Contactpersoon is verplicht.',
@@ -199,6 +203,8 @@ class CustomerApprovalController extends Controller
             'house_number.required' => 'Huisnummer is verplicht.',
             'postal_code.required' => 'Postcode is verplicht.',
             'city.required' => 'Plaats is verplicht.',
+            'packing_slip_email.email' => 'Pakbon email moet een geldig email adres zijn.',
+            'invoice_email.email' => 'Factuur email moet een geldig email adres zijn.',
         ]);
 
         $customer->update($validated);

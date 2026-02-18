@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\InvoiceMail;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -96,6 +98,16 @@ class OrderController extends Controller
             ];
         }
 
+        // Get all active products for adding to order
+        $products = \App\Models\Product::where('is_active', true)
+            ->orderBy('title')
+            ->get()
+            ->map(fn ($product) => [
+                'id' => $product->id,
+                'title' => $product->title,
+                'price' => $product->price,
+            ]);
+
         return Inertia::render('admin/OrderDetail', [
             'order' => [
                 'id' => $order->id,
@@ -114,6 +126,8 @@ class OrderController extends Controller
                 'delivery_address' => $deliveryAddress,
                 'items' => $order->items->map(function ($item) {
                     return [
+                        'id' => $item->id,
+                        'product_id' => $item->product_id,
                         'product_title' => $item->product->title,
                         'product_thumbnail' => $item->product->thumbnail_url,
                         'quantity' => $item->quantity,
@@ -122,6 +136,7 @@ class OrderController extends Controller
                     ];
                 }),
             ],
+            'availableProducts' => $products,
         ]);
     }
 
@@ -134,13 +149,82 @@ class OrderController extends Controller
             'status' => ['required', 'in:pending,confirmed,completed,cancelled'],
         ]);
 
+        $previousStatus = $order->status;
+        $newStatus = $request->input('status');
+
         $order->update([
-            'status' => $request->input('status'),
+            'status' => $newStatus,
         ]);
 
-        // TODO: Send notification to customer
+        // Send invoice to customer when order is completed
+        if ($newStatus === 'completed' && $previousStatus !== 'completed') {
+            $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+            $invoiceEmail = $order->customer->invoice_email ?? $order->customer->user->email;
+            Mail::to($invoiceEmail)->send(new InvoiceMail($order));
+        }
 
         return back()->with('success', 'Bestelstatus bijgewerkt.');
+    }
+
+    /**
+     * Update order items and notes.
+     */
+    public function update(Request $request, Order $order): RedirectResponse
+    {
+        // Only allow editing if order is not completed or cancelled
+        if (in_array($order->status, ['completed', 'cancelled'])) {
+            return back()->with('error', 'Deze bestelling kan niet meer worden aangepast.');
+        }
+
+        $validated = $request->validate([
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.id' => ['nullable', 'exists:order_items,id'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $existingItemIds = [];
+
+        // Process items: update existing or create new
+        foreach ($validated['items'] as $itemData) {
+            if (isset($itemData['id'])) {
+                // Update existing item
+                $orderItem = $order->items()->find($itemData['id']);
+                if ($orderItem) {
+                    $orderItem->update([
+                        'quantity' => $itemData['quantity'],
+                    ]);
+                    $existingItemIds[] = $itemData['id'];
+                }
+            } else {
+                // Create new item
+                $product = \App\Models\Product::find($itemData['product_id']);
+                if ($product) {
+                    $newItem = $order->items()->create([
+                        'product_id' => $product->id,
+                        'quantity' => $itemData['quantity'],
+                        'price' => $product->price,
+                    ]);
+                    $existingItemIds[] = $newItem->id;
+                }
+            }
+        }
+
+        // Delete items that are no longer in the order
+        $order->items()->whereNotIn('id', $existingItemIds)->delete();
+
+        // Recalculate total
+        $total = $order->items()->get()->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        $order->update([
+            'total' => $total,
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return back()->with('success', 'Bestelling bijgewerkt.');
     }
 
     /**

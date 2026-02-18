@@ -11,6 +11,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-vue-next';
 
 interface Customer {
@@ -71,6 +72,7 @@ const viewCustomer = (customerId: number) => {
                             <TableHead>Telefoon</TableHead>
                             <TableHead>Plaats</TableHead>
                             <TableHead>Goedgekeurd op</TableHead>
+                            <TableHead></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -86,6 +88,11 @@ const viewCustomer = (customerId: number) => {
                             <TableCell>{{ customer.phone_number }}</TableCell>
                             <TableCell>{{ customer.city }}</TableCell>
                             <TableCell>{{ customer.approved_at }}</TableCell>
+                            <TableCell class="text-right">
+                                <Button size="sm" variant="outline" @click.stop="viewCustomer(customer.id)">
+                                    Bekijk & bewerk
+                                </Button>
+                            </TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>

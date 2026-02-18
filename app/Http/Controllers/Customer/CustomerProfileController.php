@@ -29,6 +29,8 @@ class CustomerProfileController extends Controller
                 'kvk_number' => $customer->kvk_number,
                 'bank_account' => $customer->bank_account,
                 'vat_number' => $customer->vat_number,
+                'packing_slip_email' => $customer->packing_slip_email,
+                'invoice_email' => $customer->invoice_email,
             ],
             'email' => auth()->user()->email,
         ]);
@@ -54,6 +56,8 @@ class CustomerProfileController extends Controller
             'kvk_number' => $validated['kvk_number'],
             'bank_account' => $validated['bank_account'],
             'vat_number' => $validated['vat_number'],
+            'packing_slip_email' => $validated['packing_slip_email'],
+            'invoice_email' => $validated['invoice_email'],
         ]);
 
         // Update user fields (name and email)

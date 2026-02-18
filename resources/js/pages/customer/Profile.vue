@@ -20,6 +20,8 @@ interface Customer {
     kvk_number: string;
     bank_account: string;
     vat_number: string;
+    packing_slip_email: string | null;
+    invoice_email: string | null;
 }
 
 const props = defineProps<{
@@ -50,6 +52,8 @@ const form = ref({
     postal_code: props.customer.postal_code,
     city: props.customer.city,
     bank_account: props.customer.bank_account,
+    packing_slip_email: props.customer.packing_slip_email,
+    invoice_email: props.customer.invoice_email,
 });
 
 const processing = ref(false);
@@ -154,6 +158,38 @@ const submit = () => {
                                 required
                             />
                             <InputError :message="errors?.phone_number" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Preferences Section -->
+                <div class="rounded-lg border p-6 space-y-4">
+                    <h3 class="text-sm font-semibold">E-mail voorkeuren</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Optioneel: specificeer afwijkende e-mailadressen voor pakbonnen en facturen
+                    </p>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="packing_slip_email">Pakbon e-mailadres</Label>
+                            <Input
+                                id="packing_slip_email"
+                                v-model="form.packing_slip_email"
+                                type="email"
+                                placeholder="Optioneel"
+                            />
+                            <InputError :message="errors?.packing_slip_email" />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="invoice_email">Factuur e-mailadres</Label>
+                            <Input
+                                id="invoice_email"
+                                v-model="form.invoice_email"
+                                type="email"
+                                placeholder="Optioneel"
+                            />
+                            <InputError :message="errors?.invoice_email" />
                         </div>
                     </div>
                 </div>

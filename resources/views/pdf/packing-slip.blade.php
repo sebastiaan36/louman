@@ -201,16 +201,16 @@
         <!-- Header -->
         <div class="header">
             <div class="header-left">
+                @php $logoPath = storage_path('app/public/img/Logo.png'); @endphp
                 @if(file_exists($logoPath))
-                    <img src="{{ $logoPath }}" alt="Logo" class="logo">
+                    <img src="{{ $logoPath }}" alt="Slagerij Louman" style="max-height:60px; max-width:180px; margin-bottom:6px; display:block;">
                 @endif
                 <div class="company-info">
-                    <strong>{{ $companyInfo['name'] }}</strong>
-                    {{ $companyInfo['address'] }}<br>
-                    {{ $companyInfo['postal_code'] }} {{ $companyInfo['city'] }}<br>
-                    Tel: {{ $companyInfo['phone'] }}<br>
-                    Fax: {{ $companyInfo['fax'] }}<br>
-                    E-mail: {{ $companyInfo['email'] }}
+                    <strong>Ambachtelijke Slagerij T.F.M. Louman</strong>
+                    Goudsbloemstraat 76<br>
+                    1015 JR Amsterdam<br>
+                    Tel: 020 6220771<br>
+                    E-mail: info@louman-jordaan.nl
                 </div>
             </div>
             <div class="header-right">
@@ -340,8 +340,8 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p>Bedankt voor uw bestelling bij {{ $companyInfo['name'] }}</p>
-            <p>{{ $companyInfo['address'] }} • {{ $companyInfo['postal_code'] }} {{ $companyInfo['city'] }} • Tel: {{ $companyInfo['phone'] }}</p>
+            <p>Bedankt voor uw bestelling bij Ambachtelijke Slagerij T.F.M. Louman</p>
+            <p>Goudsbloemstraat 76 • 1015 JR Amsterdam • Tel: 020 6220771 • info@louman-jordaan.nl</p>
         </div>
     </div>
 </body>

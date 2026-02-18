@@ -13,6 +13,11 @@ use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PackingSlipController;
+use App\Mail\InvoiceMail;
+use App\Mail\OrderConfirmation;
+use App\Mail\OrderPlacedNotification;
+use App\Models\Order;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -78,8 +83,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.orders.show');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])
         ->name('admin.orders.update-status');
+    Route::patch('/orders/{order}', [AdminOrderController::class, 'update'])
+        ->name('admin.orders.update');
     Route::get('/orders/{order}/packing-slip', [PackingSlipController::class, 'generate'])
         ->name('admin.orders.packing-slip');
+    Route::get('/orders/{order}/invoice', [PackingSlipController::class, 'invoice'])
+        ->name('admin.orders.invoice');
 
     // Bulk actions
     Route::post('/orders/bulk/update-status', [AdminOrderController::class, 'bulkUpdateStatus'])
@@ -136,8 +145,46 @@ Route::middleware(['auth', 'approved'])->prefix('customer')->group(function () {
         ->name('customer.orders.store');
     Route::get('/orders/{order}/packing-slip', [PackingSlipController::class, 'generate'])
         ->name('customer.orders.packing-slip');
+    Route::get('/orders/{order}/invoice', [PackingSlipController::class, 'invoice'])
+        ->name('customer.orders.invoice');
     Route::post('/orders/{order}/reorder', [CartController::class, 'reorder'])
         ->name('customer.orders.reorder');
+});
+
+// Mail & PDF previews (alleen voor admins, verwijder na development)
+Route::middleware(['auth', 'admin'])->prefix('preview')->group(function () {
+    Route::get('/mail/order-placed/{order?}', function (Order $order = null) {
+        $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
+        $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+        return new OrderPlacedNotification($order);
+    })->name('preview.mail.order-placed');
+
+    Route::get('/mail/order-confirmation/{order?}', function (Order $order = null) {
+        $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
+        $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+        return new OrderConfirmation($order);
+    })->name('preview.mail.order-confirmation');
+
+    Route::get('/pdf/packing-slip/{order?}', function (Order $order = null) {
+        $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
+        $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+        $pdf = Pdf::loadView('pdf.packing-slip', ['order' => $order]);
+        return $pdf->stream('pakbon-' . $order->id . '.pdf');
+    })->name('preview.pdf.packing-slip');
+
+    Route::get('/mail/invoice/{order?}', function (Order $order = null) {
+        $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
+        $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+        $mailable = new InvoiceMail($order);
+        return $mailable->render();
+    })->name('preview.mail.invoice');
+
+    Route::get('/pdf/invoice/{order?}', function (Order $order = null) {
+        $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
+        $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+        $pdf = Pdf::loadView('pdf.invoice', ['order' => $order, 'invoiceDate' => now()]);
+        return $pdf->stream('factuur-' . $order->id . '.pdf');
+    })->name('preview.pdf.invoice');
 });
 
 require __DIR__.'/settings.php';

@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\PlaceOrderRequest;
+use App\Mail\OrderConfirmation;
+use App\Mail\OrderPlacedNotification;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -183,7 +186,14 @@ class OrderController extends Controller
 
             DB::commit();
 
-            // TODO: Send notification to admin
+            // Send notification to admin with packing slip
+            Mail::to('info@louman-joraan.nl')
+                ->send(new OrderPlacedNotification($order));
+
+            // Send order confirmation to customer
+            $confirmationEmail = $customer->packing_slip_email ?? $customer->user->email;
+            Mail::to($confirmationEmail)
+                ->send(new OrderConfirmation($order));
 
             return to_route('customer.orders.show', $order)
                 ->with('success', 'Bestelling succesvol geplaatst!');
