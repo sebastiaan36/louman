@@ -160,7 +160,15 @@ class OrderController extends Controller
         if ($newStatus === 'completed' && $previousStatus !== 'completed') {
             $order->load(['customer.user', 'deliveryAddress', 'items.product']);
             $shippedEmail = $order->customer->packing_slip_email ?? $order->customer->user->email;
-            Mail::to($shippedEmail)->send(new OrderShipped($order));
+
+            try {
+                Mail::to($shippedEmail)->send(new OrderShipped($order));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send order shipped notification', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return back()->with('success', 'Bestelstatus bijgewerkt.');
