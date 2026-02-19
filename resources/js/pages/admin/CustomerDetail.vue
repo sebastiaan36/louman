@@ -22,6 +22,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import InputError from '@/components/InputError.vue';
 import {
     Table,
@@ -32,7 +34,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit } from 'lucide-vue-next';
+import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit, Plus, Trash2 } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 
@@ -43,7 +45,6 @@ interface Customer {
     email: string;
     phone_number: string;
     packing_slip_email: string | null;
-    invoice_email: string | null;
     kvk_number: string;
     vat_number: string;
     bank_account: string;
@@ -61,10 +62,11 @@ interface Customer {
 interface DeliveryAddress {
     id: number;
     name: string;
-    street: string;
+    street_name: string;
     house_number: string;
     postal_code: string;
     city: string;
+    notes: string | null;
     is_default: boolean;
 }
 
@@ -163,7 +165,6 @@ const form = useForm({
     postal_code: props.customer.postal_code,
     city: props.customer.city,
     packing_slip_email: props.customer.packing_slip_email || '',
-    invoice_email: props.customer.invoice_email || '',
 });
 
 const openEditCustomerDialog = () => {
@@ -178,7 +179,6 @@ const openEditCustomerDialog = () => {
     form.postal_code = props.customer.postal_code;
     form.city = props.customer.city;
     form.packing_slip_email = props.customer.packing_slip_email || '';
-    form.invoice_email = props.customer.invoice_email || '';
     form.clearErrors();
     editCustomerDialogOpen.value = true;
 };
@@ -190,6 +190,70 @@ const updateCustomer = () => {
             editCustomerDialogOpen.value = false;
         },
     });
+};
+
+// Delivery address management
+const addressDialogOpen = ref(false);
+const editingAddress = ref<DeliveryAddress | null>(null);
+const addressForm = useForm({
+    name: '',
+    street_name: '',
+    house_number: '',
+    postal_code: '',
+    city: '',
+    notes: '',
+    is_default: false,
+});
+
+const openAddressDialog = (address?: DeliveryAddress) => {
+    if (address) {
+        editingAddress.value = address;
+        addressForm.name = address.name;
+        addressForm.street_name = address.street_name;
+        addressForm.house_number = address.house_number;
+        addressForm.postal_code = address.postal_code;
+        addressForm.city = address.city;
+        addressForm.notes = address.notes || '';
+        addressForm.is_default = address.is_default;
+    } else {
+        editingAddress.value = null;
+        addressForm.reset();
+    }
+    addressForm.clearErrors();
+    addressDialogOpen.value = true;
+};
+
+const submitAddress = () => {
+    if (editingAddress.value) {
+        addressForm.patch(
+            `/admin/customers/${props.customer.id}/delivery-addresses/${editingAddress.value.id}`,
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    addressDialogOpen.value = false;
+                },
+            }
+        );
+    } else {
+        addressForm.post(
+            `/admin/customers/${props.customer.id}/delivery-addresses`,
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    addressDialogOpen.value = false;
+                },
+            }
+        );
+    }
+};
+
+const deleteAddress = (addressId: number) => {
+    if (confirm('Weet je zeker dat je dit afleveradres wilt verwijderen?')) {
+        router.delete(
+            `/admin/customers/${props.customer.id}/delivery-addresses/${addressId}`,
+            { preserveScroll: true }
+        );
+    }
 };
 </script>
 
@@ -256,13 +320,6 @@ const updateCustomer = () => {
                             <div>
                                 <p class="text-sm font-medium">Pakbon Email</p>
                                 <p class="text-sm text-muted-foreground">{{ customer.packing_slip_email }}</p>
-                            </div>
-                        </div>
-                        <div v-if="customer.invoice_email" class="flex items-start gap-3">
-                            <Mail class="h-4 w-4 text-muted-foreground mt-0.5" />
-                            <div>
-                                <p class="text-sm font-medium">Factuur Email</p>
-                                <p class="text-sm text-muted-foreground">{{ customer.invoice_email }}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -361,8 +418,16 @@ const updateCustomer = () => {
                 <!-- Delivery Addresses -->
                 <Card>
                     <CardHeader>
-                        <CardTitle>Afleveradressen</CardTitle>
-                        <CardDescription>{{ deliveryAddresses.length }} geregistreerd(e) adres(sen)</CardDescription>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Afleveradressen</CardTitle>
+                                <CardDescription>{{ deliveryAddresses.length }} geregistreerd(e) adres(sen)</CardDescription>
+                            </div>
+                            <Button size="sm" variant="outline" @click="openAddressDialog()">
+                                <Plus class="h-4 w-4 mr-2" />
+                                Toevoegen
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div v-if="deliveryAddresses.length === 0" class="text-sm text-muted-foreground">
@@ -374,8 +439,8 @@ const updateCustomer = () => {
                                 :key="address.id"
                                 class="flex items-start gap-3 pb-3 border-b last:border-b-0 last:pb-0"
                             >
-                                <MapPin class="h-4 w-4 text-muted-foreground mt-0.5" />
-                                <div class="flex-1">
+                                <MapPin class="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                                <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
                                         <p class="text-sm font-medium">{{ address.name }}</p>
                                         <Badge v-if="address.is_default" variant="secondary" class="text-xs">
@@ -383,9 +448,20 @@ const updateCustomer = () => {
                                         </Badge>
                                     </div>
                                     <p class="text-sm text-muted-foreground">
-                                        {{ address.street }} {{ address.house_number }}<br>
+                                        {{ address.street_name }} {{ address.house_number }}<br>
                                         {{ address.postal_code }} {{ address.city }}
                                     </p>
+                                    <p v-if="address.notes" class="text-xs text-muted-foreground mt-1 italic">
+                                        {{ address.notes }}
+                                    </p>
+                                </div>
+                                <div class="flex gap-1 shrink-0">
+                                    <Button size="sm" variant="ghost" @click="openAddressDialog(address)">
+                                        <Edit class="h-4 w-4" />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" class="text-destructive hover:text-destructive" @click="deleteAddress(address.id)">
+                                        <Trash2 class="h-4 w-4" />
+                                    </Button>
                                 </div>
                             </div>
                         </div>
@@ -634,17 +710,6 @@ const updateCustomer = () => {
                             <InputError :message="form.errors.packing_slip_email" class="mt-2" />
                         </div>
 
-                        <div>
-                            <Label for="invoice_email">Factuur Email</Label>
-                            <Input
-                                id="invoice_email"
-                                v-model="form.invoice_email"
-                                type="email"
-                                class="mt-1"
-                                placeholder="optioneel"
-                            />
-                            <InputError :message="form.errors.invoice_email" class="mt-2" />
-                        </div>
                     </div>
 
                     <!-- Business Information -->
@@ -755,6 +820,112 @@ const updateCustomer = () => {
                             :disabled="form.processing"
                         >
                             Opslaan
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Delivery Address Dialog -->
+        <Dialog v-model:open="addressDialogOpen">
+            <DialogContent class="max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>{{ editingAddress ? 'Afleveradres bewerken' : 'Afleveradres toevoegen' }}</DialogTitle>
+                    <DialogDescription>
+                        {{ editingAddress ? 'Wijzig de gegevens van dit afleveradres.' : 'Voeg een nieuw afleveradres toe voor deze klant.' }}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form @submit.prevent="submitAddress" class="space-y-4">
+                    <div class="grid gap-2">
+                        <Label for="addr_name">Naam adres *</Label>
+                        <Input
+                            id="addr_name"
+                            v-model="addressForm.name"
+                            type="text"
+                            required
+                            placeholder="Bijv. Hoofdkantoor, Magazijn, etc."
+                        />
+                        <InputError :message="addressForm.errors.name" />
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="addr_street_name">Straatnaam *</Label>
+                            <Input
+                                id="addr_street_name"
+                                v-model="addressForm.street_name"
+                                type="text"
+                                required
+                            />
+                            <InputError :message="addressForm.errors.street_name" />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="addr_house_number">Huisnummer *</Label>
+                            <Input
+                                id="addr_house_number"
+                                v-model="addressForm.house_number"
+                                type="text"
+                                required
+                            />
+                            <InputError :message="addressForm.errors.house_number" />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="addr_postal_code">Postcode *</Label>
+                            <Input
+                                id="addr_postal_code"
+                                v-model="addressForm.postal_code"
+                                type="text"
+                                required
+                            />
+                            <InputError :message="addressForm.errors.postal_code" />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="addr_city">Plaats *</Label>
+                            <Input
+                                id="addr_city"
+                                v-model="addressForm.city"
+                                type="text"
+                                required
+                            />
+                            <InputError :message="addressForm.errors.city" />
+                        </div>
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="addr_notes">Notities (optioneel)</Label>
+                        <Textarea
+                            id="addr_notes"
+                            v-model="addressForm.notes"
+                            placeholder="Extra informatie over dit adres"
+                        />
+                        <InputError :message="addressForm.errors.notes" />
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <Checkbox
+                            id="addr_is_default"
+                            v-model:checked="addressForm.is_default"
+                        />
+                        <Label for="addr_is_default" class="text-sm font-normal cursor-pointer">
+                            Stel in als standaard afleveradres
+                        </Label>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            @click="addressDialogOpen = false"
+                            :disabled="addressForm.processing"
+                        >
+                            Annuleren
+                        </Button>
+                        <Button type="submit" :disabled="addressForm.processing">
+                            {{ editingAddress ? 'Bijwerken' : 'Toevoegen' }}
                         </Button>
                     </DialogFooter>
                 </form>

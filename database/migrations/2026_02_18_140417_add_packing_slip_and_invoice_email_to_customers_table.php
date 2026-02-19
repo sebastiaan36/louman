@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::table('customers', function (Blueprint $table) {
             $table->string('packing_slip_email')->nullable()->after('phone_number');
-            $table->string('invoice_email')->nullable()->after('packing_slip_email');
         });
     }
 
@@ -23,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('customers', function (Blueprint $table) {
-            $table->dropColumn(['packing_slip_email', 'invoice_email']);
+            $table->dropColumn('packing_slip_email');
         });
     }
 };

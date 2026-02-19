@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\DeliveryAddress;
 use App\Notifications\CustomerApproved;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -84,7 +85,6 @@ class CustomerApprovalController extends Controller
             'postal_code' => $customer->postal_code,
             'city' => $customer->city,
             'packing_slip_email' => $customer->packing_slip_email,
-            'invoice_email' => $customer->invoice_email,
             'customer_category' => $customer->customer_category,
             'customer_category_label' => $customer->getCategoryLabel(),
             'discount_percentage' => $customer->discount_percentage,
@@ -95,10 +95,11 @@ class CustomerApprovalController extends Controller
         $deliveryAddresses = $customer->deliveryAddresses->map(fn ($address) => [
             'id' => $address->id,
             'name' => $address->name,
-            'street' => $address->street,
+            'street_name' => $address->street_name,
             'house_number' => $address->house_number,
             'postal_code' => $address->postal_code,
             'city' => $address->city,
+            'notes' => $address->notes,
             'is_default' => $address->is_default,
         ]);
 
@@ -191,7 +192,6 @@ class CustomerApprovalController extends Controller
             'postal_code' => ['required', 'string', 'max:7'],
             'city' => ['required', 'string', 'max:255'],
             'packing_slip_email' => ['nullable', 'email', 'max:255'],
-            'invoice_email' => ['nullable', 'email', 'max:255'],
         ], [
             'company_name.required' => 'Bedrijfsnaam is verplicht.',
             'contact_person.required' => 'Contactpersoon is verplicht.',
@@ -204,11 +204,76 @@ class CustomerApprovalController extends Controller
             'postal_code.required' => 'Postcode is verplicht.',
             'city.required' => 'Plaats is verplicht.',
             'packing_slip_email.email' => 'Pakbon email moet een geldig email adres zijn.',
-            'invoice_email.email' => 'Factuur email moet een geldig email adres zijn.',
         ]);
 
         $customer->update($validated);
 
         return back()->with('success', "Klantgegevens bijgewerkt.");
+    }
+
+    /**
+     * Store a new delivery address for a customer.
+     */
+    public function storeDeliveryAddress(Request $request, Customer $customer): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'street_name' => ['required', 'string', 'max:255'],
+            'house_number' => ['required', 'string', 'max:10'],
+            'postal_code' => ['required', 'string', 'max:7'],
+            'city' => ['required', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:500'],
+            'is_default' => ['boolean'],
+        ]);
+
+        if ($validated['is_default'] ?? false) {
+            $customer->deliveryAddresses()->update(['is_default' => false]);
+        }
+
+        $customer->deliveryAddresses()->create($validated);
+
+        return back()->with('success', 'Afleveradres toegevoegd.');
+    }
+
+    /**
+     * Update a delivery address for a customer.
+     */
+    public function updateDeliveryAddress(Request $request, Customer $customer, DeliveryAddress $deliveryAddress): RedirectResponse
+    {
+        if ($deliveryAddress->customer_id !== $customer->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'street_name' => ['required', 'string', 'max:255'],
+            'house_number' => ['required', 'string', 'max:10'],
+            'postal_code' => ['required', 'string', 'max:7'],
+            'city' => ['required', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:500'],
+            'is_default' => ['boolean'],
+        ]);
+
+        if ($validated['is_default'] ?? false) {
+            $customer->deliveryAddresses()->update(['is_default' => false]);
+        }
+
+        $deliveryAddress->update($validated);
+
+        return back()->with('success', 'Afleveradres bijgewerkt.');
+    }
+
+    /**
+     * Delete a delivery address for a customer.
+     */
+    public function destroyDeliveryAddress(Customer $customer, DeliveryAddress $deliveryAddress): RedirectResponse
+    {
+        if ($deliveryAddress->customer_id !== $customer->id) {
+            abort(404);
+        }
+
+        $deliveryAddress->delete();
+
+        return back()->with('success', 'Afleveradres verwijderd.');
     }
 }

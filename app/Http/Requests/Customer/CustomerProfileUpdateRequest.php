@@ -40,7 +40,6 @@ class CustomerProfileUpdateRequest extends FormRequest
             'city' => $this->cityRules(),
             'bank_account' => $this->bankAccountRules(),
             'packing_slip_email' => ['nullable', 'email', 'max:255'],
-            'invoice_email' => ['nullable', 'email', 'max:255'],
         ];
     }
 
@@ -64,7 +63,6 @@ class CustomerProfileUpdateRequest extends FormRequest
             'city' => 'plaats',
             'bank_account' => 'rekeningnummer',
             'packing_slip_email' => 'pakbon e-mailadres',
-            'invoice_email' => 'factuur e-mailadres',
         ];
     }
 
@@ -85,7 +83,6 @@ class CustomerProfileUpdateRequest extends FormRequest
             'postal_code.regex' => 'Vul een geldige Nederlandse postcode in (bijv. 1234 AB).',
             'bank_account.regex' => 'Vul een geldig Nederlands IBAN rekeningnummer in (bijv. NL91ABNA0417164300).',
             'packing_slip_email.email' => 'Vul een geldig pakbon e-mailadres in.',
-            'invoice_email.email' => 'Vul een geldig factuur e-mailadres in.',
         ];
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Mail\InvoiceMail;
+use App\Mail\OrderShipped;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -156,11 +156,11 @@ class OrderController extends Controller
             'status' => $newStatus,
         ]);
 
-        // Send invoice to customer when order is completed
+        // Send shipped notification to customer when order is completed
         if ($newStatus === 'completed' && $previousStatus !== 'completed') {
             $order->load(['customer.user', 'deliveryAddress', 'items.product']);
-            $invoiceEmail = $order->customer->invoice_email ?? $order->customer->user->email;
-            Mail::to($invoiceEmail)->send(new InvoiceMail($order));
+            $shippedEmail = $order->customer->packing_slip_email ?? $order->customer->user->email;
+            Mail::to($shippedEmail)->send(new OrderShipped($order));
         }
 
         return back()->with('success', 'Bestelstatus bijgewerkt.');
