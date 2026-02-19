@@ -199,7 +199,7 @@ class OrderController extends Controller
 
         // Send mails after transaction — mail errors should not block order creation
         try {
-            Mail::to('info@louman-joraan.nl')
+            Mail::to('info@louman-jordaan.nl')
                 ->send(new OrderPlacedNotification($order));
         } catch (\Exception $e) {
             \Log::error('Failed to send admin order notification', [
