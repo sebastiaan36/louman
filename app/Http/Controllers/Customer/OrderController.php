@@ -185,18 +185,6 @@ class OrderController extends Controller
             $customer->cartItems()->delete();
 
             DB::commit();
-
-            // Send notification to admin with packing slip
-            Mail::to('info@louman-joraan.nl')
-                ->send(new OrderPlacedNotification($order));
-
-            // Send order confirmation to customer
-            $confirmationEmail = $customer->packing_slip_email ?? $customer->user->email;
-            Mail::to($confirmationEmail)
-                ->send(new OrderConfirmation($order));
-
-            return to_route('customer.orders.show', $order)
-                ->with('success', 'Bestelling succesvol geplaatst!');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -206,8 +194,33 @@ class OrderController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return back()->with('error', 'Er ging iets mis bij het plaatsen van de bestelling: ' . $e->getMessage());
+            return back()->with('error', 'Er ging iets mis bij het plaatsen van de bestelling. Probeer het opnieuw.');
         }
+
+        // Send mails after transaction — mail errors should not block order creation
+        try {
+            Mail::to('info@louman-joraan.nl')
+                ->send(new OrderPlacedNotification($order));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send admin order notification', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        try {
+            $confirmationEmail = $customer->packing_slip_email ?? $customer->user->email;
+            Mail::to($confirmationEmail)
+                ->send(new OrderConfirmation($order));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send order confirmation to customer', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return to_route('customer.orders.show', $order)
+            ->with('success', 'Bestelling succesvol geplaatst!');
     }
 
     /**
