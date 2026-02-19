@@ -32,7 +32,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { ref, computed } from 'vue';
-import { Trash2, Plus, Search, Download } from 'lucide-vue-next';
+import { Trash2, Plus, Search } from 'lucide-vue-next';
 
 interface OrderItem {
     id: number;
@@ -239,16 +239,7 @@ const backToOrders = () => {
                     <Button v-if="canEditOrder()" variant="outline" @click="openEditDialog">
                         Bestelling aanpassen
                     </Button>
-                    <a
-                        v-if="order.status === 'completed'"
-                        :href="`/admin/orders/${order.id}/invoice`"
-                        target="_blank"
-                    >
-                        <Button variant="outline">
-                            <Download class="h-4 w-4 mr-2" />
-                            Factuur downloaden
-                        </Button>
-                    </a>
+
                     <Button variant="outline" @click="backToOrders">
                         ← Terug naar bestellingen
                     </Button>
