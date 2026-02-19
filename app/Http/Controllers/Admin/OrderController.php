@@ -168,6 +168,8 @@ class OrderController extends Controller
                     'order_id' => $order->id,
                     'error' => $e->getMessage(),
                 ]);
+
+                return back()->with('error', 'Status bijgewerkt maar mail kon niet verstuurd worden: ' . $e->getMessage());
             }
         }
 
