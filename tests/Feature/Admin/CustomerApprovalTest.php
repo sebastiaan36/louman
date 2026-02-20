@@ -40,6 +40,7 @@ test('admin kan klant goedkeuren', function () {
         ->post("/admin/customers/{$customer->id}/approve", [
             'customer_category' => 'groothandel',
             'discount_percentage' => '0',
+            'delivery_day' => 'maandag',
         ])
         ->assertRedirect();
 

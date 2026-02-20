@@ -56,7 +56,7 @@ test('OrderPlacedNotification wordt verstuurd naar admin', function () {
     $this->actingAs($user)
         ->post('/customer/orders', ['delivery_address_id' => $address->id]);
 
-    Mail::assertQueued(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo('info@louman-joraan.nl'));
+    Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo('info@louman-jordaan.nl'));
 });
 
 test('OrderConfirmation wordt verstuurd naar klant', function () {
@@ -72,7 +72,7 @@ test('OrderConfirmation wordt verstuurd naar klant', function () {
     $this->actingAs($user)
         ->post('/customer/orders', ['delivery_address_id' => $address->id]);
 
-    Mail::assertQueued(OrderConfirmation::class, fn ($mail) => $mail->hasTo($user->email));
+    Mail::assertSent(OrderConfirmation::class, fn ($mail) => $mail->hasTo($user->email));
 });
 
 test('bevestigingsmail gaat naar packing_slip_email als die is ingesteld', function () {
@@ -91,7 +91,7 @@ test('bevestigingsmail gaat naar packing_slip_email als die is ingesteld', funct
     $this->actingAs($user)
         ->post('/customer/orders', ['delivery_address_id' => $address->id]);
 
-    Mail::assertQueued(OrderConfirmation::class, fn ($mail) => $mail->hasTo('pakbon@klant.nl'));
+    Mail::assertSent(OrderConfirmation::class, fn ($mail) => $mail->hasTo('pakbon@klant.nl'));
 });
 
 test('klant ziet eigen bestellingen', function () {

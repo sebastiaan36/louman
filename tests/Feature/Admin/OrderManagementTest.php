@@ -82,7 +82,7 @@ test('verzonden mail wordt verstuurd bij status voltooid', function () {
 
     expect($order->fresh()->status)->toBe('completed');
 
-    Mail::assertQueued(OrderShipped::class, function (OrderShipped $mail) use ($order) {
+    Mail::assertSent(OrderShipped::class, function (OrderShipped $mail) use ($order) {
         return $mail->order->id === $order->id;
     });
 });
@@ -106,7 +106,7 @@ test('verzonden mail gaat naar packing_slip_email als die is ingesteld', functio
     $this->actingAs($admin)
         ->patch("/admin/orders/{$order->id}/status", ['status' => 'completed']);
 
-    Mail::assertQueued(OrderShipped::class, fn ($mail) => $mail->hasTo('verzending@klant.nl'));
+    Mail::assertSent(OrderShipped::class, fn ($mail) => $mail->hasTo('verzending@klant.nl'));
 });
 
 test('admin kan bestelling aanpassen als niet voltooid', function () {

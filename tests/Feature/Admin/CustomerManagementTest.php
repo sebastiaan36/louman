@@ -62,6 +62,7 @@ test('admin kan klantcategorie en korting updaten', function () {
         ->patch("/admin/customers/{$customer->id}/category-discount", [
             'customer_category' => 'horeca',
             'discount_percentage' => '5',
+            'delivery_day' => 'dinsdag',
         ])
         ->assertRedirect()
         ->assertSessionHas('success');
