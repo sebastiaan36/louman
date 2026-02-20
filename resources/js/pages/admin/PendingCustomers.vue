@@ -54,17 +54,29 @@ const approvalDialogOpen = ref(false);
 const selectedCustomerId = ref<number | null>(null);
 const selectedCategory = ref<string>('');
 const selectedDiscount = ref<string>('');
+const selectedDeliveryDay = ref<string>('');
 const processing = ref(false);
+
+const deliveryDays = [
+    { value: 'maandag', label: 'Maandag' },
+    { value: 'dinsdag', label: 'Dinsdag' },
+    { value: 'woensdag', label: 'Woensdag' },
+    { value: 'donderdag', label: 'Donderdag' },
+    { value: 'vrijdag', label: 'Vrijdag' },
+    { value: 'zaterdag', label: 'Zaterdag' },
+    { value: 'zondag', label: 'Zondag' },
+];
 
 const openApprovalDialog = (customerId: number) => {
     selectedCustomerId.value = customerId;
     selectedCategory.value = '';
     selectedDiscount.value = '';
+    selectedDeliveryDay.value = '';
     approvalDialogOpen.value = true;
 };
 
 const approveCustomer = () => {
-    if (!selectedCategory.value || !selectedDiscount.value) {
+    if (!selectedCategory.value || !selectedDiscount.value || !selectedDeliveryDay.value) {
         return;
     }
 
@@ -74,6 +86,7 @@ const approveCustomer = () => {
         {
             customer_category: selectedCategory.value,
             discount_percentage: selectedDiscount.value,
+            delivery_day: selectedDeliveryDay.value,
         },
         {
             preserveScroll: true,
@@ -83,6 +96,7 @@ const approveCustomer = () => {
                 selectedCustomerId.value = null;
                 selectedCategory.value = '';
                 selectedDiscount.value = '';
+                selectedDeliveryDay.value = '';
             },
         }
     );
@@ -246,6 +260,18 @@ const approveCustomer = () => {
                             </Label>
                         </div>
                     </div>
+
+                    <Label for="delivery_day" class="mb-2 block mt-4">Leverdag *</Label>
+                    <select
+                        id="delivery_day"
+                        v-model="selectedDeliveryDay"
+                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    >
+                        <option value="" disabled>Selecteer een dag</option>
+                        <option v-for="day in deliveryDays" :key="day.value" :value="day.value">
+                            {{ day.label }}
+                        </option>
+                    </select>
                 </div>
 
                 <DialogFooter>
@@ -258,7 +284,7 @@ const approveCustomer = () => {
                     </Button>
                     <Button
                         @click="approveCustomer"
-                        :disabled="!selectedCategory || !selectedDiscount || processing"
+                        :disabled="!selectedCategory || !selectedDiscount || !selectedDeliveryDay || processing"
                     >
                         Goedkeuren
                     </Button>

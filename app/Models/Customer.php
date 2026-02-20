@@ -35,6 +35,7 @@ class Customer extends Model
         'approved_by',
         'customer_category',
         'discount_percentage',
+        'delivery_day',
     ];
 
     /**

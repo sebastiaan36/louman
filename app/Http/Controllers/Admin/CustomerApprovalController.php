@@ -88,6 +88,7 @@ class CustomerApprovalController extends Controller
             'customer_category' => $customer->customer_category,
             'customer_category_label' => $customer->getCategoryLabel(),
             'discount_percentage' => $customer->discount_percentage,
+            'delivery_day' => $customer->delivery_day,
             'approved_at' => $customer->approved_at?->format('d-m-Y H:i'),
             'created_at' => $customer->created_at->format('d-m-Y H:i'),
         ];
@@ -133,11 +134,14 @@ class CustomerApprovalController extends Controller
         $validated = $request->validate([
             'customer_category' => ['required', 'in:groothandel,broodjeszaak,horeca'],
             'discount_percentage' => ['required', 'in:0,2.5,3,5'],
+            'delivery_day' => ['required', 'in:maandag,dinsdag,woensdag,donderdag,vrijdag,zaterdag,zondag'],
         ], [
             'customer_category.required' => 'Selecteer een klantcategorie.',
             'customer_category.in' => 'Ongeldige klantcategorie.',
             'discount_percentage.required' => 'Selecteer een kortingspercentage.',
             'discount_percentage.in' => 'Ongeldig kortingspercentage.',
+            'delivery_day.required' => 'Selecteer een leverdag.',
+            'delivery_day.in' => 'Ongeldige leverdag.',
         ]);
 
         $customer->update([
@@ -145,6 +149,7 @@ class CustomerApprovalController extends Controller
             'approved_by' => auth()->id(),
             'customer_category' => $validated['customer_category'],
             'discount_percentage' => $validated['discount_percentage'],
+            'delivery_day' => $validated['delivery_day'],
         ]);
 
         $customer->user->notify(new CustomerApproved);
@@ -160,16 +165,20 @@ class CustomerApprovalController extends Controller
         $validated = $request->validate([
             'customer_category' => ['required', 'in:groothandel,broodjeszaak,horeca'],
             'discount_percentage' => ['required', 'in:0,2.5,3,5'],
+            'delivery_day' => ['required', 'in:maandag,dinsdag,woensdag,donderdag,vrijdag,zaterdag,zondag'],
         ], [
             'customer_category.required' => 'Selecteer een klantcategorie.',
             'customer_category.in' => 'Ongeldige klantcategorie.',
             'discount_percentage.required' => 'Selecteer een kortingspercentage.',
             'discount_percentage.in' => 'Ongeldig kortingspercentage.',
+            'delivery_day.required' => 'Selecteer een leverdag.',
+            'delivery_day.in' => 'Ongeldige leverdag.',
         ]);
 
         $customer->update([
             'customer_category' => $validated['customer_category'],
             'discount_percentage' => $validated['discount_percentage'],
+            'delivery_day' => $validated['delivery_day'],
         ]);
 
         return back()->with('success', "Klantgegevens bijgewerkt.");

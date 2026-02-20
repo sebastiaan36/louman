@@ -55,6 +55,7 @@ interface Customer {
     customer_category: string | null;
     customer_category_label: string | null;
     discount_percentage: string | null;
+    delivery_day: string | null;
     approved_at: string;
     created_at: string;
 }
@@ -121,16 +122,28 @@ const getStatusLabel = (status: string) => {
 const editDialogOpen = ref(false);
 const editCategory = ref<string>('');
 const editDiscount = ref<string>('');
+const editDeliveryDay = ref<string>('');
 const processing = ref(false);
+
+const deliveryDays = [
+    { value: 'maandag', label: 'Maandag' },
+    { value: 'dinsdag', label: 'Dinsdag' },
+    { value: 'woensdag', label: 'Woensdag' },
+    { value: 'donderdag', label: 'Donderdag' },
+    { value: 'vrijdag', label: 'Vrijdag' },
+    { value: 'zaterdag', label: 'Zaterdag' },
+    { value: 'zondag', label: 'Zondag' },
+];
 
 const openEditDialog = () => {
     editCategory.value = props.customer.customer_category || '';
     editDiscount.value = props.customer.discount_percentage || '';
+    editDeliveryDay.value = props.customer.delivery_day || '';
     editDialogOpen.value = true;
 };
 
 const updateCategoryAndDiscount = () => {
-    if (!editCategory.value || !editDiscount.value) {
+    if (!editCategory.value || !editDiscount.value || !editDeliveryDay.value) {
         return;
     }
 
@@ -140,6 +153,7 @@ const updateCategoryAndDiscount = () => {
         {
             customer_category: editCategory.value,
             discount_percentage: editDiscount.value,
+            delivery_day: editDeliveryDay.value,
         },
         {
             preserveScroll: true,
@@ -378,6 +392,13 @@ const deleteAddress = (addressId: number) => {
                             <div>
                                 <p class="text-sm font-medium">Kortingspercentage</p>
                                 <p class="text-sm text-muted-foreground">{{ customer.discount_percentage }}%</p>
+                            </div>
+                        </div>
+                        <div v-if="customer.delivery_day" class="flex items-start gap-3">
+                            <MapPin class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">Leverdag</p>
+                                <p class="text-sm text-muted-foreground capitalize">{{ customer.delivery_day }}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -629,6 +650,20 @@ const deleteAddress = (addressId: number) => {
                     </div>
                 </div>
 
+                    <div class="mt-6">
+                        <Label for="edit_delivery_day" class="mb-2 block">Leverdag *</Label>
+                        <select
+                            id="edit_delivery_day"
+                            v-model="editDeliveryDay"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        >
+                            <option value="" disabled>Selecteer een dag</option>
+                            <option v-for="day in deliveryDays" :key="day.value" :value="day.value">
+                                {{ day.label }}
+                            </option>
+                        </select>
+                    </div>
+
                 <DialogFooter>
                     <Button
                         variant="outline"
@@ -639,7 +674,7 @@ const deleteAddress = (addressId: number) => {
                     </Button>
                     <Button
                         @click="updateCategoryAndDiscount"
-                        :disabled="!editCategory || !editDiscount || processing"
+                        :disabled="!editCategory || !editDiscount || !editDeliveryDay || processing"
                     >
                         Opslaan
                     </Button>

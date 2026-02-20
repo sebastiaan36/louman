@@ -91,6 +91,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Orders
     Route::get('/orders', [AdminOrderController::class, 'index'])
         ->name('admin.orders.index');
+    Route::get('/orders/create', [AdminOrderController::class, 'create'])
+        ->name('admin.orders.create');
+    Route::get('/orders/production-list', [AdminOrderController::class, 'productionList'])
+        ->name('admin.orders.production-list');
+    Route::get('/orders/customer-overview', [AdminOrderController::class, 'customerOverview'])
+        ->name('admin.orders.customer-overview');
+    Route::post('/orders', [AdminOrderController::class, 'store'])
+        ->name('admin.orders.store');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])
         ->name('admin.orders.show');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])

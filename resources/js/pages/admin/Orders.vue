@@ -24,7 +24,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import Pagination from '@/components/Pagination.vue';
-import { ShoppingCart, Download, CheckSquare, FileArchive, Search } from 'lucide-vue-next';
+import { ShoppingCart, Download, CheckSquare, FileArchive, Search, Plus, ClipboardList, LayoutGrid } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
 
 const page = usePage();
@@ -33,6 +33,7 @@ interface Order {
     id: number;
     order_number: string;
     customer_name: string;
+    customer_delivery_day: string | null;
     created_at: string;
     total: string;
     status: string;
@@ -82,7 +83,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const selectedStatus = ref(props.filters.status || '');
+const selectedStatus = ref(props.filters.status || 'all');
 const searchQuery = ref(props.filters.search || '');
 const selectedOrders = ref<number[]>([]);
 const bulkAction = ref<string>('');
@@ -91,7 +92,7 @@ const bulkStatusValue = ref<string>('');
 // Update URL params with current filters
 const updateFilters = () => {
     const params = new URLSearchParams();
-    if (selectedStatus.value) params.set('status', selectedStatus.value);
+    if (selectedStatus.value && selectedStatus.value !== 'all') params.set('status', selectedStatus.value);
     if (searchQuery.value) params.set('search', searchQuery.value);
 
     router.get(`/admin/orders?${params.toString()}`, {}, {
@@ -124,7 +125,7 @@ const getStatusVariant = (status: string) => {
 };
 
 const clearFilters = () => {
-    selectedStatus.value = '';
+    selectedStatus.value = 'all';
     searchQuery.value = '';
 };
 
@@ -218,14 +219,36 @@ const downloadBulkPackingSlips = () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-6 p-6">
-            <div>
-                <h1 class="text-2xl font-bold flex items-center gap-2">
-                    <ShoppingCart class="h-6 w-6" />
-                    Bestellingen
-                </h1>
-                <p class="text-sm text-muted-foreground">
-                    Beheer alle klantbestellingen
-                </p>
+            <div class="flex items-start justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold flex items-center gap-2">
+                        <ShoppingCart class="h-6 w-6" />
+                        Bestellingen
+                    </h1>
+                    <p class="text-sm text-muted-foreground">
+                        Beheer alle klantbestellingen
+                    </p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="/admin/orders/production-list" target="_blank">
+                        <Button variant="outline">
+                            <ClipboardList class="h-4 w-4 mr-2" />
+                            Productielijst
+                        </Button>
+                    </a>
+                    <a href="/admin/orders/customer-overview" target="_blank">
+                        <Button variant="outline">
+                            <LayoutGrid class="h-4 w-4 mr-2" />
+                            Bestellingenoverzicht
+                        </Button>
+                    </a>
+                    <Link href="/admin/orders/create">
+                        <Button>
+                            <Plus class="h-4 w-4 mr-2" />
+                            Nieuwe bestelling
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             <!-- Filters -->
@@ -251,6 +274,7 @@ const downloadBulkPackingSlips = () => {
                                 <SelectValue placeholder="Alle statussen" />
                             </SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="all">Alle bestellingen</SelectItem>
                                 <SelectItem value="pending">In behandeling</SelectItem>
                                 <SelectItem value="confirmed">Bevestigd</SelectItem>
                                 <SelectItem value="completed">Voltooid</SelectItem>
@@ -263,7 +287,7 @@ const downloadBulkPackingSlips = () => {
                         <Button
                             variant="outline"
                             @click="clearFilters"
-                            :disabled="!selectedStatus && !searchQuery"
+                            :disabled="selectedStatus === 'all' && !searchQuery"
                         >
                             Filters wissen
                         </Button>
@@ -353,7 +377,14 @@ const downloadBulkPackingSlips = () => {
                                 />
                             </TableCell>
                             <TableCell class="font-medium">{{ order.order_number }}</TableCell>
-                            <TableCell>{{ order.customer_name }}</TableCell>
+                            <TableCell>
+                                <div class="flex items-center justify-between gap-4">
+                                    <span>{{ order.customer_name }}</span>
+                                    <span v-if="order.customer_delivery_day" class="text-xs text-muted-foreground capitalize shrink-0">
+                                        {{ order.customer_delivery_day }}
+                                    </span>
+                                </div>
+                            </TableCell>
                             <TableCell>{{ order.created_at }}</TableCell>
                             <TableCell class="font-medium">{{ formatPrice(order.total) }}</TableCell>
                             <TableCell>{{ order.item_count }} {{ order.item_count === 1 ? 'product' : 'producten' }}</TableCell>

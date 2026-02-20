@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OrderShipped;
+use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -55,6 +58,7 @@ class OrderController extends Controller
                 'id' => $order->id,
                 'order_number' => '#'.$order->id,
                 'customer_name' => $order->customer->company_name,
+                'customer_delivery_day' => $order->customer->delivery_day,
                 'created_at' => $order->created_at->format('d-m-Y H:i'),
                 'total' => $order->total,
                 'status' => $order->status,
@@ -70,6 +74,206 @@ class OrderController extends Controller
                 'search' => $search,
             ],
         ]);
+    }
+
+    /**
+     * Show the form for creating a new order.
+     */
+    public function create(): Response
+    {
+        $customers = Customer::with(['deliveryAddresses', 'user'])
+            ->whereNotNull('approved_at')
+            ->orderBy('company_name')
+            ->get()
+            ->map(fn (Customer $customer) => [
+                'id' => $customer->id,
+                'company_name' => $customer->company_name,
+                'contact_person' => $customer->contact_person,
+                'customer_category' => $customer->customer_category,
+                'discount_percentage' => $customer->discount_percentage,
+                'delivery_addresses' => $customer->deliveryAddresses->map(fn ($addr) => [
+                    'id' => $addr->id,
+                    'name' => $addr->name,
+                    'street_name' => $addr->street_name,
+                    'house_number' => $addr->house_number,
+                    'postal_code' => $addr->postal_code,
+                    'city' => $addr->city,
+                    'is_default' => $addr->is_default,
+                ]),
+            ]);
+
+        $products = Product::where('is_active', true)
+            ->orderBy('title')
+            ->get()
+            ->map(fn (Product $product) => [
+                'id' => $product->id,
+                'title' => $product->title,
+                'price_groothandel' => $product->price_groothandel,
+                'price_broodjeszaak' => $product->price_broodjeszaak,
+                'price_horeca' => $product->price_horeca,
+            ]);
+
+        return Inertia::render('admin/CreateOrder', [
+            'customers' => $customers,
+            'products' => $products,
+        ]);
+    }
+
+    /**
+     * Store a newly created order.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'customer_id' => ['required', 'exists:customers,id'],
+            'delivery_address_id' => ['nullable', 'exists:delivery_addresses,id'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $customer = Customer::findOrFail($validated['customer_id']);
+
+        // Verify delivery address belongs to this customer if provided
+        if ($validated['delivery_address_id']) {
+            $belongs = $customer->deliveryAddresses()
+                ->where('id', $validated['delivery_address_id'])
+                ->exists();
+            if (! $belongs) {
+                return back()->withErrors(['delivery_address_id' => 'Ongeldig afleveradres.']);
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            $order = Order::create([
+                'customer_id' => $customer->id,
+                'delivery_address_id' => $validated['delivery_address_id'] ?? null,
+                'total' => 0,
+                'status' => 'pending',
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            $total = 0;
+            foreach ($validated['items'] as $itemData) {
+                $product = Product::findOrFail($itemData['product_id']);
+                $price = (float) $product->getPriceForCustomer($customer);
+
+                $order->items()->create([
+                    'product_id' => $product->id,
+                    'quantity' => $itemData['quantity'],
+                    'price' => $price,
+                ]);
+
+                $total += $price * $itemData['quantity'];
+            }
+
+            $order->update(['total' => $total]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Admin order creation failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Er ging iets mis bij het aanmaken van de bestelling.');
+        }
+
+        return to_route('admin.orders.show', $order)
+            ->with('success', 'Bestelling aangemaakt.');
+    }
+
+    /**
+     * Generate customer order overview PDF for all pending orders.
+     */
+    public function customerOverview(): \Illuminate\Http\Response
+    {
+        $orders = Order::with(['customer', 'items.product'])
+            ->where('status', 'pending')
+            ->get();
+
+        // Group orders by customer and aggregate product quantities per customer
+        $customers = [];
+        foreach ($orders as $order) {
+            $customerId = $order->customer_id;
+            if (! isset($customers[$customerId])) {
+                $customers[$customerId] = [
+                    'company_name' => $order->customer->company_name,
+                    'delivery_day' => $order->customer->delivery_day,
+                    'products' => [],
+                ];
+            }
+            foreach ($order->items as $item) {
+                $productId = $item->product_id;
+                if (! isset($customers[$customerId]['products'][$productId])) {
+                    $customers[$customerId]['products'][$productId] = [
+                        'article_number' => $item->product->article_number ?? '—',
+                        'title' => $item->product->title,
+                        'quantity' => 0,
+                    ];
+                }
+                $customers[$customerId]['products'][$productId]['quantity'] += $item->quantity;
+            }
+        }
+
+        // Sort customers alphabetically and sort products per customer by article number
+        usort($customers, fn ($a, $b) => strcmp($a['company_name'], $b['company_name']));
+        foreach ($customers as &$customer) {
+            usort($customer['products'], fn ($a, $b) => strcmp($a['article_number'], $b['article_number']));
+            $customer['products'] = array_values($customer['products']);
+        }
+        unset($customer);
+
+        // Split into pairs for 2-column layout
+        $rows = array_chunk($customers, 2);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.customer-overview', [
+            'rows' => $rows,
+            'orderCount' => $orders->count(),
+            'customerCount' => count($customers),
+            'generatedAt' => now()->format('d-m-Y H:i'),
+        ]);
+
+        return $pdf->download('bestellingenoverzicht-'.now()->format('Y-m-d').'.pdf');
+    }
+
+    /**
+     * Generate production list PDF for all pending orders.
+     */
+    public function productionList(): \Illuminate\Http\Response
+    {
+        $orders = Order::with(['items.product'])
+            ->where('status', 'pending')
+            ->get();
+
+        // Aggregate quantities per product
+        $products = [];
+        foreach ($orders as $order) {
+            foreach ($order->items as $item) {
+                $productId = $item->product_id;
+                if (! isset($products[$productId])) {
+                    $products[$productId] = [
+                        'article_number' => $item->product->article_number ?? '—',
+                        'title' => $item->product->title,
+                        'quantity' => 0,
+                    ];
+                }
+                $products[$productId]['quantity'] += $item->quantity;
+            }
+        }
+
+        // Sort by article number
+        usort($products, fn ($a, $b) => strcmp($a['article_number'], $b['article_number']));
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.production-list', [
+            'products' => $products,
+            'orderCount' => $orders->count(),
+            'generatedAt' => now()->format('d-m-Y H:i'),
+        ]);
+
+        return $pdf->download('productielijst-'.now()->format('Y-m-d').'.pdf');
     }
 
     /**
