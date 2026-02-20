@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Minus, Plus, Trash2 } from 'lucide-vue-next';
-import { useCart, type CartItem } from '@/composables/useCart';
 import { ref } from 'vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useCart, type CartItem } from '@/composables/useCart';
 
 const props = defineProps<{
     item: CartItem;

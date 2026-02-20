@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { ShoppingCart, Users, Euro, TrendingUp, TrendingDown, Clock, Zap, FileText, UsersRound, Package } from 'lucide-vue-next';
+import { computed } from 'vue';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import admin from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShoppingCart, Users, Euro, TrendingUp, TrendingDown, Clock, Zap, FileText, UsersRound, Package } from 'lucide-vue-next';
-import { computed } from 'vue';
 
 interface AdminStats {
     pendingOrders: number;
@@ -33,7 +33,7 @@ interface OrderDeadline {
     is_urgent: boolean;
 }
 
-const props = defineProps<{
+defineProps<{
     stats?: AdminStats | CustomerStats;
     orderDeadline?: OrderDeadline;
 }>();

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-vue-next';
-import CartSheetItem from './CartSheetItem.vue';
+import { computed } from 'vue';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { useCart, type CartItem } from '@/composables/useCart';
-import { ref, computed } from 'vue';
+import CartSheetItem from './CartSheetItem.vue';
 
 const props = defineProps<{
     open: boolean;

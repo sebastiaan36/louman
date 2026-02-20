@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import admin from '@/routes/admin';
-import { type BreadcrumbItem } from '@/types';
+import { useForm } from '@inertiajs/vue3';
+import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit, Plus, Trash2 } from 'lucide-vue-next';
+import { ref } from 'vue';
+import InputError from '@/components/InputError.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -11,6 +13,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -19,12 +22,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import InputError from '@/components/InputError.vue';
+import { Label } from '@/components/ui/label';
 import {
     Table,
     TableBody,
@@ -33,10 +32,11 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit, Plus, Trash2 } from 'lucide-vue-next';
-import { ref } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import admin from '@/routes/admin';
+import { type BreadcrumbItem } from '@/types';
 
 interface Customer {
     id: number;

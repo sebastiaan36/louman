@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
+import { Zap, ShoppingCart, X, Minus, Plus } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
     Table,
     TableBody,
@@ -14,9 +13,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Zap, ShoppingCart, X, Minus, Plus } from 'lucide-vue-next';
-import { ref } from 'vue';
 import { useCart } from '@/composables/useCart';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import { type BreadcrumbItem } from '@/types';
 
 interface Product {
     id: number;

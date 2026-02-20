@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -14,8 +11,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { computed } from 'vue';
-import { Download } from 'lucide-vue-next';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import { type BreadcrumbItem } from '@/types';
 
 interface OrderItem {
     product_title: string;

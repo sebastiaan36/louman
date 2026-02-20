@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
+import { ShoppingCart, Download, CheckSquare, FileArchive, Search, Plus, ClipboardList, LayoutGrid } from 'lucide-vue-next';
+import { ref, watch, computed } from 'vue';
+import Pagination from '@/components/Pagination.vue';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -23,9 +22,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import Pagination from '@/components/Pagination.vue';
-import { ShoppingCart, Download, CheckSquare, FileArchive, Search, Plus, ClipboardList, LayoutGrid } from 'lucide-vue-next';
-import { ref, watch, computed } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import { type BreadcrumbItem } from '@/types';
 
 const page = usePage();
 
@@ -86,7 +85,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 const selectedStatus = ref(props.filters.status || 'all');
 const searchQuery = ref(props.filters.search || '');
 const selectedOrders = ref<number[]>([]);
-const bulkAction = ref<string>('');
 const bulkStatusValue = ref<string>('');
 
 // Update URL params with current filters

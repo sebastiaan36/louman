@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
-import Breadcrumbs from '@/components/Breadcrumbs.vue';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ShoppingCart } from 'lucide-vue-next';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CartSheet from '@/components/cart/CartSheet.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useCart, type CartItem } from '@/composables/useCart';
 import type { BreadcrumbItem } from '@/types';
 

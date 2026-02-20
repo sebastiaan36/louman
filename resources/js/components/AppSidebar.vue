@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import { FileText, FolderTree, LayoutGrid, Package, ShoppingCart, Store, Users, UsersRound, Zap } from 'lucide-vue-next';
+import { computed } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -17,13 +18,11 @@ import {
 import { dashboard } from '@/routes';
 import admin from '@/routes/admin';
 import { type NavItem } from '@/types';
-import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 const isAdmin = computed(() => user.value?.role === 'admin');
-const cartCount = computed(() => page.props.cartCount as number || 0);
 
 // Admin menu sections
 const adminSection1 = computed<NavItem[]>(() => [

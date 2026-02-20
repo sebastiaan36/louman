@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
 
 interface PaginationLink {
     url: string | null;
@@ -18,7 +18,7 @@ interface Props {
     lastPage: number;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 // Helper to parse label text (remove HTML entities)
 const parseLabel = (label: string): string => {

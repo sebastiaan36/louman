@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
+import { Search, Clock } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
+import ProductCard from '@/components/ProductCard.vue';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -13,11 +14,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import ProductCard from '@/components/ProductCard.vue';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ref, watch } from 'vue';
-import { Search, Clock } from 'lucide-vue-next';
 import { useCart } from '@/composables/useCart';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import { type BreadcrumbItem } from '@/types';
 
 interface Product {
     id: number;

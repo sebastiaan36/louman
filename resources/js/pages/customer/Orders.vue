@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
+import { FileText, Download, ShoppingCart, Search } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,8 +14,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { FileText, Download, ShoppingCart, Search } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import { type BreadcrumbItem } from '@/types';
 
 interface Order {
     id: number;

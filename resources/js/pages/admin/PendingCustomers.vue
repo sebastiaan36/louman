@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -21,7 +19,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { ref } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import { type BreadcrumbItem } from '@/types';
 
 interface Customer {
     id: number;
@@ -36,7 +36,7 @@ interface Customer {
     registered_at: string;
 }
 
-const props = defineProps<{
+defineProps<{
     customers: Customer[];
 }>();
 
