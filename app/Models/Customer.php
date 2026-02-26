@@ -36,6 +36,8 @@ class Customer extends Model
         'customer_category',
         'discount_percentage',
         'delivery_day',
+        'route_order',
+        'show_on_map',
     ];
 
     /**
@@ -47,6 +49,7 @@ class Customer extends Model
     {
         return [
             'approved_at' => 'datetime',
+            'show_on_map' => 'boolean',
         ];
     }
 

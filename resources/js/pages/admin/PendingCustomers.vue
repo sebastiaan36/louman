@@ -76,7 +76,7 @@ const openApprovalDialog = (customerId: number) => {
 };
 
 const approveCustomer = () => {
-    if (!selectedCategory.value || !selectedDiscount.value || !selectedDeliveryDay.value) {
+    if (!selectedCategory.value || !selectedDeliveryDay.value) {
         return;
     }
 
@@ -209,30 +209,42 @@ const approveCustomer = () => {
                         </div>
                     </div>
 
-                    <Label class="mb-3 block mt-4">Kortingspercentage *</Label>
+                    <Label class="mb-3 block mt-4">Kortingspercentage</Label>
                     <div class="space-y-2">
                         <div class="flex items-center space-x-2">
                             <input
                                 type="radio"
-                                id="discount_0"
-                                value="0"
+                                id="discount_none"
+                                value=""
                                 v-model="selectedDiscount"
                                 class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
                             />
-                            <Label for="discount_0" class="cursor-pointer font-normal">
-                                0% (geen korting)
+                            <Label for="discount_none" class="cursor-pointer font-normal">
+                                Geen korting
                             </Label>
                         </div>
                         <div class="flex items-center space-x-2">
                             <input
                                 type="radio"
-                                id="discount_2_5"
-                                value="2.5"
+                                id="discount_1"
+                                value="1"
                                 v-model="selectedDiscount"
                                 class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
                             />
-                            <Label for="discount_2_5" class="cursor-pointer font-normal">
-                                2,5%
+                            <Label for="discount_1" class="cursor-pointer font-normal">
+                                1%
+                            </Label>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input
+                                type="radio"
+                                id="discount_2"
+                                value="2"
+                                v-model="selectedDiscount"
+                                class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <Label for="discount_2" class="cursor-pointer font-normal">
+                                2%
                             </Label>
                         </div>
                         <div class="flex items-center space-x-2">
@@ -245,6 +257,18 @@ const approveCustomer = () => {
                             />
                             <Label for="discount_3" class="cursor-pointer font-normal">
                                 3%
+                            </Label>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input
+                                type="radio"
+                                id="discount_4"
+                                value="4"
+                                v-model="selectedDiscount"
+                                class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <Label for="discount_4" class="cursor-pointer font-normal">
+                                4%
                             </Label>
                         </div>
                         <div class="flex items-center space-x-2">
@@ -284,7 +308,7 @@ const approveCustomer = () => {
                     </Button>
                     <Button
                         @click="approveCustomer"
-                        :disabled="!selectedCategory || !selectedDiscount || !selectedDeliveryDay || processing"
+                        :disabled="!selectedCategory || !selectedDeliveryDay || processing"
                     >
                         Goedkeuren
                     </Button>

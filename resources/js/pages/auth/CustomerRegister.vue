@@ -3,6 +3,7 @@ import { Form, Head } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -203,6 +204,21 @@ import { login } from '@/routes';
                             placeholder="Bevestig wachtwoord"
                         />
                         <InputError :message="errors.password_confirmation" />
+                    </div>
+                </div>
+
+                <!-- Kaart sectie -->
+                <div class="flex items-start gap-3">
+                    <Checkbox
+                        id="show_on_map"
+                        name="show_on_map"
+                        :default-checked="true"
+                        value="1"
+                    />
+                    <div class="grid gap-1">
+                        <Label for="show_on_map" class="leading-snug cursor-pointer">
+                            Toon mijn bedrijf op de kaart op louman-jordaan.nl
+                        </Label>
                     </div>
                 </div>
 

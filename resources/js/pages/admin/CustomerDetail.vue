@@ -56,6 +56,7 @@ interface Customer {
     customer_category_label: string | null;
     discount_percentage: string | null;
     delivery_day: string | null;
+    show_on_map: boolean;
     approved_at: string;
     created_at: string;
 }
@@ -123,6 +124,7 @@ const editDialogOpen = ref(false);
 const editCategory = ref<string>('');
 const editDiscount = ref<string>('');
 const editDeliveryDay = ref<string>('');
+const editShowOnMap = ref<boolean>(true);
 const processing = ref(false);
 
 const deliveryDays = [
@@ -133,17 +135,19 @@ const deliveryDays = [
     { value: 'vrijdag', label: 'Vrijdag' },
     { value: 'zaterdag', label: 'Zaterdag' },
     { value: 'zondag', label: 'Zondag' },
+    { value: 'ophalen', label: 'Ophalen' },
 ];
 
 const openEditDialog = () => {
     editCategory.value = props.customer.customer_category || '';
     editDiscount.value = props.customer.discount_percentage || '';
     editDeliveryDay.value = props.customer.delivery_day || '';
+    editShowOnMap.value = props.customer.show_on_map ?? true;
     editDialogOpen.value = true;
 };
 
 const updateCategoryAndDiscount = () => {
-    if (!editCategory.value || !editDiscount.value || !editDeliveryDay.value) {
+    if (!editCategory.value || !editDeliveryDay.value) {
         return;
     }
 
@@ -154,6 +158,7 @@ const updateCategoryAndDiscount = () => {
             customer_category: editCategory.value,
             discount_percentage: editDiscount.value,
             delivery_day: editDeliveryDay.value,
+            show_on_map: editShowOnMap.value,
         },
         {
             preserveScroll: true,
@@ -401,6 +406,13 @@ const deleteAddress = (addressId: number) => {
                                 <p class="text-sm text-muted-foreground capitalize">{{ customer.delivery_day }}</p>
                             </div>
                         </div>
+                        <div class="flex items-start gap-3">
+                            <MapPin class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">Toon op kaart (louman-jordaan.nl)</p>
+                                <p class="text-sm text-muted-foreground">{{ customer.show_on_map ? 'Ja' : 'Nee' }}</p>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -596,30 +608,42 @@ const deleteAddress = (addressId: number) => {
                     </div>
 
                     <div>
-                        <Label class="mb-3 block">Kortingspercentage *</Label>
+                        <Label class="mb-3 block">Kortingspercentage</Label>
                         <div class="space-y-2">
                             <div class="flex items-center space-x-2">
                                 <input
                                     type="radio"
-                                    id="edit_discount_0"
-                                    value="0"
+                                    id="edit_discount_none"
+                                    value=""
                                     v-model="editDiscount"
                                     class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
                                 />
-                                <Label for="edit_discount_0" class="cursor-pointer font-normal">
-                                    0% (geen korting)
+                                <Label for="edit_discount_none" class="cursor-pointer font-normal">
+                                    Geen korting
                                 </Label>
                             </div>
                             <div class="flex items-center space-x-2">
                                 <input
                                     type="radio"
-                                    id="edit_discount_2_5"
-                                    value="2.5"
+                                    id="edit_discount_1"
+                                    value="1"
                                     v-model="editDiscount"
                                     class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
                                 />
-                                <Label for="edit_discount_2_5" class="cursor-pointer font-normal">
-                                    2,5%
+                                <Label for="edit_discount_1" class="cursor-pointer font-normal">
+                                    1%
+                                </Label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    id="edit_discount_2"
+                                    value="2"
+                                    v-model="editDiscount"
+                                    class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <Label for="edit_discount_2" class="cursor-pointer font-normal">
+                                    2%
                                 </Label>
                             </div>
                             <div class="flex items-center space-x-2">
@@ -632,6 +656,18 @@ const deleteAddress = (addressId: number) => {
                                 />
                                 <Label for="edit_discount_3" class="cursor-pointer font-normal">
                                     3%
+                                </Label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    id="edit_discount_4"
+                                    value="4"
+                                    v-model="editDiscount"
+                                    class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <Label for="edit_discount_4" class="cursor-pointer font-normal">
+                                    4%
                                 </Label>
                             </div>
                             <div class="flex items-center space-x-2">
@@ -664,6 +700,17 @@ const deleteAddress = (addressId: number) => {
                         </select>
                     </div>
 
+                    <div class="mt-6 flex items-center space-x-2">
+                        <Checkbox
+                            id="edit_show_on_map"
+                            :checked="editShowOnMap"
+                            @update:checked="editShowOnMap = $event"
+                        />
+                        <Label for="edit_show_on_map" class="cursor-pointer font-normal leading-snug">
+                            Toon bedrijf op kaart op louman-jordaan.nl
+                        </Label>
+                    </div>
+
                 <DialogFooter>
                     <Button
                         variant="outline"
@@ -674,7 +721,7 @@ const deleteAddress = (addressId: number) => {
                     </Button>
                     <Button
                         @click="updateCategoryAndDiscount"
-                        :disabled="!editCategory || !editDiscount || !editDeliveryDay || processing"
+                        :disabled="!editCategory || !editDeliveryDay || processing"
                     >
                         Opslaan
                     </Button>

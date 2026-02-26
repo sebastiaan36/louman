@@ -50,6 +50,7 @@ class CustomerRegisterController extends Controller
                 'kvk_number' => $request->kvk_number,
                 'bank_account' => $request->bank_account,
                 'vat_number' => $request->vat_number,
+                'show_on_map' => $request->boolean('show_on_map', true),
             ]);
 
             return $user->load('customer');

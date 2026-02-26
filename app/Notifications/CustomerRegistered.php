@@ -35,6 +35,8 @@ class CustomerRegistered extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $showOnMap = $this->customer->show_on_map ? 'Ja' : 'Nee';
+
         return (new MailMessage)
             ->subject('Nieuwe Klantregistratie')
             ->greeting('Nieuwe klant geregistreerd')
@@ -43,6 +45,7 @@ class CustomerRegistered extends Notification implements ShouldQueue
             ->line("**Contactpersoon:** {$this->customer->contact_person}")
             ->line("**Email:** {$this->customer->user->email}")
             ->line("**KvK nummer:** {$this->customer->kvk_number}")
+            ->line("**Toon op kaart (louman-jordaan.nl):** {$showOnMap}")
             ->action('Bekijk en keur goed', route('admin.customers.pending'))
             ->line('Klik op de knop hierboven om de klant goed te keuren in het admin paneel.');
     }

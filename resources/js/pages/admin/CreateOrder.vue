@@ -31,9 +31,7 @@ interface Customer {
 interface Product {
     id: number;
     title: string;
-    price_groothandel: string;
-    price_broodjeszaak: string;
-    price_horeca: string;
+    price: string;
 }
 
 interface OrderItem {
@@ -111,12 +109,7 @@ const getPriceForCustomer = (productId: number): number => {
     const product = props.products.find(p => p.id === productId);
     if (!product || !selectedCustomer.value) return 0;
 
-    const category = selectedCustomer.value.customer_category;
-    let basePrice = parseFloat(
-        category === 'broodjeszaak' ? product.price_broodjeszaak :
-        category === 'horeca' ? product.price_horeca :
-        product.price_groothandel
-    );
+    let basePrice = parseFloat(product.price);
 
     const discount = parseFloat(selectedCustomer.value.discount_percentage ?? '0');
     if (discount > 0) {

@@ -39,6 +39,7 @@ class CustomerRegisterRequest extends FormRequest
             'kvk_number' => $this->kvkNumberRules(),
             'bank_account' => $this->bankAccountRules(),
             'vat_number' => $this->vatNumberRules(),
+            'show_on_map' => ['nullable', 'boolean'],
         ];
     }
 

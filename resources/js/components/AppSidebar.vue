@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { FileText, FolderTree, LayoutGrid, Package, ShoppingCart, Store, Users, UsersRound, Zap } from 'lucide-vue-next';
+import { FileText, FolderTree, LayoutGrid, MapPin, Package, ShoppingCart, Store, Users, UsersRound, Zap } from 'lucide-vue-next';
 import { computed } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -61,6 +61,11 @@ const adminSection3 = computed<NavItem[]>(() => [
         title: 'Categorieën',
         href: '/admin/categories',
         icon: FolderTree,
+    },
+    {
+        title: 'Rijroute',
+        href: '/admin/delivery-route',
+        icon: MapPin,
     },
 ]);
 

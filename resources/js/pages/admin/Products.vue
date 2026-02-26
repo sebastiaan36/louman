@@ -1,7 +1,17 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import {
     Table,
     TableBody,
@@ -18,9 +28,7 @@ interface Product {
     id: number;
     title: string;
     category: string | null;
-    price_groothandel: string;
-    price_broodjeszaak: string;
-    price_horeca: string;
+    price: string;
     article_number: string;
     in_stock: boolean;
     photo_url: string | null;
@@ -40,6 +48,35 @@ const breadcrumbs: BreadcrumbItem[] = [
         title: 'Producten',
     },
 ];
+
+const page = usePage();
+const importResults = computed(
+    () =>
+        (page.props.flash as { import_results?: { imported: number; updated: number; skipped: string[] } })
+            ?.import_results,
+);
+
+const importOpen = ref(false);
+const csvFile = ref<File | null>(null);
+const importing = ref(false);
+
+const handleCsvChange = (e: Event) => {
+    csvFile.value = (e.target as HTMLInputElement).files?.[0] ?? null;
+};
+
+const submitImport = () => {
+    if (!csvFile.value) return;
+    importing.value = true;
+    const formData = new FormData();
+    formData.append('csv_file', csvFile.value);
+    router.post('/admin/products/import', formData, {
+        onFinish: () => {
+            importing.value = false;
+            importOpen.value = false;
+            csvFile.value = null;
+        },
+    });
+};
 
 const deleteProduct = (id: number) => {
     if (confirm('Weet je zeker dat je dit product wilt verwijderen?')) {
@@ -70,9 +107,27 @@ const formatPrice = (price: string) => {
                     </p>
                 </div>
 
-                <Link href="/admin/products/create">
-                    <Button>Product toevoegen</Button>
-                </Link>
+                <div class="flex gap-2">
+                    <a href="/admin/products/export">
+                        <Button variant="outline">CSV downloaden</Button>
+                    </a>
+                    <Button variant="outline" @click="importOpen = true">CSV importeren</Button>
+                    <Link href="/admin/products/create">
+                        <Button>Product toevoegen</Button>
+                    </Link>
+                </div>
+            </div>
+
+            <div
+                v-if="importResults?.skipped?.length"
+                class="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm"
+            >
+                <p class="mb-2 font-medium text-yellow-800">
+                    Overgeslagen rijen ({{ importResults.skipped.length }}):
+                </p>
+                <ul class="list-inside list-disc space-y-1 text-yellow-700">
+                    <li v-for="reason in importResults.skipped" :key="reason">{{ reason }}</li>
+                </ul>
             </div>
 
             <div v-if="products.length === 0" class="rounded-lg border border-dashed p-12 text-center">
@@ -115,20 +170,7 @@ const formatPrice = (price: string) => {
                             <TableCell class="font-medium">{{ product.title }}</TableCell>
                             <TableCell>{{ product.category || '-' }}</TableCell>
                             <TableCell>
-                                <div class="space-y-0.5 text-sm">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-muted-foreground text-xs">GH:</span>
-                                        <span class="font-medium">{{ formatPrice(product.price_groothandel) }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-muted-foreground text-xs">BZ:</span>
-                                        <span class="font-medium">{{ formatPrice(product.price_broodjeszaak) }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-muted-foreground text-xs">HC:</span>
-                                        <span class="font-medium">{{ formatPrice(product.price_horeca) }}</span>
-                                    </div>
-                                </div>
+                                <span class="font-medium">{{ formatPrice(product.price) }}</span>
                             </TableCell>
                             <TableCell>
                                 <Badge :variant="product.in_stock ? 'default' : 'destructive'">
@@ -161,4 +203,44 @@ const formatPrice = (price: string) => {
             </div>
         </div>
     </AppLayout>
+
+    <Dialog :open="importOpen" @update:open="importOpen = $event">
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Producten importeren via CSV</DialogTitle>
+                <DialogDescription>
+                    Upload een CSV-bestand met productgegevens. Rijen zonder naam of artikelnummer worden overgeslagen.
+                </DialogDescription>
+            </DialogHeader>
+
+            <div class="space-y-4">
+                <div>
+                    <Label>CSV-bestand</Label>
+                    <input
+                        type="file"
+                        accept=".csv,.txt"
+                        class="mt-1 block w-full text-sm"
+                        @change="handleCsvChange"
+                    />
+                </div>
+                <div class="rounded-md bg-muted p-3 text-xs text-muted-foreground space-y-1">
+                    <p class="font-medium">Verwachte kolomnamen (eerste rij):</p>
+                    <p class="font-mono break-all leading-relaxed">
+                        article_number, title, description, price, category_id, weight,
+                        in_stock, is_active, ingredients, allergens, nutrition_energy, nutrition_fat,
+                        nutrition_saturated_fat, nutrition_carbohydrates, nutrition_sugars,
+                        nutrition_protein, nutrition_salt, nutrition_fiber
+                    </p>
+                    <p class="mt-2">Gebruik <code class="font-mono">.</code> als decimaalteken voor prijzen. Lege kolommen krijgen standaardwaarden.</p>
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="outline" @click="importOpen = false">Annuleren</Button>
+                <Button :disabled="!csvFile || importing" @click="submitImport">
+                    {{ importing ? 'Importeren...' : 'Importeren' }}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>

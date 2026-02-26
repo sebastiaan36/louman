@@ -7,52 +7,16 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
-test('prijs voor groothandel klant is correct', function () {
+test('prijs zonder korting is correct', function () {
     $user = User::factory()->create(['role' => 'customer']);
     $customer = Customer::factory()->approved()->create([
         'user_id' => $user->id,
         'customer_category' => 'groothandel',
-        'discount_percentage' => 0,
+        'discount_percentage' => null,
     ]);
-    $product = Product::factory()->make([
-        'price_groothandel' => '10.00',
-        'price_broodjeszaak' => '12.00',
-        'price_horeca' => '15.00',
-    ]);
+    $product = Product::factory()->make(['price' => '10.00']);
 
     expect($product->getPriceForCustomer($customer))->toBe('10.00');
-});
-
-test('prijs voor broodjeszaak klant is correct', function () {
-    $user = User::factory()->create(['role' => 'customer']);
-    $customer = Customer::factory()->approved()->create([
-        'user_id' => $user->id,
-        'customer_category' => 'broodjeszaak',
-        'discount_percentage' => 0,
-    ]);
-    $product = Product::factory()->make([
-        'price_groothandel' => '10.00',
-        'price_broodjeszaak' => '12.00',
-        'price_horeca' => '15.00',
-    ]);
-
-    expect($product->getPriceForCustomer($customer))->toBe('12.00');
-});
-
-test('prijs voor horeca klant is correct', function () {
-    $user = User::factory()->create(['role' => 'customer']);
-    $customer = Customer::factory()->approved()->create([
-        'user_id' => $user->id,
-        'customer_category' => 'horeca',
-        'discount_percentage' => 0,
-    ]);
-    $product = Product::factory()->make([
-        'price_groothandel' => '10.00',
-        'price_broodjeszaak' => '12.00',
-        'price_horeca' => '15.00',
-    ]);
-
-    expect($product->getPriceForCustomer($customer))->toBe('15.00');
 });
 
 test('korting wordt correct toegepast', function () {
@@ -60,9 +24,9 @@ test('korting wordt correct toegepast', function () {
     $customer = Customer::factory()->approved()->create([
         'user_id' => $user->id,
         'customer_category' => 'groothandel',
-        'discount_percentage' => '5', // valid enum value
+        'discount_percentage' => '5',
     ]);
-    $product = Product::factory()->make(['price_groothandel' => '100.00']);
+    $product = Product::factory()->make(['price' => '100.00']);
 
     expect($product->getPriceForCustomer($customer))->toBe('95.00');
 });

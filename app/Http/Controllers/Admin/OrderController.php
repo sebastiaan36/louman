@@ -108,9 +108,7 @@ class OrderController extends Controller
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'title' => $product->title,
-                'price_groothandel' => $product->price_groothandel,
-                'price_broodjeszaak' => $product->price_broodjeszaak,
-                'price_horeca' => $product->price_horeca,
+                'price' => $product->price,
             ]);
 
         return Inertia::render('admin/CreateOrder', [
@@ -202,6 +200,7 @@ class OrderController extends Controller
                 $customers[$customerId] = [
                     'company_name' => $order->customer->company_name,
                     'delivery_day' => $order->customer->delivery_day,
+                    'route_order'  => $order->customer->route_order,
                     'products' => [],
                 ];
             }
@@ -218,8 +217,27 @@ class OrderController extends Controller
             }
         }
 
-        // Sort customers alphabetically and sort products per customer by article number
-        usort($customers, fn ($a, $b) => strcmp($a['company_name'], $b['company_name']));
+        // Sort customers by delivery day, then by route_order, then alphabetically
+        $dayOrder = array_flip(['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag', 'ophalen']);
+        usort($customers, function ($a, $b) use ($dayOrder) {
+            $dayA = $dayOrder[$a['delivery_day']] ?? 99;
+            $dayB = $dayOrder[$b['delivery_day']] ?? 99;
+            if ($dayA !== $dayB) {
+                return $dayA - $dayB;
+            }
+            if ($a['route_order'] !== $b['route_order']) {
+                if ($a['route_order'] === null) {
+                    return 1;
+                }
+                if ($b['route_order'] === null) {
+                    return -1;
+                }
+
+                return $a['route_order'] - $b['route_order'];
+            }
+
+            return strcmp($a['company_name'], $b['company_name']);
+        });
         foreach ($customers as &$customer) {
             usort($customer['products'], fn ($a, $b) => strcmp($a['article_number'], $b['article_number']));
             $customer['products'] = array_values($customer['products']);

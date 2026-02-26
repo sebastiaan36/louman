@@ -76,9 +76,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const form = ref({
     category_id: props.product?.category_id?.toString() || '',
     title: props.product?.title || '',
-    price_groothandel: props.product?.price_groothandel || '',
-    price_broodjeszaak: props.product?.price_broodjeszaak || '',
-    price_horeca: props.product?.price_horeca || '',
+    price: props.product?.price || '',
     description: props.product?.description || '',
     ingredients: props.product?.ingredients || '',
     allergens: props.product?.allergens || '',
@@ -136,9 +134,7 @@ const submit = () => {
         formData.append('category_id', form.value.category_id);
     }
     formData.append('title', form.value.title);
-    formData.append('price_groothandel', form.value.price_groothandel);
-    formData.append('price_broodjeszaak', form.value.price_broodjeszaak);
-    formData.append('price_horeca', form.value.price_horeca);
+    formData.append('price', form.value.price);
     formData.append('description', form.value.description);
     formData.append('ingredients', form.value.ingredients);
     formData.append('allergens', form.value.allergens);
@@ -326,45 +322,17 @@ const cancel = () => {
 
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="grid gap-2">
-                            <Label for="price_groothandel">Prijs Groothandel (€) <span class="text-destructive">*</span></Label>
+                            <Label for="price">Prijs (€) <span class="text-destructive">*</span></Label>
                             <Input
-                                id="price_groothandel"
-                                v-model="form.price_groothandel"
+                                id="price"
+                                v-model="form.price"
                                 type="number"
                                 step="0.01"
                                 min="0"
                                 required
                                 placeholder="0.00"
                             />
-                            <InputError :message="errors?.price_groothandel" />
-                        </div>
-
-                        <div class="grid gap-2">
-                            <Label for="price_broodjeszaak">Prijs Broodjeszaak (€) <span class="text-destructive">*</span></Label>
-                            <Input
-                                id="price_broodjeszaak"
-                                v-model="form.price_broodjeszaak"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                required
-                                placeholder="0.00"
-                            />
-                            <InputError :message="errors?.price_broodjeszaak" />
-                        </div>
-
-                        <div class="grid gap-2">
-                            <Label for="price_horeca">Prijs Horeca (€) <span class="text-destructive">*</span></Label>
-                            <Input
-                                id="price_horeca"
-                                v-model="form.price_horeca"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                required
-                                placeholder="0.00"
-                            />
-                            <InputError :message="errors?.price_horeca" />
+                            <InputError :message="errors?.price" />
                         </div>
 
                         <div class="grid gap-2">

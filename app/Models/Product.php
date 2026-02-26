@@ -22,9 +22,7 @@ class Product extends Model
         'category_id',
         'title',
         'photo',
-        'price_groothandel',
-        'price_broodjeszaak',
-        'price_horeca',
+        'price',
         'description',
         'ingredients',
         'allergens',
@@ -43,9 +41,7 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'price_groothandel' => 'decimal:2',
-            'price_broodjeszaak' => 'decimal:2',
-            'price_horeca' => 'decimal:2',
+            'price' => 'decimal:2',
             'ingredients' => 'array',
             'allergens' => 'array',
             'nutrition_facts' => 'array',
@@ -115,18 +111,12 @@ class Product extends Model
     }
 
     /**
-     * Get the price for a specific customer based on their category.
+     * Get the price for a specific customer, applying their discount if any.
      */
     public function getPriceForCustomer(Customer $customer): string
     {
-        $basePrice = match ($customer->customer_category) {
-            'groothandel' => $this->price_groothandel,
-            'broodjeszaak' => $this->price_broodjeszaak,
-            'horeca' => $this->price_horeca,
-            default => $this->price_groothandel,
-        };
+        $basePrice = $this->price;
 
-        // Apply discount if customer has one
         if ($customer->discount_percentage) {
             $discount = (float) $customer->discount_percentage;
             $basePrice = $basePrice * (1 - ($discount / 100));

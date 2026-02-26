@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerApprovalController;
+use App\Http\Controllers\Admin\DeliveryRouteController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\CustomerRegisterController;
@@ -63,6 +64,10 @@ Route::post('/email/verification-notification', function (Request $request) {
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/customers/pending', [CustomerApprovalController::class, 'index'])
         ->name('admin.customers.pending');
+    Route::get('/customers/export', [CustomerApprovalController::class, 'export'])
+        ->name('admin.customers.export');
+    Route::post('/customers/import', [CustomerApprovalController::class, 'import'])
+        ->name('admin.customers.import');
     Route::get('/customers', [CustomerApprovalController::class, 'allCustomers'])
         ->name('admin.customers.index');
     Route::get('/customers/{customer}', [CustomerApprovalController::class, 'show'])
@@ -82,9 +87,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/customers/{customer}/delivery-addresses/{deliveryAddress}', [CustomerApprovalController::class, 'destroyDeliveryAddress'])
         ->name('admin.customers.delivery-addresses.destroy');
 
+    // Rijroute
+    Route::get('/delivery-route', [DeliveryRouteController::class, 'index'])
+        ->name('admin.delivery-route');
+    Route::post('/delivery-route/order', [DeliveryRouteController::class, 'updateOrder'])
+        ->name('admin.delivery-route.update-order');
+
     Route::resource('categories', CategoryController::class)
         ->except(['show', 'create', 'edit'])
         ->names('admin.categories');
+    Route::get('products/export', [ProductController::class, 'export'])->name('admin.products.export');
+    Route::post('products/import', [ProductController::class, 'import'])->name('admin.products.import');
     Route::resource('products', ProductController::class)
         ->names('admin.products');
 

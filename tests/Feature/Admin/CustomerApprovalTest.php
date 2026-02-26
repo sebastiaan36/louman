@@ -39,7 +39,6 @@ test('admin kan klant goedkeuren', function () {
     $this->actingAs($admin)
         ->post("/admin/customers/{$customer->id}/approve", [
             'customer_category' => 'groothandel',
-            'discount_percentage' => '0',
             'delivery_day' => 'maandag',
         ])
         ->assertRedirect();
@@ -57,7 +56,6 @@ test('admin kan klant niet dubbel goedkeuren', function () {
     $this->actingAs($admin)
         ->post("/admin/customers/{$customer->id}/approve", [
             'customer_category' => 'groothandel',
-            'discount_percentage' => '0',
         ])
         ->assertRedirect()
         ->assertSessionHas('error');
@@ -68,8 +66,6 @@ test('goedkeuring vereist een klantcategorie', function () {
     $customer = pendingCustomer();
 
     $this->actingAs($admin)
-        ->post("/admin/customers/{$customer->id}/approve", [
-            'discount_percentage' => '0',
-        ])
+        ->post("/admin/customers/{$customer->id}/approve", [])
         ->assertSessionHasErrors('customer_category');
 });

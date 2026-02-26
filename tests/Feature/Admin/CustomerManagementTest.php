@@ -63,6 +63,7 @@ test('admin kan klantcategorie en korting updaten', function () {
             'customer_category' => 'horeca',
             'discount_percentage' => '5',
             'delivery_day' => 'dinsdag',
+            'show_on_map' => true,
         ])
         ->assertRedirect()
         ->assertSessionHas('success');
