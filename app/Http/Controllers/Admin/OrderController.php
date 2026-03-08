@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OrderShipped;
+use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
@@ -192,65 +193,59 @@ class OrderController extends Controller
             ->where('status', 'pending')
             ->get();
 
-        // Group orders by customer and aggregate product quantities per customer
-        $customers = [];
+        // Build product map per customer from pending orders
+        $customerOrders = [];
         foreach ($orders as $order) {
             $customerId = $order->customer_id;
-            if (! isset($customers[$customerId])) {
-                $customers[$customerId] = [
-                    'company_name' => $order->customer->company_name,
-                    'delivery_day' => $order->customer->delivery_day,
-                    'route_order'  => $order->customer->route_order,
-                    'products' => [],
-                ];
-            }
             foreach ($order->items as $item) {
                 $productId = $item->product_id;
-                if (! isset($customers[$customerId]['products'][$productId])) {
-                    $customers[$customerId]['products'][$productId] = [
+                if (! isset($customerOrders[$customerId][$productId])) {
+                    $customerOrders[$customerId][$productId] = [
                         'article_number' => $item->product->article_number ?? '—',
                         'title' => $item->product->title,
                         'quantity' => 0,
                     ];
                 }
-                $customers[$customerId]['products'][$productId]['quantity'] += $item->quantity;
+                $customerOrders[$customerId][$productId]['quantity'] += $item->quantity;
             }
         }
 
-        // Sort customers by delivery day, then by route_order, then alphabetically
-        $dayOrder = array_flip(['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag', 'ophalen']);
-        usort($customers, function ($a, $b) use ($dayOrder) {
-            $dayA = $dayOrder[$a['delivery_day']] ?? 99;
-            $dayB = $dayOrder[$b['delivery_day']] ?? 99;
-            if ($dayA !== $dayB) {
-                return $dayA - $dayB;
-            }
-            if ($a['route_order'] !== $b['route_order']) {
-                if ($a['route_order'] === null) {
-                    return 1;
-                }
-                if ($b['route_order'] === null) {
-                    return -1;
-                }
+        // Load ALL approved customers sorted by route order then name
+        $allCustomers = Customer::approved()
+            ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
+            ->get();
 
-                return $a['route_order'] - $b['route_order'];
-            }
-
-            return strcmp($a['company_name'], $b['company_name']);
-        });
-        foreach ($customers as &$customer) {
-            usort($customer['products'], fn ($a, $b) => strcmp($a['article_number'], $b['article_number']));
-            $customer['products'] = array_values($customer['products']);
+        // Group customers by delivery day
+        $dayOrder = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag', 'ophalen'];
+        $rawGroups = [];
+        foreach ($allCustomers as $customer) {
+            $day = $customer->delivery_day ?: 'onbekend';
+            $products = $customerOrders[$customer->id] ?? [];
+            usort($products, fn ($a, $b) => strcmp($a['article_number'], $b['article_number']));
+            $rawGroups[$day][] = [
+                'company_name' => $customer->company_name,
+                'phone_number' => $customer->phone_number,
+                'products' => array_values($products),
+            ];
         }
-        unset($customer);
 
-        // Split into pairs for 2-column layout
-        $rows = array_chunk($customers, 2);
+        // Sort day groups in the correct weekday order
+        $dayGroups = [];
+        foreach ($dayOrder as $day) {
+            if (isset($rawGroups[$day])) {
+                $dayGroups[$day] = $rawGroups[$day];
+            }
+        }
+        foreach ($rawGroups as $day => $customers) {
+            if (! isset($dayGroups[$day])) {
+                $dayGroups[$day] = $customers;
+            }
+        }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.customer-overview', [
-            'rows' => $rows,
+            'dayGroups' => $dayGroups,
             'orderCount' => $orders->count(),
-            'customerCount' => count($customers),
+            'customerCount' => $allCustomers->count(),
             'generatedAt' => now()->format('d-m-Y H:i'),
         ]);
 
@@ -392,6 +387,11 @@ class OrderController extends Controller
                 ]);
             }
         }
+
+        AuditLog::record('order.status_updated', "Bestelstatus gewijzigd van {$previousStatus} naar {$newStatus}", $order, [
+            'previous_status' => $previousStatus,
+            'new_status' => $newStatus,
+        ]);
 
         return back()->with('success', 'Bestelstatus bijgewerkt.');
     }
@@ -535,7 +535,7 @@ class OrderController extends Controller
         $zipFileName = 'pakbonnen-'.date('Y-m-d-His').'.zip';
         $zipPath = storage_path('app/temp/'.$zipFileName);
 
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
             return back()->with('error', 'Kon ZIP bestand niet aanmaken.');
         }

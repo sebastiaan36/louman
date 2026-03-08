@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\DeliveryAddress;
 use App\Notifications\CustomerApproved;
@@ -145,15 +146,24 @@ class CustomerApprovalController extends Controller
             'delivery_day.in' => 'Ongeldige leverdag.',
         ]);
 
-        $customer->update([
+        $customer->forceFill([
             'approved_at' => now(),
             'approved_by' => auth()->id(),
+        ])->save();
+
+        $customer->update([
             'customer_category' => $validated['customer_category'],
             'discount_percentage' => $validated['discount_percentage'] ?? null,
             'delivery_day' => $validated['delivery_day'],
         ]);
 
         $customer->user->notify(new CustomerApproved);
+
+        AuditLog::record('customer.approved', "Klant {$customer->company_name} goedgekeurd", $customer, [
+            'customer_category' => $validated['customer_category'],
+            'discount_percentage' => $validated['discount_percentage'] ?? null,
+            'delivery_day' => $validated['delivery_day'],
+        ]);
 
         return back()->with('success', "Klant {$customer->company_name} is goedgekeurd.");
     }
@@ -183,7 +193,14 @@ class CustomerApprovalController extends Controller
             'show_on_map' => $validated['show_on_map'],
         ]);
 
-        return back()->with('success', "Klantgegevens bijgewerkt.");
+        AuditLog::record('customer.updated', "Klantinstellingen bijgewerkt voor {$customer->company_name}", $customer, [
+            'customer_category' => $validated['customer_category'],
+            'discount_percentage' => $validated['discount_percentage'] ?? null,
+            'delivery_day' => $validated['delivery_day'],
+            'show_on_map' => $validated['show_on_map'],
+        ]);
+
+        return back()->with('success', 'Klantgegevens bijgewerkt.');
     }
 
     /**
@@ -219,7 +236,7 @@ class CustomerApprovalController extends Controller
 
         $customer->update($validated);
 
-        return back()->with('success', "Klantgegevens bijgewerkt.");
+        return back()->with('success', 'Klantgegevens bijgewerkt.');
     }
 
     /**
@@ -283,6 +300,8 @@ class CustomerApprovalController extends Controller
             ->whereNotNull('approved_at')
             ->orderBy('company_name')
             ->get();
+
+        AuditLog::record('customer.export', "CSV export van {$customers->count()} klanten");
 
         return response()->stream(function () use ($customers) {
             $handle = fopen('php://output', 'w');
@@ -363,6 +382,7 @@ class CustomerApprovalController extends Controller
 
             if ($headers === null) {
                 $headers = array_map('trim', $row);
+
                 continue;
             }
 
@@ -374,6 +394,7 @@ class CustomerApprovalController extends Controller
 
             if (empty($data['id'] ?? '')) {
                 $skipped[] = "Rij {$rowNumber}: id is leeg";
+
                 continue;
             }
 
@@ -381,6 +402,7 @@ class CustomerApprovalController extends Controller
 
             if (! $customer) {
                 $skipped[] = "Rij {$rowNumber}: klant met id {$data['id']} niet gevonden";
+
                 continue;
             }
 
@@ -402,6 +424,8 @@ class CustomerApprovalController extends Controller
             $summary .= '. '.count($skipped).' '.(count($skipped) === 1 ? 'rij' : 'rijen').' overgeslagen.';
         }
 
+        AuditLog::record('customer.import', "CSV import: {$updated} klanten bijgewerkt, ".count($skipped).' rijen overgeslagen');
+
         return redirect()->route('admin.customers.index')
             ->with('success', $summary)
             ->with('import_results', ['updated' => $updated, 'skipped' => $skipped]);
@@ -422,19 +446,19 @@ class CustomerApprovalController extends Controller
 
         // Map field name → CSV column(s) that drive it
         $fieldMap = [
-            'company_name'       => ['company_name'],
-            'contact_person'     => ['contact_person'],
-            'phone_number'       => ['phone_number'],
-            'street_name'        => ['street_name'],
-            'house_number'       => ['house_number'],
-            'postal_code'        => ['postal_code'],
-            'city'               => ['city'],
+            'company_name' => ['company_name'],
+            'contact_person' => ['contact_person'],
+            'phone_number' => ['phone_number'],
+            'street_name' => ['street_name'],
+            'house_number' => ['house_number'],
+            'postal_code' => ['postal_code'],
+            'city' => ['city'],
             'packing_slip_email' => ['packing_slip_email'],
-            'customer_category'  => ['customer_category'],
+            'customer_category' => ['customer_category'],
             'discount_percentage' => ['discount_percentage'],
-            'delivery_day'       => ['delivery_day'],
-            'route_order'        => ['route_order'],
-            'show_on_map'        => ['show_on_map'],
+            'delivery_day' => ['delivery_day'],
+            'route_order' => ['route_order'],
+            'show_on_map' => ['show_on_map'],
         ];
 
         $updateData = [];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductRequest;
+use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
@@ -87,6 +88,7 @@ class ProductController extends Controller
                 'category_id' => $product->category_id,
                 'title' => $product->title,
                 'price' => $product->price,
+                'suggested_retail_price' => $product->suggested_retail_price,
                 'description' => $product->description,
                 'ingredients' => implode(', ', $product->ingredients ?? []),
                 'allergens' => implode(', ', $product->allergens ?? []),
@@ -133,11 +135,20 @@ class ProductController extends Controller
      */
     public function destroy(Product $product): RedirectResponse
     {
+        if ($product->orderItems()->exists()) {
+            return back()->with('error', 'Dit product kan niet worden verwijderd omdat het in bestellingen voorkomt.');
+        }
+
         // Delete photo
         if ($product->photo) {
             Storage::disk('public')->delete($product->photo);
             Storage::disk('public')->delete('products/thumbs/'.basename($product->photo));
         }
+
+        AuditLog::record('product.deleted', "Product '{$product->title}' verwijderd", null, [
+            'product_id' => $product->id,
+            'article_number' => $product->article_number,
+        ]);
 
         $product->delete();
 
@@ -178,6 +189,7 @@ class ProductController extends Controller
 
             if ($headers === null) {
                 $headers = array_map('trim', $row);
+
                 continue;
             }
 
@@ -189,15 +201,17 @@ class ProductController extends Controller
 
             if (empty($data['title'] ?? '')) {
                 $skipped[] = "Rij {$rowNumber}: naam is leeg";
+
                 continue;
             }
 
             if (empty($data['article_number'] ?? '')) {
                 $skipped[] = "Rij {$rowNumber} ({$data['title']}): artikelnummer is leeg";
+
                 continue;
             }
 
-                $productData = $this->buildProductData($data);
+            $productData = $this->buildProductData($data);
 
             $existing = Product::where('article_number', $data['article_number'])->first();
 
@@ -260,6 +274,8 @@ class ProductController extends Controller
     {
         $products = Product::orderBy('article_number')->get();
 
+        AuditLog::record('product.export', "CSV export van {$products->count()} producten");
+
         return response()->stream(function () use ($products) {
             $handle = fopen('php://output', 'w');
 
@@ -268,7 +284,7 @@ class ProductController extends Controller
 
             fputcsv($handle, [
                 'article_number', 'title', 'description',
-                'price',
+                'price', 'suggested_retail_price',
                 'in_stock', 'is_active', 'weight', 'category_id',
                 'ingredients', 'allergens', 'nutrition_facts',
             ], ';');
@@ -279,6 +295,7 @@ class ProductController extends Controller
                     $product->title,
                     $product->description ?? '',
                     $product->price,
+                    $product->suggested_retail_price ?? '',
                     $product->in_stock ? 1 : 0,
                     $product->is_active ? 1 : 0,
                     $product->weight ?? '',
@@ -321,16 +338,17 @@ class ProductController extends Controller
         }
 
         return [
-            'title'           => $data['title'] ?? '',
-            'description'     => $data['description'] ?? '',
-            'price'           => is_numeric($data['price'] ?? '') ? (float) $data['price'] : 0,
-            'in_stock'           => ($data['in_stock'] ?? '') !== '' ? (bool) (int) $data['in_stock'] : true,
-            'is_active'          => ($data['is_active'] ?? '') !== '' ? (bool) (int) $data['is_active'] : true,
-            'weight'             => ($data['weight'] ?? '') !== '' ? $data['weight'] : null,
-            'category_id'        => $this->resolveCategory($data['category_id'] ?? ''),
-            'ingredients'        => $this->parseTagString($data['ingredients'] ?? null),
-            'allergens'          => $this->parseTagString($data['allergens'] ?? null),
-            'nutrition_facts'    => ! empty($nutritionFacts) ? $nutritionFacts : null,
+            'title' => $data['title'] ?? '',
+            'description' => $data['description'] ?? '',
+            'price' => is_numeric($data['price'] ?? '') ? (float) $data['price'] : 0,
+            'suggested_retail_price' => ($data['suggested_retail_price'] ?? '') !== '' && is_numeric($data['suggested_retail_price']) ? (float) $data['suggested_retail_price'] : null,
+            'in_stock' => ($data['in_stock'] ?? '') !== '' ? (bool) (int) $data['in_stock'] : true,
+            'is_active' => ($data['is_active'] ?? '') !== '' ? (bool) (int) $data['is_active'] : true,
+            'weight' => ($data['weight'] ?? '') !== '' ? $data['weight'] : null,
+            'category_id' => $this->resolveCategory($data['category_id'] ?? ''),
+            'ingredients' => $this->parseTagString($data['ingredients'] ?? null),
+            'allergens' => $this->parseTagString($data['allergens'] ?? null),
+            'nutrition_facts' => ! empty($nutritionFacts) ? $nutritionFacts : null,
         ];
     }
 
@@ -340,16 +358,17 @@ class ProductController extends Controller
 
         // Map each product field to the CSV column(s) that should trigger its update
         $fieldMap = [
-            'title'       => ['title'],
+            'title' => ['title'],
             'description' => ['description'],
-            'price'       => ['price'],
-            'in_stock'           => ['in_stock'],
-            'is_active'          => ['is_active'],
-            'weight'             => ['weight'],
-            'category_id'        => ['category_id'],
-            'ingredients'        => ['ingredients'],
-            'allergens'          => ['allergens'],
-            'nutrition_facts'    => array_merge(['nutrition_facts'], $nutritionColumns),
+            'price' => ['price'],
+            'suggested_retail_price' => ['suggested_retail_price'],
+            'in_stock' => ['in_stock'],
+            'is_active' => ['is_active'],
+            'weight' => ['weight'],
+            'category_id' => ['category_id'],
+            'ingredients' => ['ingredients'],
+            'allergens' => ['allergens'],
+            'nutrition_facts' => array_merge(['nutrition_facts'], $nutritionColumns),
         ];
 
         $updateData = [];

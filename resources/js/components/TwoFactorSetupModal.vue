@@ -169,8 +169,8 @@ watch(
                                     v-else
                                     class="relative z-10 overflow-hidden border p-5"
                                 >
-                                    <div
-                                        v-html="qrCodeSvg"
+                                    <img
+                                        :src="`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrCodeSvg ?? '')}`"
                                         class="flex aspect-square size-full items-center justify-center"
                                         :style="{
                                             filter:
@@ -178,6 +178,7 @@ watch(
                                                     ? 'invert(1) brightness(1.5)'
                                                     : undefined,
                                         }"
+                                        alt="QR Code"
                                     />
                                 </div>
                             </div>

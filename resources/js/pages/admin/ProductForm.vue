@@ -40,6 +40,7 @@ interface Product {
     category_id: number | null;
     title: string;
     price: string;
+    suggested_retail_price: string | null;
     description: string;
     ingredients: string;
     allergens: string;
@@ -77,6 +78,7 @@ const form = ref({
     category_id: props.product?.category_id?.toString() || '',
     title: props.product?.title || '',
     price: props.product?.price || '',
+    suggested_retail_price: props.product?.suggested_retail_price || '',
     description: props.product?.description || '',
     ingredients: props.product?.ingredients || '',
     allergens: props.product?.allergens || '',
@@ -135,6 +137,9 @@ const submit = () => {
     }
     formData.append('title', form.value.title);
     formData.append('price', form.value.price);
+    if (form.value.suggested_retail_price) {
+        formData.append('suggested_retail_price', form.value.suggested_retail_price);
+    }
     formData.append('description', form.value.description);
     formData.append('ingredients', form.value.ingredients);
     formData.append('allergens', form.value.allergens);
@@ -333,6 +338,19 @@ const cancel = () => {
                                 placeholder="0.00"
                             />
                             <InputError :message="errors?.price" />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="suggested_retail_price">Verkoopadviesprijs (€)</Label>
+                            <Input
+                                id="suggested_retail_price"
+                                v-model="form.suggested_retail_price"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                            />
+                            <InputError :message="errors?.suggested_retail_price" />
                         </div>
 
                         <div class="grid gap-2">

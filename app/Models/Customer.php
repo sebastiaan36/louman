@@ -31,8 +31,6 @@ class Customer extends Model
         'bank_account',
         'vat_number',
         'packing_slip_email',
-        'approved_at',
-        'approved_by',
         'customer_category',
         'discount_percentage',
         'delivery_day',

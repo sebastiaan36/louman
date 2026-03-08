@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -31,6 +32,7 @@ class Product extends Model
         'article_number',
         'in_stock',
         'is_active',
+        'suggested_retail_price',
     ];
 
     /**
@@ -42,6 +44,7 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
+            'suggested_retail_price' => 'decimal:2',
             'ingredients' => 'array',
             'allergens' => 'array',
             'nutrition_facts' => 'array',
@@ -56,6 +59,14 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Get the order items for this product.
+     */
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
     }
 
     /**
