@@ -20,24 +20,51 @@ class ProductController extends Controller
     /**
      * Display a listing of products.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $products = Product::with('category')
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(fn (Product $product) => [
-                'id' => $product->id,
-                'title' => $product->title,
-                'category' => $product->category?->name,
-                'price' => $product->price,
-                'article_number' => $product->article_number,
-                'in_stock' => $product->in_stock,
-                'photo_url' => $product->thumbnail_url,
-                'is_active' => $product->is_active,
-            ]);
+        $search = $request->input('search');
+        $sort = $request->input('sort', 'newest');
+
+        $allowedSorts = ['newest', 'article_asc', 'article_desc', 'price_asc', 'price_desc', 'popularity'];
+        if (! in_array($sort, $allowedSorts)) {
+            $sort = 'newest';
+        }
+
+        $query = Product::with('category');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('article_number', 'like', "%{$search}%");
+            });
+        }
+
+        match ($sort) {
+            'article_asc' => $query->orderBy('article_number', 'asc'),
+            'article_desc' => $query->orderBy('article_number', 'desc'),
+            'price_asc' => $query->orderBy('price', 'asc'),
+            'price_desc' => $query->orderBy('price', 'desc'),
+            'popularity' => $query->withCount('orderItems')->orderByDesc('order_items_count'),
+            default => $query->orderBy('created_at', 'desc'),
+        };
+
+        $products = $query->get()->map(fn (Product $product) => [
+            'id' => $product->id,
+            'title' => $product->title,
+            'category' => $product->category?->name,
+            'price' => $product->price,
+            'article_number' => $product->article_number,
+            'in_stock' => $product->in_stock,
+            'photo_url' => $product->thumbnail_url,
+            'is_active' => $product->is_active,
+        ]);
 
         return Inertia::render('admin/Products', [
             'products' => $products,
+            'filters' => [
+                'search' => $search,
+                'sort' => $sort,
+            ],
         ]);
     }
 

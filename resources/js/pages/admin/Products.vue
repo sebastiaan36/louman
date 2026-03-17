@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Search } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,7 +12,15 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -35,8 +44,14 @@ interface Product {
     is_active: boolean;
 }
 
-defineProps<{
+interface Filters {
+    search: string | null;
+    sort: string | null;
+}
+
+const props = defineProps<{
     products: Product[];
+    filters: Filters;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -48,6 +63,29 @@ const breadcrumbs: BreadcrumbItem[] = [
         title: 'Producten',
     },
 ];
+
+const searchQuery = ref(props.filters.search || '');
+const selectedSort = ref(props.filters.sort || 'newest');
+
+const sortOptions = [
+    { value: 'newest', label: 'Nieuwste eerst' },
+    { value: 'article_asc', label: 'Artikelnr. ↑ (laag → hoog)' },
+    { value: 'article_desc', label: 'Artikelnr. ↓ (hoog → laag)' },
+    { value: 'price_asc', label: 'Prijs ↑ (laag → hoog)' },
+    { value: 'price_desc', label: 'Prijs ↓ (hoog → laag)' },
+    { value: 'popularity', label: 'Populariteit' },
+];
+
+watch([searchQuery, selectedSort], ([search, sort]) => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (sort && sort !== 'newest') params.set('sort', sort);
+
+    router.get(`/admin/products?${params.toString()}`, {}, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}, { deep: true });
 
 const page = usePage();
 const importResults = computed(
@@ -115,6 +153,53 @@ const formatPrice = (price: string) => {
                     <Link href="/admin/products/create">
                         <Button>Product toevoegen</Button>
                     </Link>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="rounded-lg border p-4">
+                <div class="grid gap-4 md:grid-cols-3">
+                    <div class="grid gap-2">
+                        <Label for="search">Zoeken</Label>
+                        <div class="relative">
+                            <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="search"
+                                v-model="searchQuery"
+                                type="text"
+                                placeholder="Zoek op naam, artikelnummer..."
+                                class="pl-8"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label>Sorteren</Label>
+                        <Select v-model="selectedSort">
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem
+                                    v-for="option in sortOptions"
+                                    :key="option.value"
+                                    :value="option.value"
+                                >
+                                    {{ option.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div class="flex items-end">
+                        <Button
+                            variant="outline"
+                            @click="searchQuery = ''; selectedSort = 'newest'"
+                            :disabled="!searchQuery && selectedSort === 'newest'"
+                        >
+                            Filters wissen
+                        </Button>
+                    </div>
                 </div>
             </div>
 
