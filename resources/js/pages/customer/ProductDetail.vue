@@ -225,7 +225,7 @@ const backToProducts = () => {
                             </span>
                             <span class="text-xs text-muted-foreground">ex. BTW</span>
                             <span v-if="product.suggested_retail_price" class="text-xs text-muted-foreground mt-1">
-                                Adviespijs: {{ new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(parseFloat(product.suggested_retail_price)) }}
+                                Adviesprijs: {{ new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(parseFloat(product.suggested_retail_price)) }} per 1000 gram
                             </span>
                         </div>
                         <Badge :variant="product.is_in_stock ? 'default' : 'destructive'">
