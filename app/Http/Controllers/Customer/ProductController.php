@@ -22,11 +22,38 @@ class ProductController extends Controller
         // Get filter parameters
         $categoryId = $request->input('category');
         $search = $request->input('search');
+        $sort = $request->input('sort', 'article_asc');
+
+        $allowedSorts = ['article_asc', 'article_desc', 'price_asc', 'price_desc', 'favorites', 'popularity'];
+        if (! in_array($sort, $allowedSorts)) {
+            $sort = 'article_asc';
+        }
 
         // Build query
-        $query = Product::with('category')
-            ->active()
-            ->orderBy('created_at', 'desc');
+        $query = Product::with('category')->active();
+
+        // Apply sort
+        if ($sort === 'favorites') {
+            $query->leftJoin('product_favorites', function ($join) use ($customer) {
+                $join->on('products.id', '=', 'product_favorites.product_id')
+                    ->where('product_favorites.customer_id', $customer->id);
+            })
+                ->select('products.*')
+                ->orderByRaw('CASE WHEN product_favorites.customer_id IS NOT NULL THEN 0 ELSE 1 END')
+                ->orderBy('products.article_number', 'asc');
+        } elseif ($sort === 'popularity') {
+            $query->withCount('orderItems')
+                ->orderByDesc('order_items_count')
+                ->orderBy('article_number', 'asc');
+        } elseif ($sort === 'price_asc') {
+            $query->orderBy('price', 'asc');
+        } elseif ($sort === 'price_desc') {
+            $query->orderBy('price', 'desc');
+        } elseif ($sort === 'article_desc') {
+            $query->orderBy('article_number', 'desc');
+        } else {
+            $query->orderBy('article_number', 'asc');
+        }
 
         // Apply category filter
         if ($categoryId) {
@@ -42,8 +69,12 @@ class ProductController extends Controller
             });
         }
 
+        // Eager-load favorites and cart items for this customer to avoid N+1
+        $favoriteIds = $customer->favoriteProducts()->pluck('product_id')->flip();
+        $cartIds = $customer->cartItems()->pluck('product_id')->flip();
+
         // Get products
-        $products = $query->get()->map(function (Product $product) use ($customer) {
+        $products = $query->get()->map(function (Product $product) use ($customer, $favoriteIds, $cartIds) {
             return [
                 'id' => $product->id,
                 'title' => $product->title,
@@ -53,8 +84,8 @@ class ProductController extends Controller
                 'article_number' => $product->article_number,
                 'thumbnail_url' => $product->thumbnail_url,
                 'is_in_stock' => $product->isInStock(),
-                'is_favorite' => $customer->favoriteProducts()->where('product_id', $product->id)->exists(),
-                'in_cart' => $customer->cartItems()->where('product_id', $product->id)->exists(),
+                'is_favorite' => $favoriteIds->has($product->id),
+                'in_cart' => $cartIds->has($product->id),
             ];
         });
 
@@ -67,6 +98,7 @@ class ProductController extends Controller
             'filters' => [
                 'category' => $categoryId,
                 'search' => $search,
+                'sort' => $sort,
             ],
             'orderDeadline' => OrderDeadline::getTimeRemaining(),
         ]);

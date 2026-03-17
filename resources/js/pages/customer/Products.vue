@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { Search, Clock } from 'lucide-vue-next';
+import { ArrowDown, ArrowUp, Clock, Search, Star, TrendingUp } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 import ProductCard from '@/components/ProductCard.vue';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,7 @@ interface Category {
 interface Filters {
     category: string | null;
     search: string | null;
+    sort: string | null;
 }
 
 interface OrderDeadline {
@@ -70,12 +71,29 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const selectedCategory = ref(props.filters.category?.toString() || '');
 const searchQuery = ref(props.filters.search || '');
+const selectedSort = ref(props.filters.sort || 'article_asc');
+
+type SortOption = {
+    value: string;
+    label: string;
+    icon?: 'arrow-up' | 'arrow-down' | 'star' | 'trending';
+};
+
+const sortOptions: SortOption[] = [
+    { value: 'article_asc', label: 'Artikelnr', icon: 'arrow-up' },
+    { value: 'article_desc', label: 'Artikelnr', icon: 'arrow-down' },
+    { value: 'price_asc', label: 'Prijs', icon: 'arrow-up' },
+    { value: 'price_desc', label: 'Prijs', icon: 'arrow-down' },
+    { value: 'favorites', label: 'Favorieten', icon: 'star' },
+    { value: 'popularity', label: 'Populariteit', icon: 'trending' },
+];
 
 // Watch for filter changes and update URL
-watch([selectedCategory, searchQuery], ([category, search]) => {
+watch([selectedCategory, searchQuery, selectedSort], ([category, search, sort]) => {
     const params = new URLSearchParams();
     if (category) params.set('category', category);
     if (search) params.set('search', search);
+    if (sort && sort !== 'article_asc') params.set('sort', sort);
 
     router.get(`/customer/products?${params.toString()}`, {}, {
         preserveState: true,
@@ -100,6 +118,7 @@ const handleAddToCart = (productId: number) => {
 const clearFilters = () => {
     selectedCategory.value = '';
     searchQuery.value = '';
+    selectedSort.value = 'article_asc';
 };
 </script>
 
@@ -198,11 +217,34 @@ const clearFilters = () => {
                         <Button
                             variant="outline"
                             @click="clearFilters"
-                            :disabled="!selectedCategory && !searchQuery"
+                            :disabled="!selectedCategory && !searchQuery && selectedSort === 'article_asc'"
                         >
                             Filters wissen
                         </Button>
                     </div>
+                </div>
+
+                <!-- Sort controls -->
+                <div class="mt-4 flex flex-wrap items-center gap-2 border-t pt-4">
+                    <span class="text-sm text-muted-foreground">Sorteren:</span>
+                    <button
+                        v-for="option in sortOptions"
+                        :key="option.value"
+                        type="button"
+                        @click="selectedSort = option.value"
+                        :class="[
+                            'inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
+                            selectedSort === option.value
+                                ? 'border-primary bg-primary text-primary-foreground'
+                                : 'border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground',
+                        ]"
+                    >
+                        <ArrowUp v-if="option.icon === 'arrow-up'" class="h-3.5 w-3.5" />
+                        <ArrowDown v-else-if="option.icon === 'arrow-down'" class="h-3.5 w-3.5" />
+                        <Star v-else-if="option.icon === 'star'" class="h-3.5 w-3.5" />
+                        <TrendingUp v-else-if="option.icon === 'trending'" class="h-3.5 w-3.5" />
+                        {{ option.label }}
+                    </button>
                 </div>
             </div>
 
