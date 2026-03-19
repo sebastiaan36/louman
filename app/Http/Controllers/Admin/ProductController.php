@@ -285,9 +285,9 @@ class ProductController extends Controller
         // Save original
         Storage::disk('public')->put($path, file_get_contents($file));
 
-        // Create thumbnail
+        // Create thumbnail (600px on longest side)
         $image = $manager->read($file);
-        $image->scale(width: 300);
+        $image->scaleDown(width: 600, height: 600);
         $thumbnailPath = 'products/thumbs/'.$filename;
         Storage::disk('public')->put($thumbnailPath, (string) $image->encode());
 
