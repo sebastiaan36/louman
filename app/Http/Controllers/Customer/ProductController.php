@@ -40,19 +40,19 @@ class ProductController extends Controller
             })
                 ->select('products.*')
                 ->orderByRaw('CASE WHEN product_favorites.customer_id IS NOT NULL THEN 0 ELSE 1 END')
-                ->orderBy('products.article_number', 'asc');
+                ->orderByRaw('CAST(products.article_number AS UNSIGNED) ASC');
         } elseif ($sort === 'popularity') {
             $query->withCount('orderItems')
                 ->orderByDesc('order_items_count')
-                ->orderBy('article_number', 'asc');
+                ->orderByRaw('CAST(article_number AS UNSIGNED) ASC');
         } elseif ($sort === 'price_asc') {
             $query->orderBy('price', 'asc');
         } elseif ($sort === 'price_desc') {
             $query->orderBy('price', 'desc');
         } elseif ($sort === 'article_desc') {
-            $query->orderBy('article_number', 'desc');
+            $query->orderByRaw('CAST(article_number AS UNSIGNED) DESC');
         } else {
-            $query->orderBy('article_number', 'asc');
+            $query->orderByRaw('CAST(article_number AS UNSIGNED) ASC');
         }
 
         // Apply category filter

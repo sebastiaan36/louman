@@ -40,8 +40,8 @@ class ProductController extends Controller
         }
 
         match ($sort) {
-            'article_asc' => $query->orderBy('article_number', 'asc'),
-            'article_desc' => $query->orderBy('article_number', 'desc'),
+            'article_asc' => $query->orderByRaw('CAST(article_number AS UNSIGNED) ASC'),
+            'article_desc' => $query->orderByRaw('CAST(article_number AS UNSIGNED) DESC'),
             'price_asc' => $query->orderBy('price', 'asc'),
             'price_desc' => $query->orderBy('price', 'desc'),
             'popularity' => $query->withCount('orderItems')->orderByDesc('order_items_count'),
