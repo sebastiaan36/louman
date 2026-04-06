@@ -21,6 +21,7 @@ class ProductController extends Controller
 
         // Get filter parameters
         $categoryId = $request->input('category');
+        $subcategoryId = $request->input('subcategory');
         $search = $request->input('search');
         $sort = $request->input('sort', 'article_asc');
 
@@ -55,9 +56,18 @@ class ProductController extends Controller
             $query->orderByRaw('CAST(article_number AS UNSIGNED) ASC');
         }
 
-        // Apply category filter
-        if ($categoryId) {
-            $query->where('category_id', $categoryId);
+        // Apply category/subcategory filter
+        if ($subcategoryId) {
+            $query->where('subcategory_id', $subcategoryId);
+        } elseif ($categoryId) {
+            $category = Category::with('children')->find($categoryId);
+            if ($category) {
+                $childIds = $category->children->pluck('id');
+                $query->where(function ($q) use ($categoryId, $childIds) {
+                    $q->where('category_id', $categoryId)
+                        ->orWhereIn('subcategory_id', $childIds);
+                });
+            }
         }
 
         // Apply search filter
@@ -89,14 +99,19 @@ class ProductController extends Controller
             ];
         });
 
-        // Get categories for filter
-        $categories = Category::orderBy('sort_order')->orderBy('name')->get();
+        // Get categories for filter (with subcategories)
+        $categories = Category::with('children')
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('customer/Products', [
             'products' => $products,
             'categories' => $categories,
             'filters' => [
                 'category' => $categoryId,
+                'subcategory' => $subcategoryId,
                 'search' => $search,
                 'sort' => $sort,
             ],

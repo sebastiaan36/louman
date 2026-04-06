@@ -17,6 +17,8 @@ class CategoryController extends Controller
     public function index(): Response
     {
         $categories = Category::withCount('products')
+            ->with(['children' => fn ($q) => $q->withCount('products')])
+            ->whereNull('parent_id')
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
@@ -26,6 +28,13 @@ class CategoryController extends Controller
                 'description' => $category->description,
                 'sort_order' => $category->sort_order,
                 'products_count' => $category->products_count,
+                'children' => $category->children->map(fn (Category $child) => [
+                    'id' => $child->id,
+                    'name' => $child->name,
+                    'description' => $child->description,
+                    'sort_order' => $child->sort_order,
+                    'products_count' => $child->products_count,
+                ]),
             ]);
 
         return Inertia::render('admin/Categories', [
@@ -58,8 +67,12 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category): RedirectResponse
     {
-        if ($category->products()->count() > 0) {
+        if ($category->products()->count() > 0 || $category->subcategoryProducts()->count() > 0) {
             return back()->with('error', 'Deze categorie bevat nog producten en kan niet worden verwijderd.');
+        }
+
+        if ($category->children()->count() > 0) {
+            return back()->with('error', 'Deze categorie heeft nog subcategorieën en kan niet worden verwijderd.');
         }
 
         $category->delete();

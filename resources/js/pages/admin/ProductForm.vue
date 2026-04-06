@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { X } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -19,9 +19,15 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
+interface Subcategory {
+    id: number;
+    name: string;
+}
+
 interface Category {
     id: number;
     name: string;
+    children: Subcategory[];
 }
 
 interface NutritionFacts {
@@ -38,6 +44,7 @@ interface NutritionFacts {
 interface Product {
     id: number;
     category_id: number | null;
+    subcategory_id: number | null;
     title: string;
     price: string;
     suggested_retail_price: string | null;
@@ -76,6 +83,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const form = ref({
     category_id: props.product?.category_id?.toString() || '',
+    subcategory_id: props.product?.subcategory_id?.toString() || 'none',
     title: props.product?.title || '',
     price: props.product?.price || '',
     suggested_retail_price: props.product?.suggested_retail_price || '',
@@ -96,6 +104,15 @@ const form = ref({
         salt: props.product?.nutrition_facts?.salt || '',
         fiber: props.product?.nutrition_facts?.fiber || '',
     },
+});
+
+const selectedCategoryChildren = computed(() => {
+    const cat = props.categories.find((c) => c.id.toString() === form.value.category_id);
+    return cat?.children ?? [];
+});
+
+watch(() => form.value.category_id, () => {
+    form.value.subcategory_id = 'none';
 });
 
 const photoFile = ref<File | null>(null);
@@ -134,6 +151,9 @@ const submit = () => {
     // Append all form fields
     if (form.value.category_id) {
         formData.append('category_id', form.value.category_id);
+    }
+    if (form.value.subcategory_id && form.value.subcategory_id !== 'none') {
+        formData.append('subcategory_id', form.value.subcategory_id);
     }
     formData.append('title', form.value.title);
     formData.append('price', form.value.price);
@@ -252,6 +272,26 @@ const cancel = () => {
                                 </SelectContent>
                             </Select>
                             <InputError :message="errors?.category_id" />
+                        </div>
+
+                        <div v-if="selectedCategoryChildren.length > 0" class="grid gap-2">
+                            <Label for="subcategory_id">Subcategorie (optioneel)</Label>
+                            <Select v-model="form.subcategory_id">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecteer subcategorie (optioneel)" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">— Geen subcategorie —</SelectItem>
+                                    <SelectItem
+                                        v-for="child in selectedCategoryChildren"
+                                        :key="child.id"
+                                        :value="child.id.toString()"
+                                    >
+                                        {{ child.name }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <InputError :message="errors?.subcategory_id" />
                         </div>
 
                         <div class="grid gap-2">

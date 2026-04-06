@@ -73,7 +73,11 @@ class ProductController extends Controller
      */
     public function create(): Response
     {
-        $categories = Category::orderBy('sort_order')->orderBy('name')->get();
+        $categories = Category::with('children')
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('admin/ProductForm', [
             'categories' => $categories,
@@ -107,12 +111,17 @@ class ProductController extends Controller
      */
     public function edit(Product $product): Response
     {
-        $categories = Category::orderBy('sort_order')->orderBy('name')->get();
+        $categories = Category::with('children')
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('admin/ProductForm', [
             'product' => [
                 'id' => $product->id,
                 'category_id' => $product->category_id,
+                'subcategory_id' => $product->subcategory_id,
                 'title' => $product->title,
                 'price' => $product->price,
                 'suggested_retail_price' => $product->suggested_retail_price,

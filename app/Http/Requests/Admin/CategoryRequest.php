@@ -22,6 +22,7 @@ class CategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'sort_order' => ['integer', 'min:0'],
@@ -36,6 +37,7 @@ class CategoryRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'parent_id' => 'hoofdcategorie',
             'name' => 'naam',
             'description' => 'beschrijving',
             'sort_order' => 'sorteervolgorde',

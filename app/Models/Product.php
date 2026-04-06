@@ -21,6 +21,7 @@ class Product extends Model
      */
     protected $fillable = [
         'category_id',
+        'subcategory_id',
         'title',
         'photo',
         'price',
@@ -59,6 +60,14 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Get the subcategory that owns the product.
+     */
+    public function subcategory(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'subcategory_id');
     }
 
     /**

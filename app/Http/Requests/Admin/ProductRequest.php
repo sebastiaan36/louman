@@ -26,6 +26,7 @@ class ProductRequest extends FormRequest
 
         return [
             'category_id' => ['nullable', 'exists:categories,id'],
+            'subcategory_id' => ['nullable', 'exists:categories,id'],
             'title' => ['required', 'string', 'max:255'],
             'photo' => [
                 $this->isMethod('POST') ? 'required' : 'nullable',
@@ -67,6 +68,7 @@ class ProductRequest extends FormRequest
     {
         return [
             'category_id' => 'categorie',
+            'subcategory_id' => 'subcategorie',
             'title' => 'naam',
             'photo' => 'foto',
             'price' => 'prijs',

@@ -30,13 +30,20 @@ interface Product {
     in_cart: boolean;
 }
 
-interface Category {
+interface Subcategory {
     id: number;
     name: string;
 }
 
+interface Category {
+    id: number;
+    name: string;
+    children: Subcategory[];
+}
+
 interface Filters {
     category: string | null;
+    subcategory: string | null;
     search: string | null;
     sort: string | null;
 }
@@ -69,9 +76,17 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const selectedCategory = ref(props.filters.category?.toString() || '');
 const searchQuery = ref(props.filters.search || '');
 const selectedSort = ref(props.filters.sort || 'article_asc');
+
+// Single combined filter value: 'all' | 'cat_ID' | 'sub_ID'
+const selectedFilter = ref(
+    props.filters.subcategory
+        ? `sub_${props.filters.subcategory}`
+        : props.filters.category
+            ? `cat_${props.filters.category}`
+            : 'all',
+);
 
 const sortOptions = [
     { value: 'article_asc', label: 'Artikelnr. ↑ (laag → hoog)' },
@@ -83,9 +98,16 @@ const sortOptions = [
 ];
 
 // Watch for filter changes and update URL
-watch([selectedCategory, searchQuery, selectedSort], ([category, search, sort]) => {
+watch([selectedFilter, searchQuery, selectedSort], ([filter, search, sort]) => {
     const params = new URLSearchParams();
-    if (category) params.set('category', category);
+    if (filter && filter.startsWith('cat_')) params.set('category', filter.slice(4));
+    if (filter && filter.startsWith('sub_')) {
+        const subId = filter.slice(4);
+        params.set('subcategory', subId);
+        // Also set category for context
+        const parentCat = props.categories.find((c) => c.children.some((ch) => ch.id.toString() === subId));
+        if (parentCat) params.set('category', parentCat.id.toString());
+    }
     if (search) params.set('search', search);
     if (sort && sort !== 'article_asc') params.set('sort', sort);
 
@@ -110,7 +132,7 @@ const handleAddToCart = (productId: number) => {
 };
 
 const clearFilters = () => {
-    selectedCategory.value = '';
+    selectedFilter.value = 'all';
     searchQuery.value = '';
     selectedSort.value = 'article_asc';
 };
@@ -191,18 +213,25 @@ const clearFilters = () => {
 
                     <div class="grid gap-2">
                         <Label for="category">Categorie</Label>
-                        <Select v-model="selectedCategory">
+                        <Select v-model="selectedFilter">
                             <SelectTrigger>
                                 <SelectValue placeholder="Alle categorieën" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem
-                                    v-for="category in categories"
-                                    :key="category.id"
-                                    :value="category.id.toString()"
-                                >
-                                    {{ category.name }}
-                                </SelectItem>
+                                <SelectItem value="all">Alle categorieën</SelectItem>
+                                <template v-for="category in categories" :key="category.id">
+                                    <SelectItem :value="`cat_${category.id}`">
+                                        {{ category.name }}
+                                    </SelectItem>
+                                    <SelectItem
+                                        v-for="child in category.children"
+                                        :key="child.id"
+                                        :value="`sub_${child.id}`"
+                                        class="pl-6 text-muted-foreground"
+                                    >
+                                        — {{ child.name }}
+                                    </SelectItem>
+                                </template>
                             </SelectContent>
                         </Select>
                     </div>
@@ -229,7 +258,7 @@ const clearFilters = () => {
                         <Button
                             variant="outline"
                             @click="clearFilters"
-                            :disabled="!selectedCategory && !searchQuery && selectedSort === 'article_asc'"
+                            :disabled="selectedFilter === 'all' && !searchQuery && selectedSort === 'article_asc'"
                         >
                             Filters wissen
                         </Button>

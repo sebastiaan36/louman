@@ -20,10 +20,25 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
+
+interface Subcategory {
+    id: number;
+    name: string;
+    description?: string;
+    sort_order: number;
+    products_count: number;
+}
 
 interface Category {
     id: number;
@@ -31,6 +46,7 @@ interface Category {
     description?: string;
     sort_order: number;
     products_count: number;
+    children: Subcategory[];
 }
 
 defineProps<{
@@ -39,28 +55,25 @@ defineProps<{
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard().url,
-    },
-    {
-        title: 'Categorieën',
-    },
+    { title: 'Dashboard', href: dashboard().url },
+    { title: 'Categorieën' },
 ];
 
 const dialogOpen = ref(false);
-const editingCategory = ref<Category | null>(null);
+const editingCategory = ref<Category | Subcategory | null>(null);
 
 const form = ref({
+    parent_id: 'none' as string,
     name: '',
     description: '',
     sort_order: 0,
 });
 
-const openDialog = (category?: Category) => {
+const openDialog = (category?: Category | Subcategory, parentId?: number) => {
     if (category) {
         editingCategory.value = category;
         form.value = {
+            parent_id: ('children' in category) ? 'none' : String((category as any).parent_id ?? 'none'),
             name: category.name,
             description: category.description || '',
             sort_order: category.sort_order,
@@ -68,6 +81,7 @@ const openDialog = (category?: Category) => {
     } else {
         editingCategory.value = null;
         form.value = {
+            parent_id: parentId ? String(parentId) : 'none',
             name: '',
             description: '',
             sort_order: 0,
@@ -83,7 +97,17 @@ const submit = () => {
 
     const method = editingCategory.value ? 'patch' : 'post';
 
-    router[method](url, form.value, {
+    const data: Record<string, string | number> = {
+        name: form.value.name,
+        description: form.value.description,
+        sort_order: form.value.sort_order,
+    };
+
+    if (form.value.parent_id && form.value.parent_id !== 'none') {
+        data.parent_id = Number(form.value.parent_id);
+    }
+
+    router[method](url, data, {
         preserveScroll: true,
         onSuccess: () => {
             dialogOpen.value = false;
@@ -98,6 +122,9 @@ const deleteCategory = (id: number) => {
         });
     }
 };
+
+const totalProducts = (category: Category) =>
+    category.products_count + category.children.reduce((sum, c) => sum + c.products_count, 0);
 </script>
 
 <template>
@@ -109,7 +136,7 @@ const deleteCategory = (id: number) => {
                 <div>
                     <h1 class="text-2xl font-bold">Categorieën</h1>
                     <p class="text-sm text-muted-foreground">
-                        Beheer productcategorieën
+                        Beheer productcategorieën en subcategorieën
                     </p>
                 </div>
 
@@ -125,11 +152,31 @@ const deleteCategory = (id: number) => {
                                 {{ editingCategory ? 'Categorie bewerken' : 'Nieuwe categorie toevoegen' }}
                             </DialogTitle>
                             <DialogDescription>
-                                Voeg een categorie toe of bewerk een bestaande categorie
+                                Laat "Hoofdcategorie" leeg voor een hoofdcategorie, of kies een hoofdcategorie om een subcategorie aan te maken.
                             </DialogDescription>
                         </DialogHeader>
 
                         <form @submit.prevent="submit" class="space-y-4">
+                            <div class="grid gap-2">
+                                <Label for="parent_id">Hoofdcategorie (optioneel)</Label>
+                                <Select v-model="form.parent_id">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="— Geen (hoofdcategorie) —" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">— Geen (hoofdcategorie) —</SelectItem>
+                                        <SelectItem
+                                            v-for="category in categories"
+                                            :key="category.id"
+                                            :value="category.id.toString()"
+                                        >
+                                            {{ category.name }}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError :message="errors?.parent_id" />
+                            </div>
+
                             <div class="grid gap-2">
                                 <Label for="name">Naam</Label>
                                 <Input
@@ -183,39 +230,81 @@ const deleteCategory = (id: number) => {
                 </p>
             </div>
 
-            <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Card v-for="category in categories" :key="category.id">
-                    <CardHeader>
-                        <CardTitle>{{ category.name }}</CardTitle>
-                        <CardDescription v-if="category.description">
-                            {{ category.description }}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-4">
-                        <div class="text-sm">
-                            <p class="text-muted-foreground">
-                                {{ category.products_count }} {{ category.products_count === 1 ? 'product' : 'producten' }}
-                            </p>
-                            <p class="text-muted-foreground">
-                                Sorteervolgorde: {{ category.sort_order }}
-                            </p>
-                        </div>
+            <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div v-for="category in categories" :key="category.id" class="flex flex-col gap-2">
+                    <!-- Hoofdcategorie -->
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{{ category.name }}</CardTitle>
+                            <CardDescription v-if="category.description">
+                                {{ category.description }}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <div class="text-sm">
+                                <p class="text-muted-foreground">
+                                    {{ totalProducts(category) }} {{ totalProducts(category) === 1 ? 'product' : 'producten' }} totaal
+                                </p>
+                                <p class="text-muted-foreground">
+                                    Sorteervolgorde: {{ category.sort_order }}
+                                </p>
+                            </div>
 
-                        <div class="flex gap-2">
-                            <Button size="sm" variant="outline" @click="openDialog(category)">
-                                Bewerken
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                @click="deleteCategory(category.id)"
-                                :disabled="category.products_count > 0"
-                            >
-                                Verwijderen
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                            <div class="flex gap-2">
+                                <Button size="sm" variant="outline" @click="openDialog(category)">
+                                    Bewerken
+                                </Button>
+                                <Button size="sm" variant="outline" @click="openDialog(undefined, category.id)">
+                                    + Subcategorie
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    @click="deleteCategory(category.id)"
+                                    :disabled="category.products_count > 0 || category.children.length > 0"
+                                >
+                                    Verwijderen
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Subcategorieën -->
+                    <div v-if="category.children.length > 0" class="flex flex-col gap-2 pl-4 border-l-2 border-muted">
+                        <Card v-for="child in category.children" :key="child.id" class="bg-muted/30">
+                            <CardHeader class="pb-2">
+                                <CardTitle class="text-base">{{ child.name }}</CardTitle>
+                                <CardDescription v-if="child.description">
+                                    {{ child.description }}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent class="space-y-3">
+                                <div class="text-sm">
+                                    <p class="text-muted-foreground">
+                                        {{ child.products_count }} {{ child.products_count === 1 ? 'product' : 'producten' }}
+                                    </p>
+                                    <p class="text-muted-foreground">
+                                        Sorteervolgorde: {{ child.sort_order }}
+                                    </p>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <Button size="sm" variant="outline" @click="openDialog(child)">
+                                        Bewerken
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        @click="deleteCategory(child.id)"
+                                        :disabled="child.products_count > 0"
+                                    >
+                                        Verwijderen
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>
