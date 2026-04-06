@@ -17,7 +17,7 @@ class CategoryController extends Controller
     public function index(): Response
     {
         $categories = Category::withCount('products')
-            ->with(['children' => fn ($q) => $q->withCount('products')])
+            ->with(['children' => fn ($q) => $q->withCount('subcategoryProducts')])
             ->whereNull('parent_id')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -33,7 +33,7 @@ class CategoryController extends Controller
                     'name' => $child->name,
                     'description' => $child->description,
                     'sort_order' => $child->sort_order,
-                    'products_count' => $child->products_count,
+                    'products_count' => $child->subcategory_products_count,
                 ]),
             ]);
 
