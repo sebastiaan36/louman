@@ -34,7 +34,8 @@
       "mcp__laravel-boost__browser-logs",
       "Bash(python3 -c \"import sys,json; logs=json.load\\(sys.stdin\\); [print\\(l['type'], l['text'][:300]\\) for l in logs[-15:]]\")",
       "Bash(python3 -c ':*)",
-      "mcp__laravel-boost__last-error"
+      "mcp__laravel-boost__last-error",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/customer/products)"
     ]
   }
 }

@@ -321,7 +321,7 @@ class ProductController extends Controller
             fputcsv($handle, [
                 'article_number', 'title', 'description',
                 'price', 'suggested_retail_price',
-                'in_stock', 'is_active', 'weight', 'category_id',
+                'in_stock', 'is_active', 'weight', 'category_id', 'subcategory_id',
                 'ingredients', 'allergens', 'nutrition_facts',
             ], ';');
 
@@ -336,6 +336,7 @@ class ProductController extends Controller
                     $product->is_active ? 1 : 0,
                     $product->weight ?? '',
                     $product->category_id ?? '',
+                    $product->subcategory_id ?? '',
                     $product->ingredients ? json_encode($product->ingredients, JSON_UNESCAPED_UNICODE) : '',
                     $product->allergens ? json_encode($product->allergens, JSON_UNESCAPED_UNICODE) : '',
                     $product->nutrition_facts ? json_encode($product->nutrition_facts, JSON_UNESCAPED_UNICODE) : '',
@@ -382,6 +383,7 @@ class ProductController extends Controller
             'is_active' => ($data['is_active'] ?? '') !== '' ? (bool) (int) $data['is_active'] : true,
             'weight' => ($data['weight'] ?? '') !== '' ? $data['weight'] : null,
             'category_id' => $this->resolveCategory($data['category_id'] ?? ''),
+            'subcategory_id' => $this->resolveCategory($data['subcategory_id'] ?? ''),
             'ingredients' => $this->parseTagString($data['ingredients'] ?? null),
             'allergens' => $this->parseTagString($data['allergens'] ?? null),
             'nutrition_facts' => ! empty($nutritionFacts) ? $nutritionFacts : null,
@@ -402,6 +404,7 @@ class ProductController extends Controller
             'is_active' => ['is_active'],
             'weight' => ['weight'],
             'category_id' => ['category_id'],
+            'subcategory_id' => ['subcategory_id'],
             'ingredients' => ['ingredients'],
             'allergens' => ['allergens'],
             'nutrition_facts' => array_merge(['nutrition_facts'], $nutritionColumns),

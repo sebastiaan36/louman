@@ -243,6 +243,9 @@ const totalProducts = (category: Category) =>
                         <CardContent class="space-y-4">
                             <div class="text-sm">
                                 <p class="text-muted-foreground">
+                                    ID: {{ category.id }}
+                                </p>
+                                <p class="text-muted-foreground">
                                     {{ totalProducts(category) }} {{ totalProducts(category) === 1 ? 'product' : 'producten' }} totaal
                                 </p>
                                 <p class="text-muted-foreground">
@@ -280,6 +283,9 @@ const totalProducts = (category: Category) =>
                             </CardHeader>
                             <CardContent class="space-y-3">
                                 <div class="text-sm">
+                                    <p class="text-muted-foreground">
+                                        ID: {{ child.id }}
+                                    </p>
                                     <p class="text-muted-foreground">
                                         {{ child.products_count }} {{ child.products_count === 1 ? 'product' : 'producten' }}
                                     </p>
