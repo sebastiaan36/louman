@@ -228,9 +228,6 @@ const backToProducts = () => {
                                 Adviesprijs: {{ new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(parseFloat(product.suggested_retail_price)) }} per 1000 gram
                             </span>
                         </div>
-                        <Badge :variant="product.is_in_stock ? 'default' : 'destructive'">
-                            {{ product.is_in_stock ? 'Op voorraad' : 'Niet op voorraad' }}
-                        </Badge>
                     </div>
 
                     <Separator />
@@ -360,6 +357,7 @@ const backToProducts = () => {
                                 size="lg"
                                 class="flex-1"
                                 :disabled="!product.is_in_stock"
+                                :title="!product.is_in_stock ? 'Niet op voorraad' : undefined"
                                 @click="addToCart"
                             >
                                 <ShoppingCart class="h-5 w-5 mr-2" />

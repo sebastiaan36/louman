@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Zap, ShoppingCart, Eye } from 'lucide-vue-next';
 import { computed } from 'vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 
@@ -71,12 +70,6 @@ const formattedPrice = computed(() => {
                     />
                 </Button>
 
-                <!-- Stock badge -->
-                <div class="absolute bottom-2 left-2">
-                    <Badge :variant="product.is_in_stock ? 'default' : 'destructive'">
-                        {{ product.is_in_stock ? 'Op voorraad' : 'Niet op voorraad' }}
-                    </Badge>
-                </div>
             </div>
         </CardHeader>
 
@@ -110,6 +103,7 @@ const formattedPrice = computed(() => {
             <Button
                 class="flex-1"
                 :disabled="!product.is_in_stock"
+                :title="!product.is_in_stock ? 'Niet op voorraad' : undefined"
                 @click="emit('addToCart')"
             >
                 <ShoppingCart class="h-4 w-4 mr-2" />

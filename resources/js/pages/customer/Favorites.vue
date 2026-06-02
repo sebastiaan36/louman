@@ -2,7 +2,6 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Zap, ShoppingCart, X, Minus, Plus } from 'lucide-vue-next';
 import { ref } from 'vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -134,7 +133,6 @@ const formatPrice = (price: string) => {
                                 <TableHead>Product</TableHead>
                                 <TableHead>Gewicht</TableHead>
                                 <TableHead class="text-right">Prijs</TableHead>
-                                <TableHead>Status</TableHead>
                                 <TableHead class="text-center w-40">Aantal</TableHead>
                                 <TableHead class="w-32"></TableHead>
                             </TableRow>
@@ -177,13 +175,6 @@ const formatPrice = (price: string) => {
                                     {{ formatPrice(product.price) }}
                                 </TableCell>
 
-                                <!-- Stock Status -->
-                                <TableCell>
-                                    <Badge :variant="product.is_in_stock ? 'default' : 'destructive'">
-                                        {{ product.is_in_stock ? 'Op voorraad' : 'Niet op voorraad' }}
-                                    </Badge>
-                                </TableCell>
-
                                 <!-- Quantity Input -->
                                 <TableCell>
                                     <div class="flex items-center justify-center gap-2">
@@ -193,6 +184,7 @@ const formatPrice = (price: string) => {
                                             class="h-8 w-8"
                                             @click="decrementQuantity(product.id)"
                                             :disabled="!product.is_in_stock || quantities[product.id] <= 1"
+                                            :title="!product.is_in_stock ? 'Niet op voorraad' : undefined"
                                         >
                                             <Minus class="h-4 w-4" />
                                         </Button>
@@ -202,6 +194,7 @@ const formatPrice = (price: string) => {
                                             min="1"
                                             class="w-16 text-center"
                                             :disabled="!product.is_in_stock"
+                                            :title="!product.is_in_stock ? 'Niet op voorraad' : undefined"
                                         />
                                         <Button
                                             size="icon"
@@ -209,6 +202,7 @@ const formatPrice = (price: string) => {
                                             class="h-8 w-8"
                                             @click="incrementQuantity(product.id)"
                                             :disabled="!product.is_in_stock"
+                                            :title="!product.is_in_stock ? 'Niet op voorraad' : undefined"
                                         >
                                             <Plus class="h-4 w-4" />
                                         </Button>
@@ -221,6 +215,7 @@ const formatPrice = (price: string) => {
                                         <Button
                                             size="sm"
                                             :disabled="!product.is_in_stock"
+                                            :title="!product.is_in_stock ? 'Niet op voorraad' : undefined"
                                             @click="handleAddToCart(product.id)"
                                         >
                                             <ShoppingCart class="h-4 w-4 mr-2" />
