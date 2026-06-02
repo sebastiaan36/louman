@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ShoppingCart, Plus, Trash2, Search } from 'lucide-vue-next';
+import { ShoppingCart, Plus, Trash2, Search, Zap } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ interface Customer {
     contact_person: string;
     customer_category: string | null;
     discount_percentage: string | null;
+    favorite_product_ids: number[];
     delivery_addresses: DeliveryAddress[];
 }
 
@@ -59,6 +60,9 @@ const customerSearch = ref('');
 const selectedCustomer = ref<Customer | null>(null);
 const showCustomerDropdown = ref(false);
 
+// Quick Order (favorites) product ids for the selected customer
+const favoriteProductIds = ref<Set<number>>(new Set());
+
 const filteredCustomers = computed(() => {
     const q = customerSearch.value.toLowerCase();
     if (!q) return props.customers.slice(0, 10);
@@ -72,6 +76,7 @@ const selectCustomer = (customer: Customer) => {
     selectedCustomer.value = customer;
     customerSearch.value = customer.company_name;
     showCustomerDropdown.value = false;
+    favoriteProductIds.value = new Set(customer.favorite_product_ids);
 
     // Auto-select default delivery address
     const defaultAddr = customer.delivery_addresses.find(a => a.is_default)
@@ -79,17 +84,25 @@ const selectCustomer = (customer: Customer) => {
         ?? null;
     selectedDeliveryAddressId.value = defaultAddr?.id ?? null;
 
-    // Recalculate prices for existing items
-    orderItems.value = orderItems.value.map(item => ({
-        ...item,
-        unit_price: getPriceForCustomer(item.product_id),
-    }));
+    // Pre-fill the customer's Quick Order products with quantity 0
+    orderItems.value = customer.favorite_product_ids
+        .map(id => props.products.find(p => p.id === id))
+        .filter((p): p is Product => p !== undefined)
+        .map(product => ({
+            product_id: product.id,
+            product_title: product.title,
+            article_number: product.article_number,
+            quantity: 0,
+            unit_price: getPriceForCustomer(product.id),
+        }));
 };
 
 const clearCustomer = () => {
     selectedCustomer.value = null;
     customerSearch.value = '';
     selectedDeliveryAddressId.value = null;
+    favoriteProductIds.value = new Set();
+    orderItems.value = [];
 };
 
 // Delivery address
@@ -159,6 +172,27 @@ const removeItem = (index: number) => {
     orderItems.value.splice(index, 1);
 };
 
+const isFavorite = (productId: number): boolean => favoriteProductIds.value.has(productId);
+
+const toggleFavorite = (productId: number) => {
+    if (!selectedCustomer.value) return;
+
+    // Optimistic local update
+    const next = new Set(favoriteProductIds.value);
+    if (next.has(productId)) {
+        next.delete(productId);
+    } else {
+        next.add(productId);
+    }
+    favoriteProductIds.value = next;
+
+    router.post(
+        `/admin/customers/${selectedCustomer.value.id}/favorites/${productId}/toggle`,
+        {},
+        { preserveScroll: true, preserveState: true, only: [] },
+    );
+};
+
 const orderTotal = computed(() => {
     return orderItems.value.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
 });
@@ -182,8 +216,10 @@ const submit = () => {
         errors.value.customer = 'Selecteer een klant.';
         return;
     }
-    if (orderItems.value.length === 0) {
-        errors.value.items = 'Voeg minimaal één product toe.';
+
+    const itemsToOrder = orderItems.value.filter(i => i.quantity >= 1);
+    if (itemsToOrder.length === 0) {
+        errors.value.items = 'Voeg minimaal één product toe met een aantal van 1 of meer.';
         return;
     }
 
@@ -192,7 +228,7 @@ const submit = () => {
     router.post('/admin/orders', {
         customer_id: selectedCustomer.value.id,
         delivery_address_id: selectedDeliveryAddressId.value,
-        items: orderItems.value.map(i => ({
+        items: itemsToOrder.map(i => ({
             product_id: i.product_id,
             quantity: i.quantity,
         })),
@@ -373,6 +409,15 @@ const submit = () => {
                         <div class="text-sm font-medium w-20 text-right">
                             {{ formatPrice(item.unit_price * item.quantity) }}
                         </div>
+                        <button
+                            type="button"
+                            @click="toggleFavorite(item.product_id)"
+                            class="ml-1 hover:opacity-70"
+                            :class="isFavorite(item.product_id) ? 'text-yellow-500' : 'text-muted-foreground'"
+                            :title="isFavorite(item.product_id) ? 'Verwijderen van Quick Order-lijst' : 'Toevoegen aan Quick Order-lijst'"
+                        >
+                            <Zap class="h-4 w-4" :class="isFavorite(item.product_id) ? 'fill-yellow-500' : ''" />
+                        </button>
                         <button type="button" @click="removeItem(index)" class="text-destructive hover:opacity-70 ml-1">
                             <Trash2 class="h-4 w-4" />
                         </button>

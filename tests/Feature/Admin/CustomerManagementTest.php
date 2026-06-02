@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Customer;
+use App\Models\Product;
 
 test('admin ziet lijst van goedgekeurde klanten', function () {
     $admin = adminUser();
@@ -78,4 +78,40 @@ test('niet-admin heeft geen toegang tot klantbeheer', function () {
     $this->actingAs($customer->user)
         ->get('/admin/customers')
         ->assertStatus(403);
+});
+
+test('admin kan product toevoegen aan quick order lijst van klant', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create();
+
+    $this->actingAs($admin)
+        ->post("/admin/customers/{$customer->id}/favorites/{$product->id}/toggle")
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect($customer->favoriteProducts()->where('product_id', $product->id)->exists())->toBeTrue();
+});
+
+test('admin kan product van quick order lijst van klant verwijderen', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create();
+    $customer->favoriteProducts()->attach($product->id);
+
+    $this->actingAs($admin)
+        ->post("/admin/customers/{$customer->id}/favorites/{$product->id}/toggle")
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect($customer->favoriteProducts()->where('product_id', $product->id)->exists())->toBeFalse();
+});
+
+test('niet-admin kan quick order lijst niet aanpassen', function () {
+    $customer = approvedCustomer();
+    $product = Product::factory()->create();
+
+    $this->actingAs($customer->user)
+        ->post("/admin/customers/{$customer->id}/favorites/{$product->id}/toggle")
+        ->assertForbidden();
 });

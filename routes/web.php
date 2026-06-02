@@ -101,6 +101,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.customers.activate');
     Route::delete('/customers/{customer}', [CustomerApprovalController::class, 'destroy'])
         ->name('admin.customers.destroy');
+    Route::post('/customers/{customer}/favorites/{product}/toggle', [CustomerApprovalController::class, 'toggleFavorite'])
+        ->name('admin.customers.favorites.toggle');
     Route::patch('/customers/{customer}/category-discount', [CustomerApprovalController::class, 'updateCategoryAndDiscount'])
         ->name('admin.customers.update-category-discount');
     Route::patch('/customers/{customer}', [CustomerApprovalController::class, 'update'])

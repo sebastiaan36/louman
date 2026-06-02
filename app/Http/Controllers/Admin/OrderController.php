@@ -82,7 +82,7 @@ class OrderController extends Controller
      */
     public function create(): Response
     {
-        $customers = Customer::with(['deliveryAddresses', 'user'])
+        $customers = Customer::with(['deliveryAddresses', 'user', 'favoriteProducts:id'])
             ->whereNotNull('approved_at')
             ->orderBy('company_name')
             ->get()
@@ -92,6 +92,7 @@ class OrderController extends Controller
                 'contact_person' => $customer->contact_person,
                 'customer_category' => $customer->customer_category,
                 'discount_percentage' => $customer->discount_percentage,
+                'favorite_product_ids' => $customer->favoriteProducts->pluck('id')->all(),
                 'delivery_addresses' => $customer->deliveryAddresses->map(fn ($addr) => [
                     'id' => $addr->id,
                     'name' => $addr->name,

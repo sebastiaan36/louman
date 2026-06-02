@@ -34,6 +34,21 @@ test('nieuwe bestelling pagina toont artikelnummers bij producten', function () 
         );
 });
 
+test('nieuwe bestelling pagina stuurt quick order producten van klant mee', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create();
+    $customer->favoriteProducts()->attach($product->id);
+
+    $this->actingAs($admin)
+        ->get('/admin/orders/create')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/CreateOrder')
+            ->where('customers.0.favorite_product_ids', [$product->id])
+        );
+});
+
 test('admin kan filteren op status', function () {
     $admin = adminUser();
     $customer = approvedCustomer();

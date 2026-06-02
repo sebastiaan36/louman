@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\CustomerInvitation as CustomerInvitationModel;
 use App\Models\DeliveryAddress;
+use App\Models\Product;
 use App\Notifications\CustomerApproved;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -285,6 +286,24 @@ class CustomerApprovalController extends Controller
         $customer->update($validated);
 
         return back()->with('success', 'Klantgegevens bijgewerkt.');
+    }
+
+    /**
+     * Toggle a product on the customer's Quick Order (favorites) list.
+     */
+    public function toggleFavorite(Customer $customer, Product $product): RedirectResponse
+    {
+        $exists = $customer->favoriteProducts()->where('product_id', $product->id)->exists();
+
+        if ($exists) {
+            $customer->favoriteProducts()->detach($product->id);
+            $message = "{$product->title} verwijderd van de Quick Order-lijst.";
+        } else {
+            $customer->favoriteProducts()->attach($product->id);
+            $message = "{$product->title} toegevoegd aan de Quick Order-lijst.";
+        }
+
+        return back()->with('success', $message);
     }
 
     /**
