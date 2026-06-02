@@ -71,3 +71,18 @@ test('duplicate email wordt geweigerd', function () {
         ])
         ->assertSessionHasErrors('email');
 });
+
+test('uitnodigingsmail bevat het logo via een publieke url', function () {
+    $customer = Customer::factory()->create(['user_id' => null]);
+    $invitation = CustomerInvitationModel::create([
+        'customer_id' => $customer->id,
+        'email' => 'klant@example.com',
+        'token' => hash('sha256', 'raw-token'),
+        'expires_at' => now()->addDays(30),
+    ]);
+
+    $rendered = (new CustomerInvitation($invitation, 'raw-token'))->render();
+
+    expect($rendered)->toContain('storage/img/Logo.png');
+    expect($rendered)->not->toContain('data:image/png;base64');
+});

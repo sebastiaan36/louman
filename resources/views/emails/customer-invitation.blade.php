@@ -70,17 +70,11 @@
         .footer strong { color: #555; }
     </style>
 </head>
-@php
-    $logoPath = storage_path('app/public/img/Logo.png');
-    $logoBase64 = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : null;
-@endphp
 <body>
     <div class="container">
-        @if($logoBase64)
-            <div style="background:#ffffff; text-align:center; padding:20px 30px;">
-                <img src="{{ $logoBase64 }}" alt="Slagerij Louman" style="max-height:80px; max-width:240px;">
-            </div>
-        @endif
+        <div style="background:#ffffff; text-align:center; padding:20px 30px;">
+            <img src="{{ asset('storage/img/Logo.png') }}" alt="Slagerij Louman" style="max-height:80px; max-width:240px;">
+        </div>
         <div class="header">
             <h1>Welkom bij Slagerij Louman</h1>
             <p>Maak je account aan voor het B2B klantportaal</p>
