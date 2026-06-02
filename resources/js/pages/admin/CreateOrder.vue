@@ -227,7 +227,7 @@ const submit = () => {
                         <!-- Dropdown -->
                         <div
                             v-if="showCustomerDropdown && filteredCustomers.length > 0"
-                            class="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-lg"
+                            class="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-lg"
                         >
                             <button
                                 v-for="customer in filteredCustomers"
@@ -298,7 +298,7 @@ const submit = () => {
                         />
                         <div
                             v-if="showProductDropdown && filteredProducts.length > 0"
-                            class="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-lg"
+                            class="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-lg"
                         >
                             <button
                                 v-for="product in filteredProducts"
