@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreCustomerRequest;
+use App\Mail\CustomerInvitation;
 use App\Models\AuditLog;
 use App\Models\Customer;
+use App\Models\CustomerInvitation as CustomerInvitationModel;
 use App\Models\DeliveryAddress;
 use App\Notifications\CustomerApproved;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -28,7 +33,7 @@ class CustomerApprovalController extends Controller
                 'id' => $customer->id,
                 'company_name' => $customer->company_name,
                 'contact_person' => $customer->contact_person,
-                'email' => $customer->user->email,
+                'email' => $customer->user?->email,
                 'phone_number' => $customer->phone_number,
                 'kvk_number' => $customer->kvk_number,
                 'vat_number' => $customer->vat_number,
@@ -55,7 +60,7 @@ class CustomerApprovalController extends Controller
                 'id' => $customer->id,
                 'company_name' => $customer->company_name,
                 'contact_person' => $customer->contact_person,
-                'email' => $customer->user->email,
+                'email' => $customer->user?->email,
                 'phone_number' => $customer->phone_number,
                 'city' => $customer->city,
                 'approved_at' => $customer->approved_at->format('d-m-Y'),
@@ -64,6 +69,44 @@ class CustomerApprovalController extends Controller
         return Inertia::render('admin/Customers', [
             'customers' => $customers,
         ]);
+    }
+
+    /**
+     * Store a newly created customer. Only the company name is required.
+     * If an email is provided, an invitation is sent so the customer can
+     * set a password and complete their profile.
+     */
+    public function store(StoreCustomerRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        $customer = new Customer(['company_name' => $validated['company_name']]);
+        $customer->forceFill([
+            'approved_at' => now(),
+            'approved_by' => auth()->id(),
+        ])->save();
+
+        if (! empty($validated['email'])) {
+            $rawToken = Str::random(64);
+            $invitation = CustomerInvitationModel::create([
+                'customer_id' => $customer->id,
+                'email' => $validated['email'],
+                'token' => hash('sha256', $rawToken),
+                'expires_at' => now()->addDays(30),
+            ]);
+
+            Mail::to($validated['email'])->send(new CustomerInvitation($invitation, $rawToken));
+        }
+
+        AuditLog::record('customer.created', "Klant {$customer->company_name} aangemaakt door admin", $customer, [
+            'invited' => ! empty($validated['email']),
+        ]);
+
+        $message = empty($validated['email'])
+            ? "Klant {$customer->company_name} aangemaakt."
+            : "Klant {$customer->company_name} aangemaakt en uitnodiging verstuurd naar {$validated['email']}.";
+
+        return to_route('admin.customers.show', $customer)->with('success', $message);
     }
 
     /**
@@ -77,7 +120,7 @@ class CustomerApprovalController extends Controller
             'id' => $customer->id,
             'company_name' => $customer->company_name,
             'contact_person' => $customer->contact_person,
-            'email' => $customer->user->email,
+            'email' => $customer->user?->email,
             'phone_number' => $customer->phone_number,
             'kvk_number' => $customer->kvk_number,
             'vat_number' => $customer->vat_number,
@@ -157,7 +200,7 @@ class CustomerApprovalController extends Controller
             'delivery_day' => $validated['delivery_day'],
         ]);
 
-        $customer->user->notify(new CustomerApproved);
+        $customer->user?->notify(new CustomerApproved);
 
         AuditLog::record('customer.approved', "Klant {$customer->company_name} goedgekeurd", $customer, [
             'customer_category' => $validated['customer_category'],
@@ -322,7 +365,7 @@ class CustomerApprovalController extends Controller
                     $customer->id,
                     $customer->company_name,
                     $customer->contact_person,
-                    $customer->user->email,
+                    $customer->user?->email,
                     // Single-quote prefix tells Excel to treat the value as text,
                     // preserving leading zeros. The import strips this prefix automatically.
                     "'".$customer->phone_number,

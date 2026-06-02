@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { Users } from 'lucide-vue-next';
+import { Form, Head, router, usePage } from '@inertiajs/vue3';
+import { Plus, Users } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -11,6 +12,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Table,
@@ -61,6 +63,8 @@ const importOpen = ref(false);
 const csvFile = ref<File | null>(null);
 const importing = ref(false);
 
+const createOpen = ref(false);
+
 const handleCsvChange = (e: Event) => {
     csvFile.value = (e.target as HTMLInputElement).files?.[0] ?? null;
 };
@@ -100,6 +104,10 @@ const submitImport = () => {
                         <Button variant="outline">CSV downloaden</Button>
                     </a>
                     <Button variant="outline" @click="importOpen = true">CSV importeren</Button>
+                    <Button @click="createOpen = true">
+                        <Plus class="h-4 w-4 mr-2" />
+                        Klant toevoegen
+                    </Button>
                 </div>
             </div>
 
@@ -156,6 +164,64 @@ const submitImport = () => {
                 </Table>
             </div>
         </div>
+
+        <!-- Create Customer Dialog -->
+        <Dialog :open="createOpen" @update:open="createOpen = $event">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Klant toevoegen</DialogTitle>
+                    <DialogDescription>
+                        Alleen de bedrijfsnaam is verplicht. Vul een e-mailadres in om de
+                        klant een uitnodiging te sturen om zelf een account aan te maken.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <Form
+                    action="/admin/customers"
+                    method="post"
+                    :reset-on-success="['company_name', 'email']"
+                    @success="createOpen = false"
+                    v-slot="{ errors, processing }"
+                    class="space-y-4"
+                >
+                    <div class="grid gap-2">
+                        <Label for="company_name">Bedrijfsnaam *</Label>
+                        <Input
+                            id="company_name"
+                            type="text"
+                            required
+                            autofocus
+                            name="company_name"
+                            placeholder="Bedrijfsnaam"
+                        />
+                        <InputError :message="errors.company_name" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="email">E-mailadres (optioneel)</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            name="email"
+                            placeholder="email@bedrijf.nl"
+                        />
+                        <InputError :message="errors.email" />
+                        <p class="text-xs text-muted-foreground">
+                            Indien ingevuld krijgt de klant een uitnodiging om een wachtwoord in te stellen.
+                        </p>
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" @click="createOpen = false">
+                            Annuleren
+                        </Button>
+                        <Button type="submit" :disabled="processing">
+                            {{ processing ? 'Aanmaken...' : 'Klant aanmaken' }}
+                        </Button>
+                    </DialogFooter>
+                </Form>
+            </DialogContent>
+        </Dialog>
 
         <!-- Import Dialog -->
         <Dialog :open="importOpen" @update:open="importOpen = $event">

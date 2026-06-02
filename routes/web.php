@@ -5,8 +5,10 @@ use App\Http\Controllers\Admin\CustomerApprovalController;
 use App\Http\Controllers\Admin\DeliveryRouteController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Auth\CustomerInvitationController;
 use App\Http\Controllers\Auth\CustomerRegisterController;
 use App\Http\Controllers\Customer\CartController;
+use App\Http\Controllers\Customer\CompleteProfileController;
 use App\Http\Controllers\Customer\CustomerProfileController;
 use App\Http\Controllers\Customer\DeliveryAddressController;
 use App\Http\Controllers\Customer\FavoriteController;
@@ -15,8 +17,8 @@ use App\Http\Controllers\Customer\ProductController as CustomerProductController
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PackingSlipController;
 use App\Mail\OrderConfirmation;
-use App\Mail\OrderShipped;
 use App\Mail\OrderPlacedNotification;
+use App\Mail\OrderShipped;
 use App\Models\Order;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -44,6 +46,23 @@ Route::get('/awaiting-approval', fn () => Inertia::render('auth/AwaitingApproval
     ->middleware(['auth'])
     ->name('customer.awaiting-approval');
 
+// Customer invitation acceptance (public, guest-only)
+Route::middleware('guest')->group(function () {
+    Route::get('/invitation/{token}', [CustomerInvitationController::class, 'show'])
+        ->name('customer.invitation.show');
+    Route::post('/invitation/{token}', [CustomerInvitationController::class, 'accept'])
+        ->name('customer.invitation.accept');
+});
+
+// Customer profile completion (auth required, but no profile-complete middleware
+// because this IS the page the customer fills in)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/customer/complete-profile', [CompleteProfileController::class, 'edit'])
+        ->name('customer.complete-profile.edit');
+    Route::patch('/customer/complete-profile', [CompleteProfileController::class, 'update'])
+        ->name('customer.complete-profile.update');
+});
+
 // Email Verification Routes
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
@@ -70,6 +89,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.customers.import');
     Route::get('/customers', [CustomerApprovalController::class, 'allCustomers'])
         ->name('admin.customers.index');
+    Route::post('/customers', [CustomerApprovalController::class, 'store'])
+        ->name('admin.customers.store');
     Route::get('/customers/{customer}', [CustomerApprovalController::class, 'show'])
         ->name('admin.customers.show');
     Route::post('/customers/{customer}/approve', [CustomerApprovalController::class, 'approve'])
@@ -128,7 +149,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.orders.bulk-download-packing-slips');
 });
 
-Route::middleware(['auth', 'approved'])->prefix('customer')->group(function () {
+Route::middleware(['auth', 'approved', 'customer.profile-complete'])->prefix('customer')->group(function () {
     Route::get('/profile', [CustomerProfileController::class, 'edit'])
         ->name('customer.profile');
     Route::patch('/profile', [CustomerProfileController::class, 'update'])
@@ -182,28 +203,32 @@ Route::middleware(['auth', 'approved'])->prefix('customer')->group(function () {
 
 // Mail & PDF previews (alleen voor admins, verwijder na development)
 Route::middleware(['auth', 'admin'])->prefix('preview')->group(function () {
-    Route::get('/mail/order-placed/{order?}', function (Order $order = null) {
+    Route::get('/mail/order-placed/{order?}', function (?Order $order = null) {
         $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
         $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+
         return new OrderPlacedNotification($order);
     })->name('preview.mail.order-placed');
 
-    Route::get('/mail/order-confirmation/{order?}', function (Order $order = null) {
+    Route::get('/mail/order-confirmation/{order?}', function (?Order $order = null) {
         $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
         $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+
         return new OrderConfirmation($order);
     })->name('preview.mail.order-confirmation');
 
-    Route::get('/pdf/packing-slip/{order?}', function (Order $order = null) {
+    Route::get('/pdf/packing-slip/{order?}', function (?Order $order = null) {
         $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
         $order->load(['customer.user', 'deliveryAddress', 'items.product']);
         $pdf = Pdf::loadView('pdf.packing-slip', ['order' => $order]);
-        return $pdf->stream('pakbon-' . $order->id . '.pdf');
+
+        return $pdf->stream('pakbon-'.$order->id.'.pdf');
     })->name('preview.pdf.packing-slip');
 
-    Route::get('/mail/order-shipped/{order?}', function (Order $order = null) {
+    Route::get('/mail/order-shipped/{order?}', function (?Order $order = null) {
         $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
         $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+
         return new OrderShipped($order);
     })->name('preview.mail.order-shipped');
 });
