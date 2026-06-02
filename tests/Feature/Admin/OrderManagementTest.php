@@ -19,6 +19,21 @@ test('admin ziet alle bestellingen', function () {
         ->assertInertia(fn ($page) => $page->component('admin/Orders'));
 });
 
+test('nieuwe bestelling pagina toont artikelnummers bij producten', function () {
+    $admin = adminUser();
+    approvedCustomer();
+    $product = Product::factory()->create(['article_number' => 'ART-12345']);
+
+    $this->actingAs($admin)
+        ->get('/admin/orders/create')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/CreateOrder')
+            ->where('products.0.article_number', 'ART-12345')
+            ->where('products.0.id', $product->id)
+        );
+});
+
 test('admin kan filteren op status', function () {
     $admin = adminUser();
     $customer = approvedCustomer();

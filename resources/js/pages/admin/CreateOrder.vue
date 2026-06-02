@@ -31,12 +31,14 @@ interface Customer {
 interface Product {
     id: number;
     title: string;
+    article_number: string | null;
     price: string;
 }
 
 interface OrderItem {
     product_id: number;
     product_title: string;
+    article_number: string | null;
     quantity: number;
     unit_price: number;
 }
@@ -101,7 +103,8 @@ const filteredProducts = computed(() => {
     const q = productSearch.value.toLowerCase();
     if (!q) return [];
     return props.products.filter(p =>
-        p.title.toLowerCase().includes(q)
+        p.title.toLowerCase().includes(q) ||
+        (p.article_number?.toLowerCase().includes(q) ?? false)
     ).slice(0, 8);
 });
 
@@ -130,6 +133,7 @@ const addProduct = (product: Product) => {
         orderItems.value.push({
             product_id: product.id,
             product_title: product.title,
+            article_number: product.article_number,
             quantity: 1,
             unit_price: getPriceForCustomer(product.id),
         });
@@ -300,11 +304,16 @@ const submit = () => {
                                 v-for="product in filteredProducts"
                                 :key="product.id"
                                 type="button"
-                                class="w-full text-left px-4 py-2 text-sm hover:bg-muted flex justify-between items-center"
+                                class="w-full text-left px-4 py-2 text-sm hover:bg-muted flex justify-between items-center gap-4"
                                 @mousedown.prevent="addProduct(product)"
                             >
-                                <span>{{ product.title }}</span>
-                                <span class="text-muted-foreground text-xs ml-4">
+                                <span class="flex flex-col">
+                                    <span>{{ product.title }}</span>
+                                    <span v-if="product.article_number" class="text-muted-foreground text-xs">
+                                        Art.nr: {{ product.article_number }}
+                                    </span>
+                                </span>
+                                <span class="text-muted-foreground text-xs shrink-0">
                                     {{ formatPrice(getPriceForCustomer(product.id)) }}
                                 </span>
                             </button>
@@ -321,7 +330,12 @@ const submit = () => {
                         :key="item.product_id"
                         class="flex items-center gap-3 rounded-md border px-3 py-2"
                     >
-                        <div class="flex-1 text-sm font-medium">{{ item.product_title }}</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium truncate">{{ item.product_title }}</div>
+                            <div v-if="item.article_number" class="text-xs text-muted-foreground">
+                                Art.nr: {{ item.article_number }}
+                            </div>
+                        </div>
                         <div class="text-sm text-muted-foreground w-20 text-right">
                             {{ formatPrice(item.unit_price) }}
                         </div>
