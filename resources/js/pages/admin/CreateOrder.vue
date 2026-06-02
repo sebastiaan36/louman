@@ -102,10 +102,23 @@ const showProductDropdown = ref(false);
 const filteredProducts = computed(() => {
     const q = productSearch.value.toLowerCase();
     if (!q) return [];
-    return props.products.filter(p =>
-        p.title.toLowerCase().includes(q) ||
-        (p.article_number?.toLowerCase().includes(q) ?? false)
-    ).slice(0, 8);
+
+    const rank = (p: Product): number => {
+        const article = p.article_number?.toLowerCase() ?? '';
+        const title = p.title.toLowerCase();
+        if (article === q) return 0;
+        if (article.startsWith(q)) return 1;
+        if (title.startsWith(q)) return 2;
+        return 3;
+    };
+
+    return props.products
+        .filter(p =>
+            p.title.toLowerCase().includes(q) ||
+            (p.article_number?.toLowerCase().includes(q) ?? false)
+        )
+        .sort((a, b) => rank(a) - rank(b))
+        .slice(0, 8);
 });
 
 const getPriceForCustomer = (productId: number): number => {
