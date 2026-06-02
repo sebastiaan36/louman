@@ -44,6 +44,9 @@ defineProps<{
                     placeholder="Wachtwoord"
                     autofocus
                 />
+                <p class="text-xs text-muted-foreground">
+                    Minimaal 12 tekens, met hoofd- en kleine letters, een cijfer en een symbool.
+                </p>
                 <InputError :message="errors.password" />
             </div>
 

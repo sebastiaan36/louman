@@ -77,6 +77,36 @@ test('accept faalt bij wachtwoord-bevestiging mismatch', function () {
     ])->assertSessionHasErrors('password');
 });
 
+test('accept toont nederlandse melding bij te kort wachtwoord onder strikte regels', function () {
+    \Illuminate\Validation\Rules\Password::defaults(
+        fn () => \Illuminate\Validation\Rules\Password::min(12)->mixedCase()->numbers()->symbols()
+    );
+
+    [, $rawToken] = createInvitation();
+
+    $this->post("/invitation/{$rawToken}", [
+        'password' => 'Kort1!',
+        'password_confirmation' => 'Kort1!',
+    ])->assertSessionHasErrors([
+        'password' => 'Het wachtwoord moet minimaal 12 tekens bevatten.',
+    ]);
+});
+
+test('accept toont nederlandse melding bij ontbrekend symbool onder strikte regels', function () {
+    \Illuminate\Validation\Rules\Password::defaults(
+        fn () => \Illuminate\Validation\Rules\Password::min(12)->mixedCase()->numbers()->symbols()
+    );
+
+    [, $rawToken] = createInvitation();
+
+    $this->post("/invitation/{$rawToken}", [
+        'password' => 'GeenSymbool1234',
+        'password_confirmation' => 'GeenSymbool1234',
+    ])->assertSessionHasErrors([
+        'password' => 'Gebruik minimaal één symbool (bijv. ! @ # $).',
+    ]);
+});
+
 test('complete-profile redirect naar dashboard als profiel al compleet is', function () {
     $customer = Customer::factory()->approved()->create();
 

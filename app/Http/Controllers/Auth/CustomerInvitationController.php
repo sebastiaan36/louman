@@ -41,11 +41,7 @@ class CustomerInvitationController extends Controller
 
         $validated = $request->validate([
             'password' => $this->passwordRules(),
-        ], [
-            'password.required' => 'Vul een wachtwoord in.',
-            'password.min' => 'Het wachtwoord moet minimaal 8 tekens bevatten.',
-            'password.confirmed' => 'De wachtwoordbevestiging komt niet overeen.',
-        ]);
+        ], $this->passwordMessages());
 
         $user = DB::transaction(function () use ($invitation, $validated) {
             $user = User::create([

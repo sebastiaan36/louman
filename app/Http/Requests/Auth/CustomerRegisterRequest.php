@@ -80,6 +80,7 @@ class CustomerRegisterRequest extends FormRequest
             'kvk_number.unique' => 'Dit KvK nummer is al geregistreerd.',
             'bank_account.regex' => 'Vul een geldig Nederlands IBAN rekeningnummer in (bijv. NL91ABNA0417164300).',
             'vat_number.regex' => 'Vul een geldig Nederlands BTW nummer in (bijv. NL123456789B01).',
+            ...$this->passwordMessages(),
         ];
     }
 }
