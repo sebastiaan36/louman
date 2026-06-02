@@ -3,6 +3,7 @@ import { Form, Head, router, usePage } from '@inertiajs/vue3';
 import { Plus, Users } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -34,6 +35,7 @@ interface Customer {
     phone_number: string;
     city: string;
     approved_at: string;
+    is_active: boolean;
 }
 
 defineProps<{
@@ -137,6 +139,7 @@ const submitImport = () => {
                             <TableHead>Email</TableHead>
                             <TableHead>Telefoon</TableHead>
                             <TableHead>Plaats</TableHead>
+                            <TableHead>Status</TableHead>
                             <TableHead>Goedgekeurd op</TableHead>
                             <TableHead></TableHead>
                         </TableRow>
@@ -153,6 +156,11 @@ const submitImport = () => {
                             <TableCell>{{ customer.email }}</TableCell>
                             <TableCell>{{ customer.phone_number }}</TableCell>
                             <TableCell>{{ customer.city }}</TableCell>
+                            <TableCell>
+                                <Badge :variant="customer.is_active ? 'default' : 'destructive'">
+                                    {{ customer.is_active ? 'Actief' : 'Inactief' }}
+                                </Badge>
+                            </TableCell>
                             <TableCell>{{ customer.approved_at }}</TableCell>
                             <TableCell class="text-right">
                                 <Button size="sm" variant="outline" @click.stop="viewCustomer(customer.id)">

@@ -12,6 +12,7 @@ use App\Models\DeliveryAddress;
 use App\Notifications\CustomerApproved;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -64,6 +65,7 @@ class CustomerApprovalController extends Controller
                 'phone_number' => $customer->phone_number,
                 'city' => $customer->city,
                 'approved_at' => $customer->approved_at->format('d-m-Y'),
+                'is_active' => $customer->isActive(),
             ]);
 
         return Inertia::render('admin/Customers', [
@@ -137,6 +139,9 @@ class CustomerApprovalController extends Controller
             'show_on_map' => $customer->show_on_map,
             'approved_at' => $customer->approved_at?->format('d-m-Y H:i'),
             'created_at' => $customer->created_at->format('d-m-Y H:i'),
+            'is_active' => $customer->isActive(),
+            'deactivated_at' => $customer->deactivated_at?->format('d-m-Y H:i'),
+            'can_delete' => ! $customer->orders()->exists(),
         ];
 
         $deliveryAddresses = $customer->deliveryAddresses->map(fn ($address) => [
@@ -280,6 +285,62 @@ class CustomerApprovalController extends Controller
         $customer->update($validated);
 
         return back()->with('success', 'Klantgegevens bijgewerkt.');
+    }
+
+    /**
+     * Deactivate a customer, blocking portal access without deleting data.
+     */
+    public function deactivate(Customer $customer): RedirectResponse
+    {
+        if (! $customer->isActive()) {
+            return back()->with('error', 'Deze klant is al gedeactiveerd.');
+        }
+
+        $customer->forceFill(['deactivated_at' => now()])->save();
+
+        AuditLog::record('customer.deactivated', "Klant {$customer->company_name} gedeactiveerd", $customer);
+
+        return back()->with('success', "Klant {$customer->company_name} is gedeactiveerd.");
+    }
+
+    /**
+     * Reactivate a previously deactivated customer.
+     */
+    public function activate(Customer $customer): RedirectResponse
+    {
+        if ($customer->isActive()) {
+            return back()->with('error', 'Deze klant is al actief.');
+        }
+
+        $customer->forceFill(['deactivated_at' => null])->save();
+
+        AuditLog::record('customer.activated', "Klant {$customer->company_name} geactiveerd", $customer);
+
+        return back()->with('success', "Klant {$customer->company_name} is geactiveerd.");
+    }
+
+    /**
+     * Delete a customer that has no orders, along with the linked user account.
+     */
+    public function destroy(Customer $customer): RedirectResponse
+    {
+        if ($customer->orders()->exists()) {
+            return back()->with('error', 'Deze klant heeft bestellingen en kan niet worden verwijderd.');
+        }
+
+        $companyName = $customer->company_name;
+        $user = $customer->user;
+
+        DB::transaction(function () use ($customer, $user) {
+            $customer->delete();
+            $user?->delete();
+        });
+
+        AuditLog::record('customer.deleted', "Klant {$companyName} verwijderd", null, [
+            'company_name' => $companyName,
+        ]);
+
+        return to_route('admin.customers.index')->with('success', "Klant {$companyName} is verwijderd.");
     }
 
     /**

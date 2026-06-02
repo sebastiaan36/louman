@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureCustomerIsApproved
@@ -23,6 +24,15 @@ class EnsureCustomerIsApproved
 
         if ($user->isAdmin()) {
             return to_route('admin.dashboard');
+        }
+
+        if ($user->isCustomer() && $user->customer && ! $user->customer->isActive()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->with('status', 'Je account is gedeactiveerd. Neem contact op met Slagerij Louman.');
         }
 
         if ($user->isCustomer() && $user->customer && ! $user->customer->isApproved()) {

@@ -47,6 +47,7 @@ class Customer extends Model
     {
         return [
             'approved_at' => 'datetime',
+            'deactivated_at' => 'datetime',
             'show_on_map' => 'boolean',
         ];
     }
@@ -81,6 +82,22 @@ class Customer extends Model
     public function isApproved(): bool
     {
         return $this->approved_at !== null;
+    }
+
+    /**
+     * Scope a query to only include active (not deactivated) customers.
+     */
+    public function scopeActive(Builder $query): void
+    {
+        $query->whereNull('deactivated_at');
+    }
+
+    /**
+     * Determine if the customer is active (not deactivated).
+     */
+    public function isActive(): bool
+    {
+        return $this->deactivated_at === null;
     }
 
     /**

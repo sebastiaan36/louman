@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
-import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit, Plus, Trash2 } from 'lucide-vue-next';
+import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit, Plus, Trash2, Ban, CheckCircle2 } from 'lucide-vue-next';
 import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +59,9 @@ interface Customer {
     show_on_map: boolean;
     approved_at: string;
     created_at: string;
+    is_active: boolean;
+    deactivated_at: string | null;
+    can_delete: boolean;
 }
 
 interface DeliveryAddress {
@@ -118,6 +121,42 @@ const getStatusLabel = (status: string) => {
         cancelled: 'Geannuleerd',
     };
     return labels[status] || status;
+};
+
+// Activation / deactivation / deletion
+const deactivateDialogOpen = ref(false);
+const deleteDialogOpen = ref(false);
+const statusProcessing = ref(false);
+
+const deactivateCustomer = () => {
+    statusProcessing.value = true;
+    router.post(`/admin/customers/${props.customer.id}/deactivate`, {}, {
+        preserveScroll: true,
+        onFinish: () => {
+            statusProcessing.value = false;
+            deactivateDialogOpen.value = false;
+        },
+    });
+};
+
+const activateCustomer = () => {
+    statusProcessing.value = true;
+    router.post(`/admin/customers/${props.customer.id}/activate`, {}, {
+        preserveScroll: true,
+        onFinish: () => {
+            statusProcessing.value = false;
+        },
+    });
+};
+
+const deleteCustomer = () => {
+    statusProcessing.value = true;
+    router.delete(`/admin/customers/${props.customer.id}`, {
+        onFinish: () => {
+            statusProcessing.value = false;
+            deleteDialogOpen.value = false;
+        },
+    });
 };
 
 const editDialogOpen = ref(false);
@@ -282,14 +321,49 @@ const deleteAddress = (addressId: number) => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-6 p-6">
             <!-- Customer Info Header -->
-            <div>
-                <h1 class="text-2xl font-bold flex items-center gap-2">
-                    <Building2 class="h-6 w-6" />
-                    {{ customer.company_name }}
-                </h1>
-                <p class="text-sm text-muted-foreground">
-                    Klant sinds {{ customer.created_at }}
-                </p>
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold flex items-center gap-2">
+                        <Building2 class="h-6 w-6" />
+                        {{ customer.company_name }}
+                        <Badge :variant="customer.is_active ? 'default' : 'destructive'">
+                            {{ customer.is_active ? 'Actief' : 'Inactief' }}
+                        </Badge>
+                    </h1>
+                    <p class="text-sm text-muted-foreground">
+                        Klant sinds {{ customer.created_at }}
+                        <span v-if="!customer.is_active && customer.deactivated_at">
+                            · gedeactiveerd op {{ customer.deactivated_at }}
+                        </span>
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <Button
+                        v-if="customer.is_active"
+                        variant="outline"
+                        @click="deactivateDialogOpen = true"
+                    >
+                        <Ban class="h-4 w-4 mr-2" />
+                        Deactiveren
+                    </Button>
+                    <Button
+                        v-else
+                        variant="outline"
+                        :disabled="statusProcessing"
+                        @click="activateCustomer"
+                    >
+                        <CheckCircle2 class="h-4 w-4 mr-2" />
+                        Activeren
+                    </Button>
+                    <Button
+                        v-if="customer.can_delete"
+                        variant="destructive"
+                        @click="deleteDialogOpen = true"
+                    >
+                        <Trash2 class="h-4 w-4 mr-2" />
+                        Verwijderen
+                    </Button>
+                </div>
             </div>
 
             <!-- Customer Details Cards -->
@@ -1011,6 +1085,50 @@ const deleteAddress = (addressId: number) => {
                         </Button>
                     </DialogFooter>
                 </form>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Deactivate Confirmation Dialog -->
+        <Dialog :open="deactivateDialogOpen" @update:open="deactivateDialogOpen = $event">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Klant deactiveren</DialogTitle>
+                    <DialogDescription>
+                        Weet je zeker dat je <strong>{{ customer.company_name }}</strong> wilt deactiveren?
+                        De klant kan niet meer inloggen of bestellen. Alle gegevens en bestelhistorie
+                        blijven bewaard en je kunt de klant later weer activeren.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="deactivateDialogOpen = false">
+                        Annuleren
+                    </Button>
+                    <Button variant="destructive" :disabled="statusProcessing" @click="deactivateCustomer">
+                        Deactiveren
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Delete Confirmation Dialog -->
+        <Dialog :open="deleteDialogOpen" @update:open="deleteDialogOpen = $event">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Klant verwijderen</DialogTitle>
+                    <DialogDescription>
+                        Weet je zeker dat je <strong>{{ customer.company_name }}</strong> definitief wilt
+                        verwijderen? Dit verwijdert ook het gekoppelde account, afleveradressen, favorieten
+                        en winkelwagen. Deze actie kan niet ongedaan worden gemaakt.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="deleteDialogOpen = false">
+                        Annuleren
+                    </Button>
+                    <Button variant="destructive" :disabled="statusProcessing" @click="deleteCustomer">
+                        Definitief verwijderen
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     </AppLayout>
