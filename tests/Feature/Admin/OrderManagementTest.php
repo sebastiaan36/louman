@@ -5,6 +5,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
 
 test('admin ziet alle bestellingen', function () {
@@ -149,4 +150,88 @@ test('admin kan voltooide bestelling niet aanpassen', function () {
         ])
         ->assertRedirect()
         ->assertSessionHas('error');
+});
+
+test('productielijst bevat alleen bevestigde bestellingen', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create();
+
+    $pendingOrder = Order::factory()->pending()->create(['customer_id' => $customer->id]);
+    OrderItem::factory()->create([
+        'order_id' => $pendingOrder->id,
+        'product_id' => $product->id,
+        'quantity' => 5,
+    ]);
+
+    $confirmedOrder = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
+    OrderItem::factory()->create([
+        'order_id' => $confirmedOrder->id,
+        'product_id' => $product->id,
+        'quantity' => 3,
+    ]);
+
+    $captured = null;
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
+    $pdfMock->shouldReceive('download')->andReturn(response('', 200));
+
+    Pdf::shouldReceive('loadView')
+        ->once()
+        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
+            $captured = $data;
+
+            return $pdfMock;
+        });
+
+    $this->actingAs($admin)
+        ->get('/admin/orders/production-list')
+        ->assertOk();
+
+    expect($captured['orderCount'])->toBe(1);
+    expect($captured['products'])->toHaveCount(1);
+    expect($captured['products'][0]['quantity'])->toBe(3);
+});
+
+test('bestellingenoverzicht bevat alleen bevestigde bestellingen', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create();
+
+    $pendingOrder = Order::factory()->pending()->create(['customer_id' => $customer->id]);
+    OrderItem::factory()->create([
+        'order_id' => $pendingOrder->id,
+        'product_id' => $product->id,
+        'quantity' => 7,
+    ]);
+
+    $confirmedOrder = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
+    OrderItem::factory()->create([
+        'order_id' => $confirmedOrder->id,
+        'product_id' => $product->id,
+        'quantity' => 2,
+    ]);
+
+    $captured = null;
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
+    $pdfMock->shouldReceive('download')->andReturn(response('', 200));
+
+    Pdf::shouldReceive('loadView')
+        ->once()
+        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
+            $captured = $data;
+
+            return $pdfMock;
+        });
+
+    $this->actingAs($admin)
+        ->get('/admin/orders/customer-overview')
+        ->assertOk();
+
+    expect($captured['orderCount'])->toBe(1);
+
+    $totalQuantity = collect($captured['dayGroups'])
+        ->flatMap(fn ($customers) => $customers)
+        ->flatMap(fn ($customer) => $customer['products'])
+        ->sum('quantity');
+    expect($totalQuantity)->toBe(2);
 });

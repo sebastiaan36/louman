@@ -185,15 +185,15 @@ class OrderController extends Controller
     }
 
     /**
-     * Generate customer order overview PDF for all pending orders.
+     * Generate customer order overview PDF for all confirmed orders.
      */
     public function customerOverview(): \Illuminate\Http\Response
     {
         $orders = Order::with(['customer', 'items.product'])
-            ->where('status', 'pending')
+            ->where('status', 'confirmed')
             ->get();
 
-        // Build product map per customer from pending orders
+        // Build product map per customer from confirmed orders
         $customerOrders = [];
         foreach ($orders as $order) {
             $customerId = $order->customer_id;
@@ -253,12 +253,12 @@ class OrderController extends Controller
     }
 
     /**
-     * Generate production list PDF for all pending orders.
+     * Generate production list PDF for all confirmed orders.
      */
     public function productionList(): \Illuminate\Http\Response
     {
         $orders = Order::with(['items.product'])
-            ->where('status', 'pending')
+            ->where('status', 'confirmed')
             ->get();
 
         // Aggregate quantities per product
