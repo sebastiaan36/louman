@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Concerns\PasswordValidationRules;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerInvitation;
 use App\Models\User;
@@ -9,13 +10,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CustomerInvitationController extends Controller
 {
+    use PasswordValidationRules;
+
     /**
      * Show the password form for an invited customer.
      */
@@ -38,7 +40,11 @@ class CustomerInvitationController extends Controller
         $invitation = $this->findValidInvitation($token);
 
         $validated = $request->validate([
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'password' => $this->passwordRules(),
+        ], [
+            'password.required' => 'Vul een wachtwoord in.',
+            'password.min' => 'Het wachtwoord moet minimaal 8 tekens bevatten.',
+            'password.confirmed' => 'De wachtwoordbevestiging komt niet overeen.',
         ]);
 
         $user = DB::transaction(function () use ($invitation, $validated) {

@@ -30,7 +30,7 @@ defineProps<{
         >
             <div class="grid gap-2">
                 <Label>E-mailadres</Label>
-                <Input :value="email" type="email" disabled readonly />
+                <Input :model-value="email" type="email" disabled readonly />
             </div>
 
             <div class="grid gap-2">
