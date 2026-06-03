@@ -68,6 +68,11 @@ test('admin ziet besteldetails', function () {
     $admin = adminUser();
     $customer = approvedCustomer();
     $order = Order::factory()->create(['customer_id' => $customer->id]);
+    $product = Product::factory()->create(['weight' => '250 gram']);
+    OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'product_id' => $product->id,
+    ]);
 
     $this->actingAs($admin)
         ->get("/admin/orders/{$order->id}")
@@ -75,6 +80,7 @@ test('admin ziet besteldetails', function () {
         ->assertInertia(fn ($page) => $page
             ->component('admin/OrderDetail')
             ->where('order.id', $order->id)
+            ->where('order.items.0.product_weight', '250 gram')
         );
 });
 
@@ -185,7 +191,7 @@ test('admin kan voltooide bestelling niet aanpassen', function () {
 test('productielijst bevat alleen bevestigde bestellingen', function () {
     $admin = adminUser();
     $customer = approvedCustomer();
-    $product = Product::factory()->create();
+    $product = Product::factory()->create(['weight' => '500 gram']);
 
     $pendingOrder = Order::factory()->pending()->create(['customer_id' => $customer->id]);
     OrderItem::factory()->create([
@@ -220,12 +226,13 @@ test('productielijst bevat alleen bevestigde bestellingen', function () {
     expect($captured['orderCount'])->toBe(1);
     expect($captured['products'])->toHaveCount(1);
     expect($captured['products'][0]['quantity'])->toBe(3);
+    expect($captured['products'][0]['weight'])->toBe('500 gram');
 });
 
 test('bestellingenoverzicht bevat alleen bevestigde bestellingen', function () {
     $admin = adminUser();
     $customer = approvedCustomer();
-    $product = Product::factory()->create();
+    $product = Product::factory()->create(['weight' => '1 kilo']);
 
     $pendingOrder = Order::factory()->pending()->create(['customer_id' => $customer->id]);
     OrderItem::factory()->create([
@@ -259,9 +266,9 @@ test('bestellingenoverzicht bevat alleen bevestigde bestellingen', function () {
 
     expect($captured['orderCount'])->toBe(1);
 
-    $totalQuantity = collect($captured['dayGroups'])
+    $allProducts = collect($captured['dayGroups'])
         ->flatMap(fn ($customers) => $customers)
-        ->flatMap(fn ($customer) => $customer['products'])
-        ->sum('quantity');
-    expect($totalQuantity)->toBe(2);
+        ->flatMap(fn ($customer) => $customer['products']);
+    expect($allProducts->sum('quantity'))->toBe(2);
+    expect($allProducts->first()['weight'])->toBe('1 kilo');
 });

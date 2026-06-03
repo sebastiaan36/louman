@@ -205,6 +205,7 @@ class OrderController extends Controller
                     $customerOrders[$customerId][$productId] = [
                         'article_number' => $item->product->article_number ?? '—',
                         'title' => $item->product->title,
+                        'weight' => $item->product->weight,
                         'quantity' => 0,
                     ];
                 }
@@ -272,6 +273,7 @@ class OrderController extends Controller
                     $products[$productId] = [
                         'article_number' => $item->product->article_number ?? '—',
                         'title' => $item->product->title,
+                        'weight' => $item->product->weight,
                         'quantity' => 0,
                     ];
                 }
@@ -348,6 +350,7 @@ class OrderController extends Controller
                         'id' => $item->id,
                         'product_id' => $item->product_id,
                         'product_title' => $item->product->title,
+                        'product_weight' => $item->product->weight,
                         'product_thumbnail' => $item->product->thumbnail_url,
                         'quantity' => $item->quantity,
                         'price' => $item->price,

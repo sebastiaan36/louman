@@ -38,6 +38,7 @@ interface OrderItem {
     id: number;
     product_id: number;
     product_title: string;
+    product_weight: string | null;
     product_thumbnail: string | null;
     quantity: number;
     price: string;
@@ -277,7 +278,12 @@ const backToOrders = () => {
                                             Geen foto
                                         </div>
                                     </TableCell>
-                                    <TableCell class="font-medium">{{ item.product_title }}</TableCell>
+                                    <TableCell class="font-medium">
+                                        {{ item.product_title }}
+                                        <span v-if="item.product_weight" class="text-muted-foreground font-normal">
+                                            — {{ item.product_weight }}
+                                        </span>
+                                    </TableCell>
                                     <TableCell>{{ formatPrice(item.price) }}</TableCell>
                                     <TableCell>{{ item.quantity }}x</TableCell>
                                     <TableCell class="font-medium">{{ formatPrice(item.subtotal) }}</TableCell>

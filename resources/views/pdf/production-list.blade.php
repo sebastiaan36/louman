@@ -96,6 +96,11 @@
             font-size: 8pt;
         }
 
+        .weight {
+            color: #888;
+            font-size: 8pt;
+        }
+
         .empty {
             text-align: center;
             padding: 30px;
@@ -129,7 +134,7 @@
                     @foreach($products as $product)
                         <tr>
                             <td class="article">{{ $product['article_number'] }}</td>
-                            <td>{{ $product['title'] }}</td>
+                            <td>{{ $product['title'] }}@if(! empty($product['weight'])) <span class="weight">— {{ $product['weight'] }}</span>@endif</td>
                             <td class="qty">{{ $product['quantity'] }}</td>
                         </tr>
                     @endforeach
