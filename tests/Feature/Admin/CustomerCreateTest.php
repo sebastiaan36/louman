@@ -72,6 +72,72 @@ test('duplicate email wordt geweigerd', function () {
         ->assertSessionHasErrors('email');
 });
 
+test('admin kan alsnog een uitnodiging sturen naar klant zonder account', function () {
+    Mail::fake();
+    $admin = adminUser();
+    $customer = Customer::factory()->create(['user_id' => null]);
+
+    $this->actingAs($admin)
+        ->post("/admin/customers/{$customer->id}/invite", [
+            'email' => 'nieuw@klant.nl',
+        ])
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect(CustomerInvitationModel::where('customer_id', $customer->id)->where('email', 'nieuw@klant.nl')->exists())->toBeTrue();
+    Mail::assertSent(CustomerInvitation::class);
+});
+
+test('uitnodiging vervangt eerdere openstaande uitnodiging', function () {
+    Mail::fake();
+    $admin = adminUser();
+    $customer = Customer::factory()->create(['user_id' => null]);
+    CustomerInvitationModel::create([
+        'customer_id' => $customer->id,
+        'email' => 'oud@klant.nl',
+        'token' => hash('sha256', 'oud-token'),
+        'expires_at' => now()->addDays(30),
+    ]);
+
+    $this->actingAs($admin)
+        ->post("/admin/customers/{$customer->id}/invite", [
+            'email' => 'nieuw@klant.nl',
+        ])
+        ->assertSessionHas('success');
+
+    expect(CustomerInvitationModel::where('customer_id', $customer->id)->count())->toBe(1);
+    expect(CustomerInvitationModel::where('customer_id', $customer->id)->first()->email)->toBe('nieuw@klant.nl');
+});
+
+test('klant met bestaand account kan niet opnieuw uitgenodigd worden', function () {
+    Mail::fake();
+    $admin = adminUser();
+    $customer = approvedCustomer();
+
+    $this->actingAs($admin)
+        ->post("/admin/customers/{$customer->id}/invite", [
+            'email' => 'iets@klant.nl',
+        ])
+        ->assertSessionHas('error');
+
+    Mail::assertNothingSent();
+});
+
+test('uitnodiging vereist een uniek e-mailadres', function () {
+    Mail::fake();
+    $admin = adminUser();
+    $customer = Customer::factory()->create(['user_id' => null]);
+    \App\Models\User::factory()->create(['email' => 'bestaand@klant.nl']);
+
+    $this->actingAs($admin)
+        ->post("/admin/customers/{$customer->id}/invite", [
+            'email' => 'bestaand@klant.nl',
+        ])
+        ->assertSessionHasErrors('email');
+
+    Mail::assertNothingSent();
+});
+
 test('uitnodigingsmail bevat het logo via een publieke url', function () {
     $customer = Customer::factory()->create(['user_id' => null]);
     $invitation = CustomerInvitationModel::create([

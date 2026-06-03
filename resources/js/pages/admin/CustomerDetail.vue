@@ -43,6 +43,7 @@ interface Customer {
     company_name: string;
     contact_person: string;
     email: string;
+    has_account: boolean;
     phone_number: string;
     packing_slip_email: string | null;
     kvk_number: string;
@@ -127,6 +128,25 @@ const getStatusLabel = (status: string) => {
 const deactivateDialogOpen = ref(false);
 const deleteDialogOpen = ref(false);
 const statusProcessing = ref(false);
+
+// Account invitation (for customers without an account)
+const inviteDialogOpen = ref(false);
+const inviteForm = useForm({ email: '' });
+
+const openInviteDialog = () => {
+    inviteForm.reset();
+    inviteForm.clearErrors();
+    inviteDialogOpen.value = true;
+};
+
+const sendInvitation = () => {
+    inviteForm.post(`/admin/customers/${props.customer.id}/invite`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            inviteDialogOpen.value = false;
+        },
+    });
+};
 
 const deactivateCustomer = () => {
     statusProcessing.value = true;
@@ -396,9 +416,16 @@ const deleteAddress = (addressId: number) => {
                         </div>
                         <div class="flex items-start gap-3">
                             <Mail class="h-4 w-4 text-muted-foreground mt-0.5" />
-                            <div>
+                            <div class="flex-1">
                                 <p class="text-sm font-medium">Email</p>
-                                <p class="text-sm text-muted-foreground">{{ customer.email }}</p>
+                                <p v-if="customer.email" class="text-sm text-muted-foreground">{{ customer.email }}</p>
+                                <template v-else>
+                                    <p class="text-sm text-muted-foreground">Nog geen account</p>
+                                    <Button size="sm" variant="outline" class="mt-2" @click="openInviteDialog">
+                                        <Mail class="h-4 w-4 mr-2" />
+                                        Uitnodiging versturen
+                                    </Button>
+                                </template>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -1105,6 +1132,40 @@ const deleteAddress = (addressId: number) => {
                     </Button>
                     <Button variant="destructive" :disabled="statusProcessing" @click="deactivateCustomer">
                         Deactiveren
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Send Invitation Dialog -->
+        <Dialog :open="inviteDialogOpen" @update:open="inviteDialogOpen = $event">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Account-uitnodiging versturen</DialogTitle>
+                    <DialogDescription>
+                        Vul het e-mailadres van <strong>{{ customer.company_name }}</strong> in.
+                        De klant ontvangt een uitnodiging om een wachtwoord in te stellen en de
+                        registratie af te ronden.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="grid gap-2">
+                    <Label for="invite_email">E-mailadres</Label>
+                    <Input
+                        id="invite_email"
+                        v-model="inviteForm.email"
+                        type="email"
+                        placeholder="email@bedrijf.nl"
+                        autofocus
+                        @keyup.enter="sendInvitation"
+                    />
+                    <InputError :message="inviteForm.errors.email" />
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" @click="inviteDialogOpen = false">Annuleren</Button>
+                    <Button :disabled="inviteForm.processing" @click="sendInvitation">
+                        {{ inviteForm.processing ? 'Versturen...' : 'Uitnodiging versturen' }}
                     </Button>
                 </DialogFooter>
             </DialogContent>

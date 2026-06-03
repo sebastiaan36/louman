@@ -10,12 +10,14 @@ use App\Models\Customer;
 use App\Models\CustomerInvitation as CustomerInvitationModel;
 use App\Models\DeliveryAddress;
 use App\Models\Product;
+use App\Models\User;
 use App\Notifications\CustomerApproved;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -90,15 +92,7 @@ class CustomerApprovalController extends Controller
         ])->save();
 
         if (! empty($validated['email'])) {
-            $rawToken = Str::random(64);
-            $invitation = CustomerInvitationModel::create([
-                'customer_id' => $customer->id,
-                'email' => $validated['email'],
-                'token' => hash('sha256', $rawToken),
-                'expires_at' => now()->addDays(30),
-            ]);
-
-            Mail::to($validated['email'])->send(new CustomerInvitation($invitation, $rawToken));
+            $this->sendCustomerInvitation($customer, $validated['email']);
         }
 
         AuditLog::record('customer.created', "Klant {$customer->company_name} aangemaakt door admin", $customer, [
@@ -113,6 +107,49 @@ class CustomerApprovalController extends Controller
     }
 
     /**
+     * Send an account invitation to a customer that has no account yet.
+     */
+    public function invite(Request $request, Customer $customer): RedirectResponse
+    {
+        if ($customer->user) {
+            return back()->with('error', 'Deze klant heeft al een account.');
+        }
+
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:255', Rule::unique(User::class, 'email')],
+        ], [
+            'email.required' => 'E-mailadres is verplicht.',
+            'email.email' => 'Vul een geldig e-mailadres in.',
+            'email.unique' => 'Dit e-mailadres is al in gebruik.',
+        ]);
+
+        // Remove any earlier pending invitations so only the latest link is valid.
+        CustomerInvitationModel::where('customer_id', $customer->id)->delete();
+
+        $this->sendCustomerInvitation($customer, $validated['email']);
+
+        AuditLog::record('customer.invited', "Uitnodiging verstuurd naar {$validated['email']} voor {$customer->company_name}", $customer);
+
+        return back()->with('success', "Uitnodiging verstuurd naar {$validated['email']}.");
+    }
+
+    /**
+     * Create an invitation for the customer and email the account link.
+     */
+    private function sendCustomerInvitation(Customer $customer, string $email): void
+    {
+        $rawToken = Str::random(64);
+        $invitation = CustomerInvitationModel::create([
+            'customer_id' => $customer->id,
+            'email' => $email,
+            'token' => hash('sha256', $rawToken),
+            'expires_at' => now()->addDays(30),
+        ]);
+
+        Mail::to($email)->send(new CustomerInvitation($invitation, $rawToken));
+    }
+
+    /**
      * Display customer details with order history.
      */
     public function show(Customer $customer): Response
@@ -124,6 +161,7 @@ class CustomerApprovalController extends Controller
             'company_name' => $customer->company_name,
             'contact_person' => $customer->contact_person,
             'email' => $customer->user?->email,
+            'has_account' => $customer->user !== null,
             'phone_number' => $customer->phone_number,
             'kvk_number' => $customer->kvk_number,
             'vat_number' => $customer->vat_number,
