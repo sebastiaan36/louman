@@ -31,11 +31,6 @@ const adminSection1 = computed<NavItem[]>(() => [
         href: dashboard(),
         icon: LayoutGrid,
     },
-    {
-        title: 'Beheerders',
-        href: '/admin/administrators',
-        icon: ShieldCheck,
-    },
 ]);
 
 const adminSection2 = computed<NavItem[]>(() => [
@@ -71,6 +66,15 @@ const adminSection3 = computed<NavItem[]>(() => [
         title: 'Rijroute',
         href: '/admin/delivery-route',
         icon: MapPin,
+    },
+]);
+
+// Pinned to the bottom of the admin menu
+const adminSectionBottom = computed<NavItem[]>(() => [
+    {
+        title: 'Beheerders',
+        href: '/admin/administrators',
+        icon: ShieldCheck,
     },
 ]);
 
@@ -122,6 +126,10 @@ const footerNavItems: NavItem[] = [];
                 <NavMain :items="adminSection2" label="Klanten" />
                 <SidebarSeparator />
                 <NavMain :items="adminSection3" label="Shop" />
+                <div class="mt-auto">
+                    <SidebarSeparator />
+                    <NavMain :items="adminSectionBottom" label="Systeem" />
+                </div>
             </template>
             <template v-else>
                 <NavMain :items="customerNavItems" />
