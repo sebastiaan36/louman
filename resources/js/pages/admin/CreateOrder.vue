@@ -22,7 +22,7 @@ interface DeliveryAddress {
 interface Customer {
     id: number;
     company_name: string;
-    contact_person: string;
+    contact_person: string | null;
     customer_category: string | null;
     discount_percentage: string | null;
     favorite_product_ids: number[];
@@ -69,10 +69,18 @@ const filteredCustomers = computed(() => {
     const q = customerSearch.value.toLowerCase();
     if (!q) return props.customers.slice(0, 10);
     return props.customers.filter(c =>
-        c.company_name.toLowerCase().includes(q) ||
-        c.contact_person.toLowerCase().includes(q)
+        (c.company_name?.toLowerCase().includes(q) ?? false) ||
+        (c.contact_person?.toLowerCase().includes(q) ?? false)
     ).slice(0, 10);
 });
+
+const hideCustomerDropdown = () => {
+    window.setTimeout(() => (showCustomerDropdown.value = false), 150);
+};
+
+const hideProductDropdown = () => {
+    window.setTimeout(() => (showProductDropdown.value = false), 150);
+};
 
 const selectCustomer = (customer: Customer) => {
     selectedCustomer.value = customer;
@@ -274,7 +282,7 @@ const submit = () => {
                             placeholder="Zoek op bedrijfsnaam of contactpersoon..."
                             class="pl-9"
                             @focus="showCustomerDropdown = true"
-                            @blur="setTimeout(() => showCustomerDropdown = false, 150)"
+                            @blur="hideCustomerDropdown"
                             autocomplete="off"
                         />
                         <!-- Dropdown -->
@@ -345,7 +353,7 @@ const submit = () => {
                             placeholder="Zoek product op naam..."
                             class="pl-9"
                             @focus="showProductDropdown = true"
-                            @blur="setTimeout(() => showProductDropdown = false, 150)"
+                            @blur="hideProductDropdown"
                             autocomplete="off"
                             :disabled="!selectedCustomer"
                         />
