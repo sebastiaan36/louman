@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { FileText, FolderTree, LayoutGrid, MapPin, Package, ShoppingCart, Store, Users, UsersRound, Zap } from 'lucide-vue-next';
+import { FileText, FolderTree, LayoutGrid, MapPin, Package, ShieldCheck, ShoppingCart, Store, Users, UsersRound, Zap } from 'lucide-vue-next';
 import { computed } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -30,6 +30,11 @@ const adminSection1 = computed<NavItem[]>(() => [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Beheerders',
+        href: '/admin/administrators',
+        icon: ShieldCheck,
     },
 ]);
 

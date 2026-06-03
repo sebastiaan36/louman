@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdministratorController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerApprovalController;
 use App\Http\Controllers\Admin\DeliveryRouteController;
@@ -81,6 +82,14 @@ Route::post('/email/verification-notification', function (Request $request) {
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    // Administrators
+    Route::get('/administrators', [AdministratorController::class, 'index'])
+        ->name('admin.administrators.index');
+    Route::post('/administrators', [AdministratorController::class, 'store'])
+        ->name('admin.administrators.store');
+    Route::delete('/administrators/{administrator}', [AdministratorController::class, 'destroy'])
+        ->name('admin.administrators.destroy');
+
     Route::get('/customers/pending', [CustomerApprovalController::class, 'index'])
         ->name('admin.customers.pending');
     Route::get('/customers/export', [CustomerApprovalController::class, 'export'])
