@@ -33,6 +33,7 @@ interface Product {
     id: number;
     title: string;
     article_number: string | null;
+    weight: string | null;
     price: string;
 }
 
@@ -40,6 +41,7 @@ interface OrderItem {
     product_id: number;
     product_title: string;
     article_number: string | null;
+    weight: string | null;
     quantity: number;
     unit_price: number;
 }
@@ -92,6 +94,7 @@ const selectCustomer = (customer: Customer) => {
             product_id: product.id,
             product_title: product.title,
             article_number: product.article_number,
+            weight: product.weight,
             quantity: 0,
             unit_price: getPriceForCustomer(product.id),
         }));
@@ -160,6 +163,7 @@ const addProduct = (product: Product) => {
             product_id: product.id,
             product_title: product.title,
             article_number: product.article_number,
+            weight: product.weight,
             quantity: 1,
             unit_price: getPriceForCustomer(product.id),
         });
@@ -357,7 +361,12 @@ const submit = () => {
                                 @mousedown.prevent="addProduct(product)"
                             >
                                 <span class="flex flex-col">
-                                    <span>{{ product.title }}</span>
+                                    <span>
+                                        {{ product.title }}
+                                        <span v-if="product.weight" class="text-muted-foreground">
+                                            — {{ product.weight }}
+                                        </span>
+                                    </span>
                                     <span v-if="product.article_number" class="text-muted-foreground text-xs">
                                         Art.nr: {{ product.article_number }}
                                     </span>
@@ -380,7 +389,12 @@ const submit = () => {
                         class="flex items-center gap-3 rounded-md border px-3 py-2"
                     >
                         <div class="flex-1 min-w-0">
-                            <div class="text-sm font-medium truncate">{{ item.product_title }}</div>
+                            <div class="text-sm font-medium truncate">
+                                {{ item.product_title }}
+                                <span v-if="item.weight" class="text-muted-foreground font-normal">
+                                    — {{ item.weight }}
+                                </span>
+                            </div>
                             <div v-if="item.article_number" class="text-xs text-muted-foreground">
                                 Art.nr: {{ item.article_number }}
                             </div>

@@ -111,6 +111,7 @@ class OrderController extends Controller
                 'id' => $product->id,
                 'title' => $product->title,
                 'article_number' => $product->article_number,
+                'weight' => $product->weight,
                 'price' => $product->price,
             ]);
 

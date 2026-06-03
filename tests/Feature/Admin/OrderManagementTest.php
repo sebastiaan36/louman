@@ -22,7 +22,7 @@ test('admin ziet alle bestellingen', function () {
 test('nieuwe bestelling pagina toont artikelnummers bij producten', function () {
     $admin = adminUser();
     approvedCustomer();
-    $product = Product::factory()->create(['article_number' => 'ART-12345']);
+    $product = Product::factory()->create(['article_number' => 'ART-12345', 'weight' => '300 gram']);
 
     $this->actingAs($admin)
         ->get('/admin/orders/create')
@@ -30,6 +30,7 @@ test('nieuwe bestelling pagina toont artikelnummers bij producten', function () 
         ->assertInertia(fn ($page) => $page
             ->component('admin/CreateOrder')
             ->where('products.0.article_number', 'ART-12345')
+            ->where('products.0.weight', '300 gram')
             ->where('products.0.id', $product->id)
         );
 });
