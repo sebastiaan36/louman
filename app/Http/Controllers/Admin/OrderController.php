@@ -198,8 +198,13 @@ class OrderController extends Controller
 
         // Build product map per customer from confirmed orders
         $customerOrders = [];
+        $customerNotes = [];
         foreach ($orders as $order) {
             $customerId = $order->customer_id;
+            $note = trim((string) $order->notes);
+            if ($note !== '' && ! in_array($note, $customerNotes[$customerId] ?? [], true)) {
+                $customerNotes[$customerId][] = $note;
+            }
             foreach ($order->items as $item) {
                 $productId = $item->product_id;
                 if (! isset($customerOrders[$customerId][$productId])) {
@@ -230,6 +235,7 @@ class OrderController extends Controller
                 'company_name' => $customer->company_name,
                 'phone_number' => $customer->phone_number,
                 'products' => array_values($products),
+                'notes' => $customerNotes[$customer->id] ?? [],
             ];
         }
 

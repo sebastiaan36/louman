@@ -273,3 +273,41 @@ test('bestellingenoverzicht bevat alleen bevestigde bestellingen', function () {
     expect($allProducts->sum('quantity'))->toBe(2);
     expect($allProducts->first()['weight'])->toBe('1 kilo');
 });
+
+test('bestellingenoverzicht bevat bestelnotities per klant', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create();
+
+    $order = Order::factory()->confirmed()->create([
+        'customer_id' => $customer->id,
+        'notes' => 'Graag voor 10:00 leveren',
+    ]);
+    OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'product_id' => $product->id,
+        'quantity' => 1,
+    ]);
+
+    $captured = null;
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
+    $pdfMock->shouldReceive('download')->andReturn(response('', 200));
+
+    Pdf::shouldReceive('loadView')
+        ->once()
+        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
+            $captured = $data;
+
+            return $pdfMock;
+        });
+
+    $this->actingAs($admin)
+        ->get('/admin/orders/customer-overview')
+        ->assertOk();
+
+    $customerWithNotes = collect($captured['dayGroups'])
+        ->flatMap(fn ($customers) => $customers)
+        ->first(fn ($c) => ! empty($c['notes']));
+
+    expect($customerWithNotes['notes'])->toContain('Graag voor 10:00 leveren');
+});

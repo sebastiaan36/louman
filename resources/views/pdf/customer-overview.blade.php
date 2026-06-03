@@ -147,6 +147,19 @@
         .products tr:not(:last-child) td {
             border-bottom: 1px solid #f0f0f0;
         }
+
+        .notes {
+            margin-top: 3px;
+            padding-top: 3px;
+            border-top: 1px solid #ddd;
+            font-size: 6.5pt;
+            color: #444;
+            line-height: 1.25;
+        }
+
+        .notes strong {
+            color: #222;
+        }
     </style>
 </head>
 <body>
@@ -200,6 +213,11 @@
                                                     </tr>
                                                 @endforeach
                                             </table>
+                                        @endif
+                                        @if(!empty($customer['notes']))
+                                            <div class="notes">
+                                                <strong>Notitie:</strong> {{ implode(' • ', $customer['notes']) }}
+                                            </div>
                                         @endif
                                     </div>
                                 </td>
