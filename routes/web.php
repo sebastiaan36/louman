@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CustomerApprovalController;
 use App\Http\Controllers\Admin\DeliveryRouteController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\CustomerInvitationController;
 use App\Http\Controllers\Auth\CustomerRegisterController;
 use App\Http\Controllers\Customer\CartController;
@@ -87,6 +88,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Statistics (revenue figures) — reachable by direct link only, not in the menu
     Route::get('/cijfers', [DashboardController::class, 'statistics'])
         ->name('admin.statistics');
+
+    // Settings
+    Route::get('/settings', [SettingsController::class, 'edit'])
+        ->name('admin.settings.edit');
+    Route::patch('/settings', [SettingsController::class, 'update'])
+        ->name('admin.settings.update');
 
     // Administrators
     Route::get('/administrators', [AdministratorController::class, 'index'])

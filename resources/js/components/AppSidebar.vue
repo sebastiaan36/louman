@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { FileText, FolderTree, LayoutGrid, MapPin, Package, ShieldCheck, ShoppingCart, Store, Tag, Users, UsersRound, Zap } from 'lucide-vue-next';
+import { FileText, FolderTree, LayoutGrid, MapPin, Package, Settings, ShieldCheck, ShoppingCart, Store, Tag, Users, UsersRound, Zap } from 'lucide-vue-next';
 import { computed } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -80,6 +80,11 @@ const adminSectionBottom = computed<NavItem[]>(() => [
         title: 'Beheerders',
         href: '/admin/administrators',
         icon: ShieldCheck,
+    },
+    {
+        title: 'Instellingen',
+        href: '/admin/settings',
+        icon: Settings,
     },
 ]);
 

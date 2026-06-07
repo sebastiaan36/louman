@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Listeners\AddCcToOutgoingMail;
 use App\Models\CartItem;
 use Carbon\CarbonImmutable;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -27,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureRouteBindings();
+
+        Event::listen(MessageSending::class, AddCcToOutgoingMail::class);
     }
 
     protected function configureRouteBindings(): void

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OrderCancelled;
 use App\Mail\OrderShipped;
 use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Support\OrderStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -436,6 +438,24 @@ class OrderController extends Controller
                     Mail::to($shippedEmail)->send(new OrderShipped($order));
                 } catch (\Exception $e) {
                     \Log::error('Failed to send order shipped notification', [
+                        'order_id' => $order->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        // Notify the configured recipient when an order is cancelled.
+        if ($newStatus === 'cancelled' && $previousStatus !== 'cancelled') {
+            $cancellationEmail = Setting::get(Setting::MAIL_CANCELLATION_NOTIFICATION);
+
+            if ($cancellationEmail) {
+                $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+
+                try {
+                    Mail::to($cancellationEmail)->send(new OrderCancelled($order));
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send order cancelled notification', [
                         'order_id' => $order->id,
                         'error' => $e->getMessage(),
                     ]);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\CustomerRegisterRequest;
 use App\Models\Customer;
+use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\CustomerRegistered;
 use Illuminate\Auth\Events\Registered;
@@ -59,8 +60,14 @@ class CustomerRegisterController extends Controller
 
         event(new Registered($user));
 
-        $admins = User::where('role', 'admin')->get();
-        Notification::send($admins, new CustomerRegistered($user->customer));
+        $registrationEmail = Setting::get(Setting::MAIL_REGISTRATION_NOTIFICATION);
+        if ($registrationEmail) {
+            Notification::route('mail', $registrationEmail)
+                ->notify(new CustomerRegistered($user->customer));
+        } else {
+            $admins = User::where('role', 'admin')->get();
+            Notification::send($admins, new CustomerRegistered($user->customer));
+        }
 
         Auth::login($user);
 

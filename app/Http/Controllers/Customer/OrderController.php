@@ -7,6 +7,7 @@ use App\Http\Requests\Customer\PlaceOrderRequest;
 use App\Mail\OrderConfirmation;
 use App\Mail\OrderPlacedNotification;
 use App\Models\Order;
+use App\Models\Setting;
 use App\Support\OrderStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -202,7 +203,8 @@ class OrderController extends Controller
 
         // Send mails after transaction — mail errors should not block order creation
         try {
-            Mail::to('info@louman-jordaan.nl')
+            $orderNotificationEmail = Setting::get(Setting::MAIL_ORDER_NOTIFICATION, 'info@louman-jordaan.nl');
+            Mail::to($orderNotificationEmail)
                 ->send(new OrderPlacedNotification($order));
         } catch (\Exception $e) {
             \Log::error('Failed to send admin order notification', [
