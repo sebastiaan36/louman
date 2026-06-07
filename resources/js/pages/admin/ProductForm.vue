@@ -57,11 +57,19 @@ interface Product {
     in_stock: boolean;
     photo_url: string | null;
     is_active: boolean;
+    is_private_label: boolean;
+    visible_customer_ids: number[];
+}
+
+interface CustomerOption {
+    id: number;
+    company_name: string;
 }
 
 const props = defineProps<{
     product?: Product;
     categories: Category[];
+    customers: CustomerOption[];
     errors?: Record<string, string>;
 }>();
 
@@ -94,6 +102,8 @@ const form = ref({
     article_number: props.product?.article_number || '',
     in_stock: props.product?.in_stock ?? true,
     is_active: props.product?.is_active ?? true,
+    is_private_label: props.product?.is_private_label ?? false,
+    visible_customer_ids: props.product?.visible_customer_ids ?? [],
     nutrition_facts: {
         energy: props.product?.nutrition_facts?.energy || '',
         fat: props.product?.nutrition_facts?.fat || '',
@@ -113,6 +123,24 @@ const selectedCategoryChildren = computed(() => {
 
 watch(() => form.value.category_id, () => {
     form.value.subcategory_id = 'none';
+});
+
+const toggleVisibleCustomer = (id: number, checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+        if (!form.value.visible_customer_ids.includes(id)) {
+            form.value.visible_customer_ids.push(id);
+        }
+    } else {
+        form.value.visible_customer_ids = form.value.visible_customer_ids.filter((x) => x !== id);
+    }
+};
+
+const customerSearch = ref('');
+
+const filteredCustomers = computed(() => {
+    const q = customerSearch.value.trim().toLowerCase();
+    if (!q) return props.customers;
+    return props.customers.filter((c) => c.company_name.toLowerCase().includes(q));
 });
 
 const photoFile = ref<File | null>(null);
@@ -169,6 +197,12 @@ const submit = () => {
     formData.append('article_number', form.value.article_number);
     formData.append('in_stock', form.value.in_stock ? '1' : '0');
     formData.append('is_active', form.value.is_active ? '1' : '0');
+    formData.append('is_private_label', form.value.is_private_label ? '1' : '0');
+    if (form.value.is_private_label) {
+        form.value.visible_customer_ids.forEach((id) => {
+            formData.append('visible_customer_ids[]', id.toString());
+        });
+    }
 
     // Append nutrition facts
     if (form.value.nutrition_facts.energy) {
@@ -582,14 +616,64 @@ const cancel = () => {
                     <div class="flex items-center space-x-2">
                         <Checkbox
                             id="is_active"
-                            :checked="form.is_active"
-                            @update:checked="form.is_active = $event"
+                            v-model="form.is_active"
                         />
                         <Label for="is_active" class="cursor-pointer">
                             Product is actief (zichtbaar voor klanten)
                         </Label>
                     </div>
                     <InputError :message="errors?.is_active" />
+                </div>
+
+                <!-- Private label -->
+                <div class="rounded-lg border p-6 space-y-4">
+                    <h3 class="text-sm font-semibold">Private label</h3>
+
+                    <div class="flex items-center space-x-2">
+                        <Checkbox id="is_private_label" v-model="form.is_private_label" />
+                        <Label for="is_private_label" class="cursor-pointer">
+                            Private label product (alleen zichtbaar voor geselecteerde klanten)
+                        </Label>
+                    </div>
+
+                    <div v-if="form.is_private_label" class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <Label>Zichtbaar voor klanten</Label>
+                            <span class="text-xs text-muted-foreground">
+                                {{ form.visible_customer_ids.length }} geselecteerd
+                            </span>
+                        </div>
+                        <p v-if="customers.length === 0" class="text-sm text-muted-foreground">
+                            Er zijn nog geen goedgekeurde klanten.
+                        </p>
+                        <template v-else>
+                            <p v-if="form.visible_customer_ids.length === 0" class="text-xs text-destructive">
+                                Zonder gekoppelde klanten is dit product voor niemand zichtbaar.
+                            </p>
+                            <Input
+                                v-model="customerSearch"
+                                type="search"
+                                placeholder="Zoek klant op bedrijfsnaam..."
+                            />
+                            <div class="max-h-64 overflow-y-auto rounded-md border divide-y">
+                                <label
+                                    v-for="customer in filteredCustomers"
+                                    :key="customer.id"
+                                    class="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted"
+                                >
+                                    <Checkbox
+                                        :model-value="form.visible_customer_ids.includes(customer.id)"
+                                        @update:model-value="(checked) => toggleVisibleCustomer(customer.id, checked)"
+                                    />
+                                    <span class="text-sm">{{ customer.company_name }}</span>
+                                </label>
+                                <p v-if="filteredCustomers.length === 0" class="px-3 py-2 text-sm text-muted-foreground">
+                                    Geen klanten gevonden voor "{{ customerSearch }}".
+                                </p>
+                            </div>
+                        </template>
+                    </div>
+                    <InputError :message="errors?.is_private_label" />
                 </div>
 
                 <!-- Acties -->

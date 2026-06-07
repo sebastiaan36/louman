@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ShoppingCart, Users, Euro, TrendingUp, TrendingDown, Clock, Zap, FileText, UsersRound, Package } from 'lucide-vue-next';
+import { ShoppingCart, Users, Clock, Zap, FileText, UsersRound, Package } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -10,9 +10,6 @@ import { type BreadcrumbItem } from '@/types';
 
 interface AdminStats {
     pendingOrders: number;
-    currentMonthRevenue: string;
-    revenueChangePercentage: number;
-    revenueIncreased: boolean;
     pendingCustomers: number;
     ordersThisMonth: number;
     totalCustomers: number;
@@ -71,44 +68,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <a :href="admin.orders.index().url" class="text-primary hover:underline">
                                 Bekijk bestellingen
                             </a>
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <!-- Monthly Revenue Card -->
-                <Card>
-                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle class="text-sm font-medium">
-                            Omzet Deze Maand
-                        </CardTitle>
-                        <Euro class="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div class="text-2xl font-bold">€{{ stats.currentMonthRevenue }}</div>
-                        <p class="text-xs flex items-center gap-1">
-                            <template v-if="stats.revenueChangePercentage !== 0">
-                                <TrendingUp
-                                    v-if="stats.revenueIncreased"
-                                    class="h-3 w-3 text-green-500"
-                                />
-                                <TrendingDown
-                                    v-else
-                                    class="h-3 w-3 text-red-500"
-                                />
-                                <span
-                                    :class="[
-                                        stats.revenueIncreased ? 'text-green-500' : 'text-red-500',
-                                    ]"
-                                >
-                                    {{ Math.abs(stats.revenueChangePercentage) }}%
-                                </span>
-                                <span class="text-muted-foreground">
-                                    t.o.v. vorige maand
-                                </span>
-                            </template>
-                            <span v-else class="text-muted-foreground">
-                                Geen vergelijking beschikbaar
-                            </span>
                         </p>
                     </CardContent>
                 </Card>

@@ -17,13 +17,18 @@ class FavoriteController extends Controller
     public function index(Request $request): Response
     {
         $customer = $request->user()->customer;
+        $customer->load('customProductPrices');
+
+        // Preload cart product ids once to avoid an N+1 per favorite.
+        $cartIds = $customer->cartItems()->pluck('product_id')->flip();
 
         $favorites = $customer->favoriteProducts()
             ->with('category')
             ->active()
+            ->visibleTo($customer)
             ->orderBy('product_favorites.created_at', 'desc')
             ->get()
-            ->map(function (Product $product) use ($customer) {
+            ->map(function (Product $product) use ($customer, $cartIds) {
                 return [
                     'id' => $product->id,
                     'title' => $product->title,
@@ -34,7 +39,7 @@ class FavoriteController extends Controller
                     'thumbnail_url' => $product->thumbnail_url,
                     'is_in_stock' => $product->isInStock(),
                     'is_favorite' => true, // Always true on this page
-                    'in_cart' => $customer->cartItems()->where('product_id', $product->id)->exists(),
+                    'in_cart' => $cartIds->has($product->id),
                 ];
             });
 
@@ -49,6 +54,11 @@ class FavoriteController extends Controller
     public function toggle(Request $request, Product $product): RedirectResponse
     {
         $customer = $request->user()->customer;
+
+        // A customer can only favorite products that are visible to them.
+        if (! $product->isVisibleTo($customer)) {
+            abort(404);
+        }
 
         // Check if already favorited
         $exists = $customer->favoriteProducts()->where('product_id', $product->id)->exists();

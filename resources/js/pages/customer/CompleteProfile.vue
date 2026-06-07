@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,9 +23,11 @@ interface CustomerPrefill {
     show_on_map: boolean | null;
 }
 
-defineProps<{
+const props = defineProps<{
     customer: CustomerPrefill;
 }>();
+
+const showOnMap = ref(props.customer.show_on_map ?? true);
 </script>
 
 <template>
@@ -181,11 +184,10 @@ defineProps<{
                 </div>
 
                 <div class="flex items-start gap-3">
+                    <input type="hidden" name="show_on_map" :value="showOnMap ? '1' : '0'" />
                     <Checkbox
                         id="show_on_map"
-                        name="show_on_map"
-                        :default-checked="customer.show_on_map ?? true"
-                        value="1"
+                        v-model="showOnMap"
                     />
                     <div class="grid gap-1">
                         <Label for="show_on_map" class="leading-snug cursor-pointer">

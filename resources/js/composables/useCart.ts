@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { formatEuro } from '@/lib/price';
 
 export interface CartItem {
     id: number;
@@ -22,15 +23,7 @@ export function useCart() {
         return user?.role === 'customer';
     });
 
-    /**
-     * Format price to Dutch currency format
-     */
-    const formatPrice = (price: string | number): string => {
-        return new Intl.NumberFormat('nl-NL', {
-            style: 'currency',
-            currency: 'EUR',
-        }).format(typeof price === 'string' ? parseFloat(price) : price);
-    };
+    const formatPrice = formatEuro;
 
     /**
      * Update cart item quantity

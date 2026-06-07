@@ -7,11 +7,19 @@ use Carbon\Carbon;
 class OrderDeadline
 {
     /**
+     * The business timezone the "Monday 12:00" deadline is expressed in.
+     */
+    private static function timezone(): string
+    {
+        return config('app.business_timezone');
+    }
+
+    /**
      * Get the next Monday 12:00 deadline.
      */
     public static function getNextDeadline(): Carbon
     {
-        $now = Carbon::now();
+        $now = Carbon::now(self::timezone());
 
         // If it's Monday before 12:00, deadline is today at 12:00
         if ($now->isMonday() && $now->hour < 12) {
@@ -28,7 +36,7 @@ class OrderDeadline
     public static function getTimeRemaining(): array
     {
         $deadline = self::getNextDeadline();
-        $now = Carbon::now();
+        $now = Carbon::now(self::timezone());
 
         $diff = $now->diff($deadline);
 

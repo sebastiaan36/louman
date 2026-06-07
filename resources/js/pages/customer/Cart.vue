@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatEuro as formatPrice } from '@/lib/price';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
@@ -134,12 +135,6 @@ const totalInclVat = computed(() => {
     return total * (1 + VAT_RATE);
 });
 
-const formatPrice = (price: string | number) => {
-    return new Intl.NumberFormat('nl-NL', {
-        style: 'currency',
-        currency: 'EUR',
-    }).format(typeof price === 'string' ? parseFloat(price) : price);
-};
 
 const updateQuantity = (cartItemId: number, newQuantity: number) => {
     router.patch(
@@ -198,37 +193,18 @@ const proceedToCheckout = () => {
 };
 
 const submitOrder = () => {
-    console.log('submitOrder called');
     processing.value = true;
 
-    // Use selected address or null for main address
     const orderData = {
         delivery_address_id: checkoutForm.value.delivery_address_id,
         notes: checkoutForm.value.notes,
     };
 
-    console.log('Order data:', orderData);
-    console.log('Posting to /customer/orders');
-
     router.post('/customer/orders', orderData, {
-        onBefore: () => {
-            console.log('Request starting...');
-        },
-        onStart: () => {
-            console.log('Request started');
-        },
-        onSuccess: (page) => {
-            console.log('Order placed successfully');
-            console.log('Response:', page);
-            // Manually navigate to orders page
+        onSuccess: () => {
             router.visit('/customer/orders');
         },
-        onError: (errors) => {
-            console.log('Order error:', errors);
-            processing.value = false;
-        },
         onFinish: () => {
-            console.log('Request finished');
             processing.value = false;
         },
     });
@@ -307,7 +283,7 @@ const submitOrder = () => {
                                                 {{ item.product_title }}
                                             </Link>
                                             <p v-if="item.product_weight" class="text-sm text-muted-foreground">
-                                                {{ item.product_weight }}
+                                                circa {{ item.product_weight }}
                                             </p>
                                             <Badge v-if="!item.is_available" variant="destructive" class="mt-1">
                                                 Niet beschikbaar

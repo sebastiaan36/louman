@@ -1,0 +1,1 @@
+function n(e){return{pending:"bg-yellow-500 text-white",confirmed:"bg-blue-500 text-white",completed:"bg-green-500 text-white",cancelled:"bg-red-500 text-white"}[e]??"bg-gray-500 text-white"}function l(e){return{pending:"In behandeling",confirmed:"Bevestigd",completed:"Voltooid",cancelled:"Geannuleerd"}[e]??e}export{n as a,l as o};

@@ -20,6 +20,7 @@ class CartController extends Controller
     public function index(Request $request): Response
     {
         $customer = $request->user()->customer;
+        $customer->load('customProductPrices');
 
         $cartItems = $customer->cartItems()
             ->with('product.category')
@@ -27,8 +28,8 @@ class CartController extends Controller
             ->map(function (CartItem $cartItem) use ($customer) {
                 $product = $cartItem->product;
 
-                // Check if product is still active and available
-                $isAvailable = $product->is_active && $product->isInStock();
+                // Check if product is still active, visible and available
+                $isAvailable = $product->is_active && $product->isInStock() && $product->isVisibleTo($customer);
                 $price = $product->getPriceForCustomer($customer);
 
                 return [
@@ -94,8 +95,8 @@ class CartController extends Controller
 
         $quantity = $request->input('quantity', 1);
 
-        // Check if product is active and in stock
-        if (! $product->is_active) {
+        // Check if product is active, visible to this customer and in stock
+        if (! $product->is_active || ! $product->isVisibleTo($customer)) {
             return back()->with('error', 'Dit product is niet beschikbaar.');
         }
 
@@ -193,9 +194,10 @@ class CartController extends Controller
         foreach ($order->items as $orderItem) {
             $product = $orderItem->product;
 
-            // Check if product is still active and in stock
-            if (! $product->is_active || ! $product->isInStock()) {
+            // Check if product is still active, visible and in stock
+            if (! $product->is_active || ! $product->isInStock() || ! $product->isVisibleTo($customer)) {
                 $unavailableProducts[] = $product->title;
+
                 continue;
             }
 
@@ -223,12 +225,12 @@ class CartController extends Controller
         // Build success message
         if ($addedCount > 0 && empty($unavailableProducts)) {
             return to_route('customer.cart')
-                ->with('success', "{$addedCount} " . ($addedCount === 1 ? 'product' : 'producten') . " toegevoegd aan winkelwagen.");
+                ->with('success', "{$addedCount} ".($addedCount === 1 ? 'product' : 'producten').' toegevoegd aan winkelwagen.');
         } elseif ($addedCount > 0 && ! empty($unavailableProducts)) {
             $unavailableList = implode(', ', $unavailableProducts);
 
             return to_route('customer.cart')
-                ->with('warning', "{$addedCount} " . ($addedCount === 1 ? 'product' : 'producten') . " toegevoegd. Niet beschikbaar: {$unavailableList}");
+                ->with('warning', "{$addedCount} ".($addedCount === 1 ? 'product' : 'producten')." toegevoegd. Niet beschikbaar: {$unavailableList}");
         } else {
             return back()
                 ->with('error', 'Geen producten uit deze bestelling zijn momenteel beschikbaar.');

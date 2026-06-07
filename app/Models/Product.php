@@ -33,6 +33,7 @@ class Product extends Model
         'article_number',
         'in_stock',
         'is_active',
+        'is_private_label',
         'suggested_retail_price',
     ];
 
@@ -51,6 +52,7 @@ class Product extends Model
             'nutrition_facts' => 'array',
             'in_stock' => 'boolean',
             'is_active' => 'boolean',
+            'is_private_label' => 'boolean',
         ];
     }
 
@@ -79,11 +81,11 @@ class Product extends Model
     }
 
     /**
-     * Get the customers that favorited this product.
+     * Get the customers a private-label product is visible to.
      */
-    public function favoritedByCustomers(): BelongsToMany
+    public function visibleToCustomers(): BelongsToMany
     {
-        return $this->belongsToMany(Customer::class, 'product_favorites')->withTimestamps();
+        return $this->belongsToMany(Customer::class, 'customer_product_visibility')->withTimestamps();
     }
 
     /**
@@ -92,6 +94,32 @@ class Product extends Model
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
+    }
+
+    /**
+     * Scope a query to only products visible to the given customer:
+     * all standard products plus the private-label products linked to them.
+     */
+    public function scopeVisibleTo(Builder $query, Customer $customer): void
+    {
+        $query->where(function (Builder $q) use ($customer) {
+            $q->where('is_private_label', false)
+                ->orWhereHas('visibleToCustomers', function (Builder $c) use ($customer) {
+                    $c->whereKey($customer->id);
+                });
+        });
+    }
+
+    /**
+     * Determine if this product is visible to the given customer.
+     */
+    public function isVisibleTo(Customer $customer): bool
+    {
+        if (! $this->is_private_label) {
+            return true;
+        }
+
+        return $this->visibleToCustomers()->whereKey($customer->id)->exists();
     }
 
     /**
@@ -131,13 +159,24 @@ class Product extends Model
     }
 
     /**
-     * Get the price for a specific customer, applying their discount if any.
+     * Get the price for a specific customer.
+     *
+     * A custom price set for this (customer, product) wins and is used as-is,
+     * without the discount percentage. Otherwise the standard price applies,
+     * with the customer's discount if any — except for private-label products,
+     * which are always sold at their standard price.
      */
     public function getPriceForCustomer(Customer $customer): string
     {
+        $customPrice = $this->id ? $customer->customPriceFor($this->id) : null;
+
+        if ($customPrice !== null) {
+            return number_format((float) $customPrice, 2, '.', '');
+        }
+
         $basePrice = $this->price;
 
-        if ($customer->discount_percentage) {
+        if (! $this->is_private_label && $customer->discount_percentage) {
             $discount = (float) $customer->discount_percentage;
             $basePrice = $basePrice * (1 - ($discount / 100));
         }

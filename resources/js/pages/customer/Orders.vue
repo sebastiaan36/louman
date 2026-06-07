@@ -15,6 +15,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { orderStatusClasses } from '@/lib/orderStatus';
+import { formatEuro as formatPrice } from '@/lib/price';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
@@ -49,22 +51,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const formatPrice = (price: string) => {
-    return new Intl.NumberFormat('nl-NL', {
-        style: 'currency',
-        currency: 'EUR',
-    }).format(parseFloat(price));
-};
 
-const getStatusVariant = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive'> = {
-        pending: 'secondary',
-        confirmed: 'default',
-        completed: 'default',
-        cancelled: 'destructive',
-    };
-    return variants[status] || 'secondary';
-};
 
 const reorder = (orderId: number) => {
     router.post(`/customer/orders/${orderId}/reorder`, {}, {
@@ -167,7 +154,7 @@ const clearSearch = () => {
                             <TableCell class="font-medium">{{ formatPrice(order.total) }}</TableCell>
                             <TableCell>{{ order.item_count }} {{ order.item_count === 1 ? 'product' : 'producten' }}</TableCell>
                             <TableCell>
-                                <Badge :variant="getStatusVariant(order.status)">
+                                <Badge :class="orderStatusClasses(order.status)">
                                     {{ order.status_label }}
                                 </Badge>
                             </TableCell>

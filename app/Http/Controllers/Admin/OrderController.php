@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
+use App\Support\OrderStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,7 @@ class OrderController extends Controller
         $search = $request->input('search');
 
         $query = Order::with(['customer', 'deliveryAddress'])
+            ->withCount('items')
             ->orderBy('created_at', 'desc');
 
         // Filter by status if provided
@@ -63,8 +65,8 @@ class OrderController extends Controller
                 'created_at' => $order->created_at->format('d-m-Y H:i'),
                 'total' => $order->total,
                 'status' => $order->status,
-                'status_label' => $this->getStatusLabel($order->status),
-                'item_count' => $order->items()->count(),
+                'status_label' => OrderStatus::label($order->status),
+                'item_count' => $order->items_count,
             ];
         });
 
@@ -105,6 +107,7 @@ class OrderController extends Controller
             ]);
 
         $products = Product::where('is_active', true)
+            ->with('visibleToCustomers:id')
             ->orderBy('title')
             ->get()
             ->map(fn (Product $product) => [
@@ -113,12 +116,31 @@ class OrderController extends Controller
                 'article_number' => $product->article_number,
                 'weight' => $product->weight,
                 'price' => $product->price,
+                'is_private_label' => $product->is_private_label,
+                'visible_customer_ids' => $product->visibleToCustomers->pluck('id')->all(),
             ]);
 
         return Inertia::render('admin/CreateOrder', [
             'customers' => $customers,
             'products' => $products,
         ]);
+    }
+
+    /**
+     * Return a single customer's custom product prices, fetched on demand when
+     * a customer is selected on the new-order screen.
+     *
+     * @return array{custom_prices: array<int, string>}
+     */
+    public function customerPrices(Customer $customer): array
+    {
+        $customer->load('customProductPrices');
+
+        return [
+            'custom_prices' => $customer->customProductPrices
+                ->mapWithKeys(fn ($row) => [$row->product_id => $row->custom_price])
+                ->all(),
+        ];
     }
 
     /**
@@ -129,13 +151,14 @@ class OrderController extends Controller
         $validated = $request->validate([
             'customer_id' => ['required', 'exists:customers,id'],
             'delivery_address_id' => ['nullable', 'exists:delivery_addresses,id'],
+            'status' => ['required', 'in:pending,confirmed'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $customer = Customer::findOrFail($validated['customer_id']);
+        $customer = Customer::with('customProductPrices')->findOrFail($validated['customer_id']);
 
         // Verify delivery address belongs to this customer if provided
         if ($validated['delivery_address_id']) {
@@ -153,13 +176,21 @@ class OrderController extends Controller
                 'customer_id' => $customer->id,
                 'delivery_address_id' => $validated['delivery_address_id'] ?? null,
                 'total' => 0,
-                'status' => 'pending',
+                'status' => $validated['status'],
                 'notes' => $validated['notes'] ?? null,
             ]);
 
             $total = 0;
             foreach ($validated['items'] as $itemData) {
                 $product = Product::findOrFail($itemData['product_id']);
+
+                // A private-label product can only be ordered for a linked customer.
+                if (! $product->isVisibleTo($customer)) {
+                    DB::rollBack();
+
+                    return back()->with('error', "Product '{$product->title}' is niet beschikbaar voor deze klant.");
+                }
+
                 $price = (float) $product->getPriceForCustomer($customer);
 
                 $order->items()->create([
@@ -232,8 +263,10 @@ class OrderController extends Controller
             $products = $customerOrders[$customer->id] ?? [];
             usort($products, fn ($a, $b) => strcmp($a['article_number'], $b['article_number']));
             $rawGroups[$day][] = [
+                'id' => $customer->id,
                 'company_name' => $customer->company_name,
                 'phone_number' => $customer->phone_number,
+                'is_pickup' => $customer->delivery_day === 'ophalen',
                 'products' => array_values($products),
                 'notes' => $customerNotes[$customer->id] ?? [],
             ];
@@ -259,7 +292,7 @@ class OrderController extends Controller
             'generatedAt' => now()->format('d-m-Y H:i'),
         ]);
 
-        return $pdf->download('bestellingenoverzicht-'.now()->format('Y-m-d').'.pdf');
+        return $pdf->stream('bestellingenoverzicht-'.now()->format('Y-m-d').'.pdf');
     }
 
     /**
@@ -297,7 +330,7 @@ class OrderController extends Controller
             'generatedAt' => now()->format('d-m-Y H:i'),
         ]);
 
-        return $pdf->download('productielijst-'.now()->format('Y-m-d').'.pdf');
+        return $pdf->stream('productielijst-'.now()->format('Y-m-d').'.pdf');
     }
 
     /**
@@ -305,7 +338,7 @@ class OrderController extends Controller
      */
     public function show(Order $order): Response
     {
-        $order->load(['customer', 'items.product', 'deliveryAddress']);
+        $order->load(['customer.customProductPrices', 'items.product', 'deliveryAddress']);
 
         // Use delivery address if exists, otherwise use customer's main address
         if ($order->deliveryAddress) {
@@ -333,7 +366,7 @@ class OrderController extends Controller
             ->map(fn ($product) => [
                 'id' => $product->id,
                 'title' => $product->title,
-                'price' => $product->price,
+                'price' => $product->getPriceForCustomer($order->customer),
             ]);
 
         return Inertia::render('admin/OrderDetail', [
@@ -343,7 +376,7 @@ class OrderController extends Controller
                 'created_at' => $order->created_at->format('d-m-Y H:i'),
                 'total' => $order->total,
                 'status' => $order->status,
-                'status_label' => $this->getStatusLabel($order->status),
+                'status_label' => OrderStatus::label($order->status),
                 'notes' => $order->notes,
                 'customer' => [
                     'company_name' => $order->customer->company_name,
@@ -378,25 +411,35 @@ class OrderController extends Controller
             'status' => ['required', 'in:pending,confirmed,completed,cancelled'],
         ]);
 
-        $previousStatus = $order->status;
-        $newStatus = $request->input('status');
+        $this->applyStatusChange($order, $request->input('status'));
 
-        $order->update([
-            'status' => $newStatus,
-        ]);
+        return back()->with('success', 'Bestelstatus bijgewerkt.');
+    }
+
+    /**
+     * Apply a status change to a single order: persist it, send the shipped
+     * notification when it transitions to completed, and record an audit log.
+     */
+    private function applyStatusChange(Order $order, string $newStatus): void
+    {
+        $previousStatus = $order->status;
+
+        $order->update(['status' => $newStatus]);
 
         // Send shipped notification to customer when order is completed
         if ($newStatus === 'completed' && $previousStatus !== 'completed') {
             $order->load(['customer.user', 'deliveryAddress', 'items.product']);
-            $shippedEmail = $order->customer->packing_slip_email ?: $order->customer->user->email;
+            $shippedEmail = $order->customer->packing_slip_email ?: $order->customer->user?->email;
 
-            try {
-                Mail::to($shippedEmail)->send(new OrderShipped($order));
-            } catch (\Exception $e) {
-                \Log::error('Failed to send order shipped notification', [
-                    'order_id' => $order->id,
-                    'error' => $e->getMessage(),
-                ]);
+            if ($shippedEmail) {
+                try {
+                    Mail::to($shippedEmail)->send(new OrderShipped($order));
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send order shipped notification', [
+                        'order_id' => $order->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
         }
 
@@ -404,8 +447,6 @@ class OrderController extends Controller
             'previous_status' => $previousStatus,
             'new_status' => $newStatus,
         ]);
-
-        return back()->with('success', 'Bestelstatus bijgewerkt.');
     }
 
     /**
@@ -425,6 +466,9 @@ class OrderController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string'],
         ]);
+
+        $order->load('customer.customProductPrices');
+        $customer = $order->customer;
 
         $existingItemIds = [];
 
@@ -446,7 +490,7 @@ class OrderController extends Controller
                     $newItem = $order->items()->create([
                         'product_id' => $product->id,
                         'quantity' => $itemData['quantity'],
-                        'price' => $product->price,
+                        'price' => $product->getPriceForCustomer($customer),
                     ]);
                     $existingItemIds[] = $newItem->id;
                 }
@@ -483,12 +527,12 @@ class OrderController extends Controller
         $orderIds = $request->input('order_ids');
         $status = $request->input('status');
 
-        Order::whereIn('id', $orderIds)->update([
-            'status' => $status,
-        ]);
+        Order::whereIn('id', $orderIds)->get()->each(
+            fn (Order $order) => $this->applyStatusChange($order, $status)
+        );
 
         $count = count($orderIds);
-        $statusLabel = $this->getStatusLabel($status);
+        $statusLabel = OrderStatus::label($status);
 
         return back()->with('success', "{$count} ".($count === 1 ? 'bestelling' : 'bestellingen')." bijgewerkt naar '{$statusLabel}'.");
     }
@@ -520,13 +564,12 @@ class OrderController extends Controller
 
         // Company info
         $companyInfo = [
-            'name' => 'Ambachtelijke Slagerij T.F.M. Louman',
-            'address' => 'Goudsbloemstraat 76',
-            'postal_code' => '2565 CK',
-            'city' => 'Den Haag',
-            'phone' => '070-3605916',
-            'fax' => '070-3683175',
-            'email' => 'info@louman.nl',
+            'name' => 'Worstmakerij T.F.M. Louman',
+            'address' => 'Kombuisweg 15',
+            'postal_code' => '1041 AV',
+            'city' => 'Amsterdam',
+            'phone' => '020 4470930',
+            'email' => 'info@louman-jordaan.nl',
         ];
 
         $logoPath = public_path('storage/img/Logo.png');
@@ -565,19 +608,5 @@ class OrderController extends Controller
 
         // Download ZIP and schedule cleanup
         return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
-    }
-
-    /**
-     * Get human-readable status label.
-     */
-    private function getStatusLabel(string $status): string
-    {
-        return match ($status) {
-            'pending' => 'In behandeling',
-            'confirmed' => 'Bevestigd',
-            'completed' => 'Voltooid',
-            'cancelled' => 'Geannuleerd',
-            default => $status,
-        };
     }
 }

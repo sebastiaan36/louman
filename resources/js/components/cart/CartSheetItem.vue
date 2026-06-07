@@ -69,7 +69,7 @@ const handleRemove = () => {
             </div>
 
             <div class="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                <span v-if="item.product_weight">{{ item.product_weight }}</span>
+                <span v-if="item.product_weight">circa {{ item.product_weight }}</span>
                 <span>{{ formatPrice(item.product_price) }}</span>
             </div>
 

@@ -40,6 +40,7 @@ class CustomerRegisterRequest extends FormRequest
             'bank_account' => $this->bankAccountRules(),
             'vat_number' => $this->vatNumberRules(),
             'show_on_map' => ['nullable', 'boolean'],
+            'terms_accepted' => ['accepted'],
         ];
     }
 
@@ -80,6 +81,7 @@ class CustomerRegisterRequest extends FormRequest
             'kvk_number.unique' => 'Dit KvK nummer is al geregistreerd.',
             'bank_account.regex' => 'Vul een geldig Nederlands IBAN rekeningnummer in (bijv. NL91ABNA0417164300).',
             'vat_number.regex' => 'Vul een geldig Nederlands BTW nummer in (bijv. NL123456789B01).',
+            'terms_accepted.accepted' => 'Je moet akkoord gaan met de Algemene Voorwaarden om te registreren.',
             ...$this->passwordMessages(),
         ];
     }

@@ -28,13 +28,12 @@ class PackingSlipController extends Controller
         $data = [
             'order' => $order,
             'companyInfo' => [
-                'name' => 'Ambachtelijke Slagerij T.F.M. Louman',
-                'address' => 'Goudsbloemstraat 76',
-                'postal_code' => '1015 JR',
+                'name' => 'Worstmakerij T.F.M. Louman',
+                'address' => 'Kombuisweg 15',
+                'postal_code' => '1041 AV',
                 'city' => 'Amsterdam',
-                'phone' => '020 6220771',
-                'fax' => '020 6224001',
-                'email' => 'Info@louman-jordaan.nl',
+                'phone' => '020 4470930',
+                'email' => 'info@louman-jordaan.nl',
             ],
             'logoPath' => public_path('storage/img/Logo.png'),
         ];
@@ -42,8 +41,7 @@ class PackingSlipController extends Controller
         // Generate PDF
         $pdf = Pdf::loadView('pdf.packing-slip', $data);
 
-        // Return PDF as download
-        return $pdf->download('pakbon-' . $order->id . '.pdf');
+        // Stream the PDF inline so it opens in the browser tab.
+        return $pdf->stream('pakbon-'.$order->id.'.pdf');
     }
-
 }

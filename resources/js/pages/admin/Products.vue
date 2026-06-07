@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { Search } from 'lucide-vue-next';
+import { ImageOff, Search } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatEuro as formatPrice } from '@/lib/price';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
@@ -42,11 +43,13 @@ interface Product {
     in_stock: boolean;
     photo_url: string | null;
     is_active: boolean;
+    is_private_label: boolean;
 }
 
 interface Filters {
     search: string | null;
     sort: string | null;
+    private_label: boolean;
 }
 
 const props = defineProps<{
@@ -80,6 +83,7 @@ watch([searchQuery, selectedSort], ([search, sort]) => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
     if (sort && sort !== 'newest') params.set('sort', sort);
+    if (props.filters.private_label) params.set('private_label', '1');
 
     router.get(`/admin/products?${params.toString()}`, {}, {
         preserveState: true,
@@ -124,24 +128,20 @@ const deleteProduct = (id: number) => {
     }
 };
 
-const formatPrice = (price: string) => {
-    return new Intl.NumberFormat('nl-NL', {
-        style: 'currency',
-        currency: 'EUR',
-    }).format(parseFloat(price));
-};
 </script>
 
 <template>
-    <Head title="Producten" />
+    <Head :title="filters.private_label ? 'Private label producten' : 'Producten'" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-6 p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold">Producten</h1>
+                    <h1 class="text-2xl font-bold">
+                        {{ filters.private_label ? 'Private label producten' : 'Producten' }}
+                    </h1>
                     <p class="text-sm text-muted-foreground">
-                        Beheer productcatalogus
+                        {{ filters.private_label ? 'Producten die alleen zichtbaar zijn voor geselecteerde klanten' : 'Beheer productcatalogus' }}
                     </p>
                 </div>
 
@@ -230,7 +230,6 @@ const formatPrice = (price: string) => {
                             <TableHead>Naam</TableHead>
                             <TableHead>Categorie</TableHead>
                             <TableHead>Prijs</TableHead>
-                            <TableHead>Voorraad</TableHead>
                             <TableHead>Artikelnr</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead class="text-right">Acties</TableHead>
@@ -247,20 +246,21 @@ const formatPrice = (price: string) => {
                                 />
                                 <div
                                     v-else
-                                    class="h-12 w-12 rounded bg-muted flex items-center justify-center text-muted-foreground text-xs"
+                                    class="h-12 w-12 rounded bg-muted flex items-center justify-center text-muted-foreground"
+                                    title="Geen foto"
                                 >
-                                    Geen foto
+                                    <ImageOff class="h-5 w-5" />
                                 </div>
                             </TableCell>
-                            <TableCell class="font-medium">{{ product.title }}</TableCell>
+                            <TableCell class="font-medium">
+                                {{ product.title }}
+                                <Badge v-if="product.is_private_label" variant="outline" class="ml-2">
+                                    Private label
+                                </Badge>
+                            </TableCell>
                             <TableCell>{{ product.category || '-' }}</TableCell>
                             <TableCell>
                                 <span class="font-medium">{{ formatPrice(product.price) }}</span>
-                            </TableCell>
-                            <TableCell>
-                                <Badge :variant="product.in_stock ? 'default' : 'destructive'">
-                                    {{ product.in_stock ? 'Op voorraad' : 'Uitverkocht' }}
-                                </Badge>
                             </TableCell>
                             <TableCell class="font-mono text-sm">{{ product.article_number }}</TableCell>
                             <TableCell>

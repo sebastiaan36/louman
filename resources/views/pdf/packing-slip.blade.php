@@ -206,10 +206,11 @@
                     <img src="{{ $logoPath }}" alt="Slagerij Louman" style="max-height:60px; max-width:180px; margin-bottom:6px; display:block;">
                 @endif
                 <div class="company-info">
-                    <strong>Ambachtelijke Slagerij T.F.M. Louman</strong>
-                    Goudsbloemstraat 76<br>
-                    1015 JR Amsterdam<br>
-                    Tel: 020 6220771<br>
+                    <strong>Worstmakerij T.F.M. Louman</strong>
+                    Slagerij Louman B.V.<br>
+                    Kombuisweg 15<br>
+                    1041 AV Amsterdam<br>
+                    Tel: 020 4470930<br>
                     E-mail: info@louman-jordaan.nl
                 </div>
             </div>
@@ -302,7 +303,7 @@
                 @foreach($order->items as $item)
                     <tr>
                         <td>{{ $item->product->article_number }}</td>
-                        <td>{{ $item->product->title }}</td>
+                        <td>{{ $item->product->title }}@if($item->product->weight) <span style="color:#888;">(circa {{ $item->product->weight }})</span>@endif</td>
                         <td class="text-center">{{ $item->quantity }}</td>
                         <td class="text-right">€ {{ number_format($item->price, 2, ',', '.') }}</td>
                         <td class="text-right">€ {{ number_format($item->price * $item->quantity, 2, ',', '.') }}</td>
@@ -340,8 +341,8 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p>Bedankt voor uw bestelling bij Ambachtelijke Slagerij T.F.M. Louman</p>
-            <p>Goudsbloemstraat 76 • 1015 JR Amsterdam • Tel: 020 6220771 • info@louman-jordaan.nl</p>
+            <p>Bedankt voor uw bestelling bij Worstmakerij T.F.M. Louman</p>
+            <p>Kombuisweg 15 • 1041 AV Amsterdam • Tel: 020 4470930 • info@louman-jordaan.nl</p>
         </div>
     </div>
 </body>

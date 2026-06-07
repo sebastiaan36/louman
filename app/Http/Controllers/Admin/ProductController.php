@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductRequest;
 use App\Models\AuditLog;
 use App\Models\Category;
+use App\Models\Customer;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,7 +31,13 @@ class ProductController extends Controller
             $sort = 'newest';
         }
 
+        $privateLabel = $request->boolean('private_label');
+
         $query = Product::with('category');
+
+        // Default view hides private-label products; they are shown only via
+        // the ?private_label=1 filter (the "Private label producten" menu).
+        $query->where('is_private_label', $privateLabel);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -57,6 +64,7 @@ class ProductController extends Controller
             'in_stock' => $product->in_stock,
             'photo_url' => $product->thumbnail_url,
             'is_active' => $product->is_active,
+            'is_private_label' => $product->is_private_label,
         ]);
 
         return Inertia::render('admin/Products', [
@@ -64,6 +72,7 @@ class ProductController extends Controller
             'filters' => [
                 'search' => $search,
                 'sort' => $sort,
+                'private_label' => $privateLabel,
             ],
         ]);
     }
@@ -81,6 +90,7 @@ class ProductController extends Controller
 
         return Inertia::render('admin/ProductForm', [
             'categories' => $categories,
+            'customers' => $this->customersForSelect(),
         ]);
     }
 
@@ -91,6 +101,9 @@ class ProductController extends Controller
     {
         $data = $request->validated();
 
+        $visibleCustomerIds = $data['visible_customer_ids'] ?? [];
+        unset($data['visible_customer_ids']);
+
         // Handle photo upload
         if ($request->hasFile('photo')) {
             $data['photo'] = $this->handlePhotoUpload($request->file('photo'));
@@ -100,7 +113,11 @@ class ProductController extends Controller
         $data['ingredients'] = $this->parseTagString($data['ingredients'] ?? null);
         $data['allergens'] = $this->parseTagString($data['allergens'] ?? null);
 
-        Product::create($data);
+        $product = Product::create($data);
+
+        $product->visibleToCustomers()->sync(
+            $product->is_private_label ? $visibleCustomerIds : []
+        );
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product toegevoegd.');
@@ -134,8 +151,11 @@ class ProductController extends Controller
                 'in_stock' => $product->in_stock,
                 'photo_url' => $product->photo_url,
                 'is_active' => $product->is_active,
+                'is_private_label' => $product->is_private_label,
+                'visible_customer_ids' => $product->visibleToCustomers()->pluck('customers.id')->all(),
             ],
             'categories' => $categories,
+            'customers' => $this->customersForSelect(),
         ]);
     }
 
@@ -145,6 +165,9 @@ class ProductController extends Controller
     public function update(ProductRequest $request, Product $product): RedirectResponse
     {
         $data = $request->validated();
+
+        $visibleCustomerIds = $data['visible_customer_ids'] ?? [];
+        unset($data['visible_customer_ids']);
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
@@ -161,6 +184,10 @@ class ProductController extends Controller
         $data['allergens'] = $this->parseTagString($data['allergens'] ?? null);
 
         $product->update($data);
+
+        $product->visibleToCustomers()->sync(
+            $product->is_private_label ? $visibleCustomerIds : []
+        );
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product bijgewerkt.');
@@ -189,6 +216,22 @@ class ProductController extends Controller
         $product->delete();
 
         return back()->with('success', 'Product verwijderd.');
+    }
+
+    /**
+     * Approved customers for the private-label visibility multiselect.
+     *
+     * @return \Illuminate\Support\Collection<int, array{id: int, company_name: string}>
+     */
+    private function customersForSelect(): \Illuminate\Support\Collection
+    {
+        return Customer::approved()
+            ->orderBy('company_name')
+            ->get(['id', 'company_name'])
+            ->map(fn (Customer $customer) => [
+                'id' => $customer->id,
+                'company_name' => $customer->company_name,
+            ]);
     }
 
     /**

@@ -24,14 +24,76 @@ class DashboardController extends Controller
         $stats = [];
 
         if ($isAdmin) {
-            // Admin statistics
+            // Admin statistics, without the revenue figures: those live on the
+            // separate statistics page only.
             $stats = $this->getAdminStats();
+            unset(
+                $stats['stats']['currentMonthRevenue'],
+                $stats['stats']['revenueChangePercentage'],
+                $stats['stats']['revenueIncreased'],
+            );
         } else {
             // Customer statistics (if needed in future)
             $stats = $this->getCustomerStats($user);
         }
 
         return Inertia::render('Dashboard', $stats);
+    }
+
+    /**
+     * Display the separate statistics page with all admin figures,
+     * including revenue. Reachable by direct link only (not in the menu).
+     */
+    public function statistics(): Response
+    {
+        $data = $this->getAdminStats();
+
+        // Year boundaries in the business timezone, converted to UTC for the
+        // query, so orders are bucketed by their local (Amsterdam) date.
+        $tz = config('app.business_timezone');
+        $startUtc = Carbon::now($tz)->startOfYear()->utc();
+        $endUtc = Carbon::now($tz)->endOfYear()->utc();
+        $revenueStatuses = ['pending', 'confirmed', 'completed'];
+
+        $data['stats']['currentYearRevenue'] = number_format(
+            (float) Order::whereBetween('created_at', [$startUtc, $endUtc])
+                ->whereIn('status', $revenueStatuses)
+                ->sum('total'),
+            2, '.', ''
+        );
+        $data['stats']['ordersThisYear'] = Order::whereBetween('created_at', [$startUtc, $endUtc])->count();
+        $data['chart'] = $this->getMonthlyChart($startUtc, $endUtc, $revenueStatuses);
+
+        return Inertia::render('admin/Statistics', $data);
+    }
+
+    /**
+     * Build per-month order count and revenue for the given (UTC) range,
+     * bucketing each order by its month in the business timezone.
+     *
+     * @param  array<int, string>  $revenueStatuses
+     * @return array<int, array{label: string, orders: int, revenue: float}>
+     */
+    private function getMonthlyChart(Carbon $startUtc, Carbon $endUtc, array $revenueStatuses): array
+    {
+        $labels = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
+        $months = array_map(fn (string $label) => [
+            'label' => $label,
+            'orders' => 0,
+            'revenue' => 0.0,
+        ], $labels);
+
+        Order::whereBetween('created_at', [$startUtc, $endUtc])
+            ->whereIn('status', $revenueStatuses)
+            ->get(['created_at', 'total'])
+            ->each(function (Order $order) use (&$months) {
+                $index = (int) $order->created_at->copy()->setTimezone(config('app.business_timezone'))->format('n') - 1;
+                $months[$index]['orders']++;
+                $months[$index]['revenue'] += (float) $order->total;
+            });
+
+        return array_values($months);
     }
 
     /**

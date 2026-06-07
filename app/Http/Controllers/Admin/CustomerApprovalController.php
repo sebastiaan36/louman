@@ -154,7 +154,7 @@ class CustomerApprovalController extends Controller
      */
     public function show(Customer $customer): Response
     {
-        $customer->load(['user', 'deliveryAddresses', 'orders.items.product']);
+        $customer->load(['user', 'deliveryAddresses', 'orders.items.product', 'customProductPrices']);
 
         $customerData = [
             'id' => $customer->id,
@@ -205,10 +205,23 @@ class CustomerApprovalController extends Controller
                 'items_count' => $order->items->count(),
             ]);
 
+        // Favorite products with their standard and (optional) custom price.
+        $favoriteProducts = $customer->favoriteProducts()
+            ->orderBy('title')
+            ->get()
+            ->map(fn (Product $product) => [
+                'id' => $product->id,
+                'title' => $product->title,
+                'article_number' => $product->article_number,
+                'standard_price' => number_format((float) $product->price, 2, '.', ''),
+                'custom_price' => $customer->customPriceFor($product->id),
+            ]);
+
         return Inertia::render('admin/CustomerDetail', [
             'customer' => $customerData,
             'deliveryAddresses' => $deliveryAddresses,
             'orders' => $orders,
+            'favoriteProducts' => $favoriteProducts,
         ]);
     }
 
@@ -342,6 +355,55 @@ class CustomerApprovalController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Update the customer's custom product prices (favorites only).
+     * A price equal to the standard price (or empty) removes the row,
+     * keeping the table sparse.
+     */
+    public function updateProductPrices(Request $request, Customer $customer): RedirectResponse
+    {
+        $validated = $request->validate([
+            'prices' => ['array'],
+            'prices.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'prices.*.custom_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+        ], [
+            'prices.*.custom_price.numeric' => 'Vul een geldig bedrag in.',
+            'prices.*.custom_price.min' => 'De prijs mag niet negatief zijn.',
+        ]);
+
+        $rows = collect($validated['prices'] ?? []);
+        $favoriteIds = $customer->favoriteProducts()->pluck('products.id')->all();
+        $products = Product::whereIn('id', $rows->pluck('product_id'))->get()->keyBy('id');
+
+        foreach ($rows as $row) {
+            $productId = (int) $row['product_id'];
+
+            // Custom prices are only allowed on the customer's favorites.
+            if (! in_array($productId, $favoriteIds, true)) {
+                continue;
+            }
+
+            $product = $products->get($productId);
+            $price = $row['custom_price'];
+
+            $isStandard = $price === null || $price === ''
+                || round((float) $price, 2) === round((float) $product->price, 2);
+
+            if ($isStandard) {
+                $customer->customProductPrices()->where('product_id', $productId)->delete();
+            } else {
+                $customer->customProductPrices()->updateOrCreate(
+                    ['product_id' => $productId],
+                    ['custom_price' => $price],
+                );
+            }
+        }
+
+        AuditLog::record('customer.prices_updated', "Aangepaste prijzen bijgewerkt voor {$customer->company_name}", $customer);
+
+        return back()->with('success', 'Aangepaste prijzen opgeslagen.');
     }
 
     /**

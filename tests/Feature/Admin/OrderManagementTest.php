@@ -120,7 +120,7 @@ test('verzonden mail wordt verstuurd bij status voltooid', function () {
 
     expect($order->fresh()->status)->toBe('completed');
 
-    Mail::assertSent(OrderShipped::class, function (OrderShipped $mail) use ($order) {
+    Mail::assertQueued(OrderShipped::class, function (OrderShipped $mail) use ($order) {
         return $mail->order->id === $order->id;
     });
 });
@@ -144,7 +144,7 @@ test('verzonden mail gaat naar packing_slip_email als die is ingesteld', functio
     $this->actingAs($admin)
         ->patch("/admin/orders/{$order->id}/status", ['status' => 'completed']);
 
-    Mail::assertSent(OrderShipped::class, fn ($mail) => $mail->hasTo('verzending@klant.nl'));
+    Mail::assertQueued(OrderShipped::class, fn ($mail) => $mail->hasTo('verzending@klant.nl'));
 });
 
 test('admin kan bestelling aanpassen als niet voltooid', function () {
@@ -210,7 +210,7 @@ test('productielijst bevat alleen bevestigde bestellingen', function () {
 
     $captured = null;
     $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
-    $pdfMock->shouldReceive('download')->andReturn(response('', 200));
+    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
 
     Pdf::shouldReceive('loadView')
         ->once()
@@ -251,7 +251,7 @@ test('bestellingenoverzicht bevat alleen bevestigde bestellingen', function () {
 
     $captured = null;
     $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
-    $pdfMock->shouldReceive('download')->andReturn(response('', 200));
+    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
 
     Pdf::shouldReceive('loadView')
         ->once()
@@ -291,7 +291,7 @@ test('bestellingenoverzicht bevat bestelnotities per klant', function () {
 
     $captured = null;
     $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
-    $pdfMock->shouldReceive('download')->andReturn(response('', 200));
+    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
 
     Pdf::shouldReceive('loadView')
         ->once()
@@ -310,4 +310,145 @@ test('bestellingenoverzicht bevat bestelnotities per klant', function () {
         ->first(fn ($c) => ! empty($c['notes']));
 
     expect($customerWithNotes['notes'])->toContain('Graag voor 10:00 leveren');
+});
+
+test('bestellingenoverzicht markeert ophaalklanten en stuurt klantnummer mee', function () {
+    $admin = adminUser();
+    $pickupCustomer = Customer::factory()->approved()->create(['delivery_day' => 'ophalen']);
+    $deliverCustomer = Customer::factory()->approved()->create(['delivery_day' => 'maandag']);
+
+    $captured = null;
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
+    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
+
+    Pdf::shouldReceive('loadView')
+        ->once()
+        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
+            $captured = $data;
+
+            return $pdfMock;
+        });
+
+    $this->actingAs($admin)
+        ->get('/admin/orders/customer-overview')
+        ->assertOk();
+
+    $all = collect($captured['dayGroups'])->flatMap(fn ($customers) => $customers);
+
+    // Ophaalklant is meegenomen (niet gefilterd) en gemarkeerd
+    $pickup = $all->firstWhere('id', $pickupCustomer->id);
+    expect($pickup)->not->toBeNull();
+    expect($pickup['is_pickup'])->toBeTrue();
+
+    // Bezorgklant is niet als ophalen gemarkeerd
+    $deliver = $all->firstWhere('id', $deliverCustomer->id);
+    expect($deliver['is_pickup'])->toBeFalse();
+});
+
+test('admin order-bewerking gebruikt de aangepaste klantprijs voor nieuwe regels', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create(['price' => 100]);
+    \App\Models\CustomerProductPrice::create([
+        'customer_id' => $customer->id,
+        'product_id' => $product->id,
+        'custom_price' => 70,
+    ]);
+    $order = Order::factory()->pending()->create(['customer_id' => $customer->id]);
+
+    $this->actingAs($admin)
+        ->patch("/admin/orders/{$order->id}", [
+            'items' => [['product_id' => $product->id, 'quantity' => 2]],
+        ])
+        ->assertRedirect();
+
+    $item = $order->items()->first();
+    expect((float) $item->price)->toBe(70.0);
+    expect((float) $order->fresh()->total)->toBe(140.0);
+});
+
+test('order voltooien voor klant zonder account verstuurt geen mail en crasht niet', function () {
+    Mail::fake();
+    $admin = adminUser();
+    $customer = Customer::factory()->approved()->create([
+        'user_id' => null,
+        'packing_slip_email' => null,
+    ]);
+    $order = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
+
+    $this->actingAs($admin)
+        ->patch("/admin/orders/{$order->id}/status", ['status' => 'completed'])
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    Mail::assertNothingSent();
+    expect($order->fresh()->status)->toBe('completed');
+});
+
+test('bulk voltooien verstuurt verzendmail per order', function () {
+    Mail::fake();
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $first = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
+    $second = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
+
+    $this->actingAs($admin)
+        ->post('/admin/orders/bulk/update-status', [
+            'order_ids' => [$first->id, $second->id],
+            'status' => 'completed',
+        ])
+        ->assertRedirect();
+
+    Mail::assertQueued(OrderShipped::class, 2);
+    expect($first->fresh()->status)->toBe('completed');
+});
+
+test('admin kan een bestelling aanmaken met een gekozen status', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create(['price' => 10, 'in_stock' => true]);
+
+    $this->actingAs($admin)
+        ->post('/admin/orders', [
+            'customer_id' => $customer->id,
+            'delivery_address_id' => null,
+            'status' => 'confirmed',
+            'items' => [['product_id' => $product->id, 'quantity' => 2]],
+            'notes' => null,
+        ])
+        ->assertRedirect();
+
+    $order = $customer->orders()->latest()->first();
+    expect($order->status)->toBe('confirmed');
+    expect((float) $order->total)->toBe(20.0);
+});
+
+test('admin bestelling aanmaken vereist een geldige status', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create(['in_stock' => true]);
+
+    $this->actingAs($admin)
+        ->post('/admin/orders', [
+            'customer_id' => $customer->id,
+            'status' => 'iets-ongeldigs',
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+        ])
+        ->assertSessionHasErrors('status');
+});
+
+test('admin haalt de aangepaste prijzen van een klant op via het prices-endpoint', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create();
+    \App\Models\CustomerProductPrice::create([
+        'customer_id' => $customer->id,
+        'product_id' => $product->id,
+        'custom_price' => 42.50,
+    ]);
+
+    $this->actingAs($admin)
+        ->getJson("/admin/orders/customer/{$customer->id}/prices")
+        ->assertOk()
+        ->assertJsonPath("custom_prices.{$product->id}", '42.50');
 });

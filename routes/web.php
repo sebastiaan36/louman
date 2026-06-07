@@ -34,6 +34,8 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::get('/algemene-voorwaarden', fn () => Inertia::render('Terms'))->name('terms');
+
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth'])
     ->name('dashboard');
@@ -82,6 +84,10 @@ Route::post('/email/verification-notification', function (Request $request) {
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    // Statistics (revenue figures) — reachable by direct link only, not in the menu
+    Route::get('/cijfers', [DashboardController::class, 'statistics'])
+        ->name('admin.statistics');
+
     // Administrators
     Route::get('/administrators', [AdministratorController::class, 'index'])
         ->name('admin.administrators.index');
@@ -114,6 +120,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.customers.destroy');
     Route::post('/customers/{customer}/favorites/{product}/toggle', [CustomerApprovalController::class, 'toggleFavorite'])
         ->name('admin.customers.favorites.toggle');
+    Route::post('/customers/{customer}/product-prices', [CustomerApprovalController::class, 'updateProductPrices'])
+        ->name('admin.customers.product-prices.update');
     Route::patch('/customers/{customer}/category-discount', [CustomerApprovalController::class, 'updateCategoryAndDiscount'])
         ->name('admin.customers.update-category-discount');
     Route::patch('/customers/{customer}', [CustomerApprovalController::class, 'update'])
@@ -130,6 +138,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Rijroute
     Route::get('/delivery-route', [DeliveryRouteController::class, 'index'])
         ->name('admin.delivery-route');
+    Route::get('/delivery-route/export', [DeliveryRouteController::class, 'export'])
+        ->name('admin.delivery-route.export');
     Route::post('/delivery-route/order', [DeliveryRouteController::class, 'updateOrder'])
         ->name('admin.delivery-route.update-order');
 
@@ -152,6 +162,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.orders.customer-overview');
     Route::post('/orders', [AdminOrderController::class, 'store'])
         ->name('admin.orders.store');
+    Route::get('/orders/customer/{customer}/prices', [AdminOrderController::class, 'customerPrices'])
+        ->name('admin.orders.customer-prices');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])
         ->name('admin.orders.show');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])
@@ -220,36 +232,38 @@ Route::middleware(['auth', 'approved', 'customer.profile-complete'])->prefix('cu
         ->name('customer.orders.reorder');
 });
 
-// Mail & PDF previews (alleen voor admins, verwijder na development)
-Route::middleware(['auth', 'admin'])->prefix('preview')->group(function () {
-    Route::get('/mail/order-placed/{order?}', function (?Order $order = null) {
-        $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
-        $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+// Mail & PDF previews — development only (admins, local environment).
+if (app()->isLocal()) {
+    Route::middleware(['auth', 'admin'])->prefix('preview')->group(function () {
+        Route::get('/mail/order-placed/{order?}', function (?Order $order = null) {
+            $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
+            $order->load(['customer.user', 'deliveryAddress', 'items.product']);
 
-        return new OrderPlacedNotification($order);
-    })->name('preview.mail.order-placed');
+            return new OrderPlacedNotification($order);
+        })->name('preview.mail.order-placed');
 
-    Route::get('/mail/order-confirmation/{order?}', function (?Order $order = null) {
-        $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
-        $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+        Route::get('/mail/order-confirmation/{order?}', function (?Order $order = null) {
+            $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
+            $order->load(['customer.user', 'deliveryAddress', 'items.product']);
 
-        return new OrderConfirmation($order);
-    })->name('preview.mail.order-confirmation');
+            return new OrderConfirmation($order);
+        })->name('preview.mail.order-confirmation');
 
-    Route::get('/pdf/packing-slip/{order?}', function (?Order $order = null) {
-        $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
-        $order->load(['customer.user', 'deliveryAddress', 'items.product']);
-        $pdf = Pdf::loadView('pdf.packing-slip', ['order' => $order]);
+        Route::get('/pdf/packing-slip/{order?}', function (?Order $order = null) {
+            $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
+            $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+            $pdf = Pdf::loadView('pdf.packing-slip', ['order' => $order]);
 
-        return $pdf->stream('pakbon-'.$order->id.'.pdf');
-    })->name('preview.pdf.packing-slip');
+            return $pdf->stream('pakbon-'.$order->id.'.pdf');
+        })->name('preview.pdf.packing-slip');
 
-    Route::get('/mail/order-shipped/{order?}', function (?Order $order = null) {
-        $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
-        $order->load(['customer.user', 'deliveryAddress', 'items.product']);
+        Route::get('/mail/order-shipped/{order?}', function (?Order $order = null) {
+            $order = $order ?? Order::with(['customer.user', 'deliveryAddress', 'items.product'])->latest()->firstOrFail();
+            $order->load(['customer.user', 'deliveryAddress', 'items.product']);
 
-        return new OrderShipped($order);
-    })->name('preview.mail.order-shipped');
-});
+            return new OrderShipped($order);
+        })->name('preview.mail.order-shipped');
+    });
+}
 
 require __DIR__.'/settings.php';

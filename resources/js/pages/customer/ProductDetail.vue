@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/composables/useCart';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatEuro } from '@/lib/price';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
@@ -76,20 +77,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const quantity = ref(1);
 
-const formattedPrice = computed(() => {
-    return new Intl.NumberFormat('nl-NL', {
-        style: 'currency',
-        currency: 'EUR',
-    }).format(parseFloat(props.product.price));
-});
+const formattedPrice = computed(() => formatEuro(props.product.price));
 
-const totalPrice = computed(() => {
-    const total = parseFloat(props.product.price) * quantity.value;
-    return new Intl.NumberFormat('nl-NL', {
-        style: 'currency',
-        currency: 'EUR',
-    }).format(total);
-});
+const totalPrice = computed(() => formatEuro(parseFloat(props.product.price) * quantity.value));
 
 const incrementQuantity = () => {
     quantity.value++;
@@ -225,7 +215,7 @@ const backToProducts = () => {
                             </span>
                             <span class="text-xs text-muted-foreground">ex. BTW</span>
                             <span v-if="product.suggested_retail_price" class="text-xs text-muted-foreground mt-1">
-                                Adviesprijs: {{ new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(parseFloat(product.suggested_retail_price)) }} per 1000 gram
+                                Adviesprijs: {{ formatEuro(product.suggested_retail_price) }} per 1000 gram
                             </span>
                         </div>
                     </div>
@@ -236,7 +226,7 @@ const backToProducts = () => {
                     <div class="space-y-3">
                         <div v-if="product.weight" class="flex gap-2">
                             <span class="text-sm font-medium">Gewicht:</span>
-                            <span class="text-sm text-muted-foreground">{{ product.weight }}</span>
+                            <span class="text-sm text-muted-foreground">circa {{ product.weight }}</span>
                         </div>
                         <div class="flex gap-2">
                             <span class="text-sm font-medium">Artikelnummer:</span>

@@ -36,6 +36,7 @@ class Customer extends Model
         'delivery_day',
         'route_order',
         'show_on_map',
+        'terms_accepted_at',
     ];
 
     /**
@@ -48,6 +49,7 @@ class Customer extends Model
         return [
             'approved_at' => 'datetime',
             'deactivated_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
             'show_on_map' => 'boolean',
         ];
     }
@@ -58,14 +60,6 @@ class Customer extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Get the admin user that approved the customer.
-     */
-    public function approver(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
     }
 
     /**
@@ -122,6 +116,29 @@ class Customer extends Model
     public function cartItems(): HasMany
     {
         return $this->hasMany(CartItem::class);
+    }
+
+    /**
+     * Get the customer's custom product prices (sparse: only deviating prices).
+     */
+    public function customProductPrices(): HasMany
+    {
+        return $this->hasMany(CustomerProductPrice::class);
+    }
+
+    /**
+     * Get the custom price for a product, or null if none is set.
+     * Reads from the loaded relation when available to avoid N+1 queries.
+     */
+    public function customPriceFor(int $productId): ?string
+    {
+        if ($this->relationLoaded('customProductPrices')) {
+            $row = $this->customProductPrices->firstWhere('product_id', $productId);
+
+            return $row?->custom_price;
+        }
+
+        return $this->customProductPrices()->where('product_id', $productId)->value('custom_price');
     }
 
     /**

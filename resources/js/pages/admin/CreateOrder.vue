@@ -5,8 +5,11 @@ import { ref, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { orderStatusLabel } from '@/lib/orderStatus';
+import { formatEuro as formatPrice } from '@/lib/price';
 import { type BreadcrumbItem } from '@/types';
 
 interface DeliveryAddress {
@@ -35,6 +38,8 @@ interface Product {
     article_number: string | null;
     weight: string | null;
     price: string;
+    is_private_label: boolean;
+    visible_customer_ids: number[];
 }
 
 interface OrderItem {
@@ -65,6 +70,9 @@ const showCustomerDropdown = ref(false);
 // Quick Order (favorites) product ids for the selected customer
 const favoriteProductIds = ref<Set<number>>(new Set());
 
+// The selected customer's custom product prices, fetched on demand.
+const customPrices = ref<Record<number, string>>({});
+
 const filteredCustomers = computed(() => {
     const q = customerSearch.value.toLowerCase();
     if (!q) return props.customers.slice(0, 10);
@@ -94,18 +102,31 @@ const selectCustomer = (customer: Customer) => {
         ?? null;
     selectedDeliveryAddressId.value = defaultAddr?.id ?? null;
 
-    // Pre-fill the customer's Quick Order products with quantity 0
-    orderItems.value = customer.favorite_product_ids
-        .map(id => props.products.find(p => p.id === id))
-        .filter((p): p is Product => p !== undefined)
-        .map(product => ({
-            product_id: product.id,
-            product_title: product.title,
-            article_number: product.article_number,
-            weight: product.weight,
-            quantity: 0,
-            unit_price: getPriceForCustomer(product.id),
-        }));
+    // Custom prices are fetched on demand; pre-fill the customer's Quick Order
+    // products (quantity 0) once the prices have arrived.
+    orderItems.value = [];
+    customPrices.value = {};
+    fetch(`/admin/orders/customer/${customer.id}/prices`, {
+        headers: { Accept: 'application/json' },
+    })
+        .then(response => response.json())
+        .then((data: { custom_prices: Record<number, string> }) => {
+            // Ignore a stale response if another customer was selected meanwhile.
+            if (selectedCustomer.value?.id !== customer.id) return;
+            customPrices.value = data.custom_prices ?? {};
+            orderItems.value = customer.favorite_product_ids
+                .map(id => props.products.find(p => p.id === id))
+                .filter((p): p is Product => p !== undefined)
+                .filter(isVisibleToSelectedCustomer)
+                .map(product => ({
+                    product_id: product.id,
+                    product_title: product.title,
+                    article_number: product.article_number,
+                    weight: product.weight,
+                    quantity: 0,
+                    unit_price: getPriceForCustomer(product.id),
+                }));
+        });
 };
 
 const clearCustomer = () => {
@@ -113,6 +134,7 @@ const clearCustomer = () => {
     customerSearch.value = '';
     selectedDeliveryAddressId.value = null;
     favoriteProductIds.value = new Set();
+    customPrices.value = {};
     orderItems.value = [];
 };
 
@@ -122,6 +144,13 @@ const selectedDeliveryAddressId = ref<number | null>(null);
 // Product search
 const productSearch = ref('');
 const showProductDropdown = ref(false);
+
+// A private-label product is only orderable for a linked customer.
+const isVisibleToSelectedCustomer = (product: Product): boolean => {
+    if (!product.is_private_label) return true;
+    if (!selectedCustomer.value) return false;
+    return product.visible_customer_ids.includes(selectedCustomer.value.id);
+};
 
 const filteredProducts = computed(() => {
     const q = productSearch.value.toLowerCase();
@@ -137,6 +166,7 @@ const filteredProducts = computed(() => {
     };
 
     return props.products
+        .filter(isVisibleToSelectedCustomer)
         .filter(p =>
             p.title.toLowerCase().includes(q) ||
             (p.article_number?.toLowerCase().includes(q) ?? false)
@@ -149,10 +179,17 @@ const getPriceForCustomer = (productId: number): number => {
     const product = props.products.find(p => p.id === productId);
     if (!product || !selectedCustomer.value) return 0;
 
+    // A custom price wins and is used as-is, without the discount percentage.
+    const customPrice = customPrices.value[productId];
+    if (customPrice !== undefined) {
+        return Math.round(parseFloat(customPrice) * 100) / 100;
+    }
+
     let basePrice = parseFloat(product.price);
 
+    // Private-label products are excluded from the customer's discount.
     const discount = parseFloat(selectedCustomer.value.discount_percentage ?? '0');
-    if (discount > 0) {
+    if (!product.is_private_label && discount > 0) {
         basePrice = basePrice * (1 - discount / 100);
     }
 
@@ -209,12 +246,16 @@ const orderTotal = computed(() => {
     return orderItems.value.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
 });
 
-const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(price);
-};
 
 // Notes
 const notes = ref('');
+
+// Order status (defaults to "Bevestigd")
+const status = ref('confirmed');
+const statusOptions = (['pending', 'confirmed'] as const).map((value) => ({
+    value,
+    label: orderStatusLabel(value),
+}));
 
 // Errors
 const errors = ref<Record<string, string>>({});
@@ -240,6 +281,7 @@ const submit = () => {
     router.post('/admin/orders', {
         customer_id: selectedCustomer.value.id,
         delivery_address_id: selectedDeliveryAddressId.value,
+        status: status.value,
         items: itemsToOrder.map(i => ({
             product_id: i.product_id,
             quantity: i.quantity,
@@ -460,6 +502,22 @@ const submit = () => {
                         placeholder="Optionele opmerkingen bij de bestelling..."
                         rows="3"
                     />
+                </div>
+
+                <!-- Status -->
+                <div class="space-y-2">
+                    <Label>Status</Label>
+                    <Select v-model="status">
+                        <SelectTrigger class="w-56">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
+                                {{ option.label }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <p v-if="errors.status" class="text-sm text-destructive">{{ errors.status }}</p>
                 </div>
 
                 <!-- Actions -->

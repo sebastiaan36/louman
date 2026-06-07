@@ -3,6 +3,7 @@ import { Zap, ShoppingCart, Eye } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { formatEuro } from '@/lib/price';
 
 interface Product {
     id: number;
@@ -26,12 +27,7 @@ const emit = defineEmits<{
     viewDetails: [];
 }>();
 
-const formattedPrice = computed(() => {
-    return new Intl.NumberFormat('nl-NL', {
-        style: 'currency',
-        currency: 'EUR',
-    }).format(parseFloat(props.product.price));
-});
+const formattedPrice = computed(() => formatEuro(props.product.price));
 </script>
 
 <template>
@@ -86,7 +82,7 @@ const formattedPrice = computed(() => {
                     <span class="text-[10px] text-muted-foreground">ex. BTW</span>
                 </div>
                 <span v-if="product.weight" class="text-sm text-muted-foreground">
-                    {{ product.weight }}
+                    circa {{ product.weight }}
                 </span>
             </div>
         </CardContent>

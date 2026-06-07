@@ -216,7 +216,7 @@ const deleteAddress = (id: number) => {
                             <div class="flex items-center space-x-2">
                                 <Checkbox
                                     id="is_default"
-                                    v-model:checked="form.is_default"
+                                    v-model="form.is_default"
                                 />
                                 <Label for="is_default" class="text-sm font-normal cursor-pointer">
                                     Stel in als standaard afleveradres

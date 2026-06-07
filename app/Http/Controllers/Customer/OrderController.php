@@ -7,6 +7,7 @@ use App\Http\Requests\Customer\PlaceOrderRequest;
 use App\Mail\OrderConfirmation;
 use App\Mail\OrderPlacedNotification;
 use App\Models\Order;
+use App\Support\OrderStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,7 @@ class OrderController extends Controller
 
         $query = $customer->orders()
             ->with('deliveryAddress')
+            ->withCount('items')
             ->orderBy('created_at', 'desc');
 
         // Search by order number
@@ -46,8 +48,8 @@ class OrderController extends Controller
                     'created_at' => $order->created_at->format('d-m-Y H:i'),
                     'total' => $order->total,
                     'status' => $order->status,
-                    'status_label' => $this->getStatusLabel($order->status),
-                    'item_count' => $order->items()->count(),
+                    'status_label' => OrderStatus::label($order->status),
+                    'item_count' => $order->items_count,
                 ];
             });
 
@@ -97,7 +99,7 @@ class OrderController extends Controller
                 'created_at' => $order->created_at->format('d-m-Y H:i'),
                 'total' => $order->total,
                 'status' => $order->status,
-                'status_label' => $this->getStatusLabel($order->status),
+                'status_label' => OrderStatus::label($order->status),
                 'notes' => $order->notes,
                 'delivery_address' => $deliveryAddress,
                 'items' => $order->items->map(function ($item) {
@@ -119,6 +121,7 @@ class OrderController extends Controller
     public function store(PlaceOrderRequest $request): RedirectResponse
     {
         $customer = $request->user()->customer;
+        $customer->load('customProductPrices');
 
         // Check if cart is not empty
         $cartItems = $customer->cartItems()->with('product')->get();
@@ -131,7 +134,7 @@ class OrderController extends Controller
         foreach ($cartItems as $cartItem) {
             $product = $cartItem->product;
 
-            if (! $product->is_active) {
+            if (! $product->is_active || ! $product->isVisibleTo($customer)) {
                 return back()->with('error', "Product '{$product->title}' is niet meer beschikbaar.");
             }
 
@@ -209,9 +212,11 @@ class OrderController extends Controller
         }
 
         try {
-            $confirmationEmail = $customer->packing_slip_email ?? $customer->user->email;
-            Mail::to($confirmationEmail)
-                ->send(new OrderConfirmation($order));
+            $confirmationEmail = $customer->packing_slip_email ?: $customer->user?->email;
+            if ($confirmationEmail) {
+                Mail::to($confirmationEmail)
+                    ->send(new OrderConfirmation($order));
+            }
         } catch (\Exception $e) {
             \Log::error('Failed to send order confirmation to customer', [
                 'order_id' => $order->id,
@@ -221,19 +226,5 @@ class OrderController extends Controller
 
         return to_route('customer.orders.show', $order)
             ->with('success', 'Bestelling succesvol geplaatst!');
-    }
-
-    /**
-     * Get human-readable status label.
-     */
-    private function getStatusLabel(string $status): string
-    {
-        return match ($status) {
-            'pending' => 'In behandeling',
-            'confirmed' => 'Bevestigd',
-            'completed' => 'Voltooid',
-            'cancelled' => 'Geannuleerd',
-            default => $status,
-        };
     }
 }

@@ -56,6 +56,9 @@ class ProductRequest extends FormRequest
             ],
             'in_stock' => ['required', 'boolean'],
             'is_active' => ['boolean'],
+            'is_private_label' => ['boolean'],
+            'visible_customer_ids' => ['array'],
+            'visible_customer_ids.*' => ['integer', 'exists:customers,id'],
         ];
     }
 

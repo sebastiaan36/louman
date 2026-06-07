@@ -31,7 +31,7 @@ class ProductController extends Controller
         }
 
         // Build query
-        $query = Product::with('category')->active();
+        $query = Product::with('category')->active()->visibleTo($customer);
 
         // Apply sort
         if ($sort === 'favorites') {
@@ -79,9 +79,10 @@ class ProductController extends Controller
             });
         }
 
-        // Eager-load favorites and cart items for this customer to avoid N+1
+        // Eager-load favorites, cart items and custom prices for this customer to avoid N+1
         $favoriteIds = $customer->favoriteProducts()->pluck('product_id')->flip();
         $cartIds = $customer->cartItems()->pluck('product_id')->flip();
+        $customer->load('customProductPrices');
 
         // Get products
         $products = $query->get()->map(function (Product $product) use ($customer, $favoriteIds, $cartIds) {
@@ -128,6 +129,11 @@ class ProductController extends Controller
 
         // Only show active products
         if (! $product->is_active) {
+            abort(404);
+        }
+
+        // Private-label products are only visible to linked customers.
+        if (! $product->isVisibleTo($customer)) {
             abort(404);
         }
 

@@ -1,14 +1,47 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthBase from '@/layouts/AuthLayout.vue';
-import { login } from '@/routes';
+import { login, terms } from '@/routes';
+
+const MAP_EXAMPLE_URL = 'https://louman-jordaan.nl/verkooppunten/';
+
+const termsAccepted = ref(false);
+const showOnMap = ref(true);
+const mapConfirmOpen = ref(false);
+const formRef = ref<InstanceType<typeof Form> | null>(null);
+
+const submitForm = () => {
+    formRef.value?.submit();
+};
+
+const attemptRegister = () => {
+    if (showOnMap.value) {
+        submitForm();
+        return;
+    }
+    mapConfirmOpen.value = true;
+};
+
+const confirmWithoutMap = () => {
+    mapConfirmOpen.value = false;
+    submitForm();
+};
 </script>
 
 <template>
@@ -19,6 +52,7 @@ import { login } from '@/routes';
         <Head title="Klantregistratie" />
 
         <Form
+            ref="formRef"
             action="/register/customer"
             method="post"
             :reset-on-success="['password', 'password_confirmation']"
@@ -209,12 +243,8 @@ import { login } from '@/routes';
 
                 <!-- Kaart sectie -->
                 <div class="flex items-start gap-3">
-                    <Checkbox
-                        id="show_on_map"
-                        name="show_on_map"
-                        :default-checked="true"
-                        value="1"
-                    />
+                    <input type="hidden" name="show_on_map" :value="showOnMap ? '1' : '0'" />
+                    <Checkbox id="show_on_map" v-model="showOnMap" />
                     <div class="grid gap-1">
                         <Label for="show_on_map" class="leading-snug cursor-pointer">
                             Toon mijn bedrijf op de kaart op louman-jordaan.nl
@@ -222,10 +252,34 @@ import { login } from '@/routes';
                     </div>
                 </div>
 
+                <!-- Algemene Voorwaarden -->
+                <div class="space-y-1">
+                    <div class="flex items-start gap-3">
+                        <input type="hidden" name="terms_accepted" :value="termsAccepted ? '1' : '0'" />
+                        <Checkbox
+                            id="terms_accepted"
+                            v-model="termsAccepted"
+                        />
+                        <Label for="terms_accepted" class="leading-snug cursor-pointer">
+                            Ik ga akkoord met de
+                            <a
+                                :href="terms().url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="font-medium underline underline-offset-4"
+                            >
+                                Algemene Voorwaarden
+                            </a>
+                        </Label>
+                    </div>
+                    <InputError :message="errors.terms_accepted" />
+                </div>
+
                 <Button
-                    type="submit"
+                    type="button"
                     class="mt-2 w-full"
-                    :disabled="processing"
+                    :disabled="processing || !termsAccepted"
+                    @click="attemptRegister"
                 >
                     <Spinner v-if="processing" />
                     Registreren
@@ -239,5 +293,34 @@ import { login } from '@/routes';
                 </TextLink>
             </div>
         </Form>
+
+        <!-- Bevestiging: niet op de kaart -->
+        <Dialog :open="mapConfirmOpen" @update:open="mapConfirmOpen = $event">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Niet op de kaart?</DialogTitle>
+                    <DialogDescription>
+                        Weet je zeker dat je niet als verkooppunt op de kaart van Louman wilt staan?
+                        Klanten vinden verkooppunten via de
+                        <a
+                            :href="MAP_EXAMPLE_URL"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="font-medium underline underline-offset-4"
+                        >
+                            verkooppuntenkaart
+                        </a>.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="mapConfirmOpen = false">
+                        Terug naar formulier
+                    </Button>
+                    <Button @click="confirmWithoutMap">
+                        Ja, registreren zonder kaart
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AuthBase>
 </template>

@@ -31,6 +31,8 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { orderStatusClasses } from '@/lib/orderStatus';
+import { formatEuro as formatPrice } from '@/lib/price';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
@@ -183,22 +185,7 @@ const submitEdit = () => {
     });
 };
 
-const formatPrice = (price: string | number) => {
-    return new Intl.NumberFormat('nl-NL', {
-        style: 'currency',
-        currency: 'EUR',
-    }).format(typeof price === 'string' ? parseFloat(price) : price);
-};
 
-const getStatusVariant = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive'> = {
-        pending: 'secondary',
-        confirmed: 'default',
-        completed: 'default',
-        cancelled: 'destructive',
-    };
-    return variants[status] || 'secondary';
-};
 
 const updateStatus = () => {
     if (selectedStatus.value === props.order.status) {
@@ -329,7 +316,7 @@ const backToOrders = () => {
                         <h2 class="text-lg font-semibold mb-4">Status</h2>
                         <div class="space-y-4">
                             <div>
-                                <Badge :variant="getStatusVariant(order.status)" class="text-sm">
+                                <Badge :class="['text-sm', orderStatusClasses(order.status)]">
                                     {{ order.status_label }}
                                 </Badge>
                             </div>

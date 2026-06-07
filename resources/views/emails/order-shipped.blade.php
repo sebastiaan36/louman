@@ -225,7 +225,7 @@
                 <tbody>
                     @foreach($order->items as $item)
                         <tr>
-                            <td>{{ $item->product->title }}</td>
+                            <td>{{ $item->product->title }}@if($item->product->weight) <span style="color:#888;">(circa {{ $item->product->weight }})</span>@endif</td>
                             <td class="text-center">{{ $item->quantity }}</td>
                             <td class="text-right">€ {{ number_format($item->price, 2, ',', '.') }}</td>
                             <td class="text-right">€ {{ number_format($item->price * $item->quantity, 2, ',', '.') }}</td>

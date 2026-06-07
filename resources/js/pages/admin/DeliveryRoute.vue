@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { GripVertical } from 'lucide-vue-next';
+import { Download, GripVertical } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
@@ -37,6 +38,9 @@ const DAY_LABELS: Record<string, string> = {
     zondag: 'Zondag',
     ophalen: 'Ophalen',
 };
+
+// Export scope: a specific day or all days
+const exportDay = ref<string>(props.selectedDay);
 
 const list = ref<Customer[]>([...props.customers]);
 
@@ -116,7 +120,26 @@ const saveOrder = () => {
                         Sleep klanten om de bezorgroute per dag in te stellen
                     </p>
                 </div>
-                <div v-if="saving" class="text-sm text-muted-foreground">Opslaan...</div>
+                <div class="flex items-center gap-3">
+                    <span v-if="saving" class="text-sm text-muted-foreground">Opslaan...</span>
+                    <Select :model-value="exportDay" @update:model-value="(value) => (exportDay = value as string)">
+                        <SelectTrigger class="w-44">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Alle dagen</SelectItem>
+                            <SelectItem v-for="day in days" :key="day" :value="day">
+                                {{ DAY_LABELS[day] ?? day }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <a :href="`/admin/delivery-route/export?day=${exportDay}`">
+                        <Button variant="outline">
+                            <Download class="h-4 w-4 mr-2" />
+                            Download rijroute
+                        </Button>
+                    </a>
+                </div>
             </div>
 
             <div class="flex items-center gap-4">

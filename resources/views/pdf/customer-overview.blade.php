@@ -76,6 +76,7 @@
             border: 1.5px solid #bbb;
             padding: 5px 7px;
             min-height: 36px;
+            margin-bottom: 5px;
         }
 
         .card-header {
@@ -113,6 +114,18 @@
             color: #aaa;
             font-style: italic;
             margin-top: 2px;
+        }
+
+        .pickup-badge {
+            display: inline-block;
+            background-color: #222;
+            color: #fff;
+            font-size: 6pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1px 5px;
+            border-radius: 3px;
         }
 
         /* Products table inside card */
@@ -165,70 +178,43 @@
 <body>
     @if(count($dayGroups) > 0)
         @foreach($dayGroups as $day => $customers)
-            <div class="page">
-                <div class="page-header">
-                    <div class="page-header-left">
-                        <div class="day-title">{{ ucfirst($day) }}</div>
-                        <div class="meta">
-                            {{ count($customers) }} {{ count($customers) === 1 ? 'klant' : 'klanten' }}
-                            &nbsp;|&nbsp;
-                            Bestellingenoverzicht &mdash; {{ $generatedAt }}
+            @foreach(\App\Support\PdfColumnPacker::pages($customers) as $page)
+                @php $pageCustomerCount = count($page['left']) + count($page['right']); @endphp
+                <div class="page">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="day-title">{{ $day === 'onbekend' ? 'Geen leverdag ingesteld' : ucfirst($day) }}</div>
+                            <div class="meta">
+                                {{ $pageCustomerCount }} {{ $pageCustomerCount === 1 ? 'klant' : 'klanten' }} op deze pagina
+                                &nbsp;|&nbsp;
+                                Bestellingenoverzicht &mdash; {{ $generatedAt }}
+                            </div>
+                        </div>
+                        <div class="page-header-right">
+                            <div class="meta">
+                                Bestellingen in behandeling: <strong>{{ $orderCount }}</strong>
+                                &nbsp;|&nbsp;
+                                Totaal klanten: <strong>{{ $customerCount }}</strong>
+                            </div>
                         </div>
                     </div>
-                    <div class="page-header-right">
-                        <div class="meta">
-                            Bestellingen in behandeling: <strong>{{ $orderCount }}</strong>
-                            &nbsp;|&nbsp;
-                            Totaal klanten: <strong>{{ $customerCount }}</strong>
-                        </div>
-                    </div>
-                </div>
 
-                <table class="grid">
-                    @foreach(array_chunk($customers, 2) as $row)
+                    <table class="grid">
                         <tr>
-                            @foreach($row as $customer)
-                                <td>
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <div class="card-header-left">
-                                                <div class="card-name">{{ $customer['company_name'] }}</div>
-                                                @if($customer['phone_number'])
-                                                    <div class="card-phone">{{ $customer['phone_number'] }}</div>
-                                                @endif
-                                            </div>
-                                            @if(empty($customer['products']))
-                                                <div class="card-header-right">
-                                                    <div class="card-empty-label">geen bestelling</div>
-                                                </div>
-                                            @endif
-                                        </div>
-                                        @if(!empty($customer['products']))
-                                            <table class="products">
-                                                @foreach($customer['products'] as $product)
-                                                    <tr>
-                                                        <td class="art">{{ $product['article_number'] }}</td>
-                                                        <td class="name">{{ $product['title'] }}@if(! empty($product['weight'])) <span class="weight">— {{ $product['weight'] }}</span>@endif</td>
-                                                        <td class="qty">{{ $product['quantity'] }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </table>
-                                        @endif
-                                        @if(!empty($customer['notes']))
-                                            <div class="notes">
-                                                <strong>Notitie:</strong> {{ implode(' • ', $customer['notes']) }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                </td>
-                            @endforeach
-                            @if(count($row) === 1)
-                                <td></td>
-                            @endif
+                            <td>
+                                @foreach($page['left'] as $customer)
+                                    @include('pdf.partials.customer-card', ['customer' => $customer])
+                                @endforeach
+                            </td>
+                            <td>
+                                @foreach($page['right'] as $customer)
+                                    @include('pdf.partials.customer-card', ['customer' => $customer])
+                                @endforeach
+                            </td>
                         </tr>
-                    @endforeach
-                </table>
-            </div>
+                    </table>
+                </div>
+            @endforeach
         @endforeach
     @else
         <div style="padding: 40px; text-align: center; color: #777; font-size: 9pt;">

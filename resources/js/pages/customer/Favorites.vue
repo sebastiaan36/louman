@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { useCart } from '@/composables/useCart';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatEuro as formatPrice } from '@/lib/price';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
@@ -78,12 +79,6 @@ const decrementQuantity = (productId: number) => {
     }
 };
 
-const formatPrice = (price: string) => {
-    return new Intl.NumberFormat('nl-NL', {
-        style: 'currency',
-        currency: 'EUR',
-    }).format(parseFloat(price));
-};
 </script>
 
 <template>
@@ -165,7 +160,7 @@ const formatPrice = (price: string) => {
                                 <!-- Weight -->
                                 <TableCell>
                                     <span v-if="product.weight" class="text-sm text-muted-foreground">
-                                        {{ product.weight }}
+                                        circa {{ product.weight }}
                                     </span>
                                     <span v-else class="text-sm text-muted-foreground">-</span>
                                 </TableCell>

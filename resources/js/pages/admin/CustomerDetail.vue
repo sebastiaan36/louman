@@ -34,6 +34,8 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { orderStatusClasses, orderStatusLabel } from '@/lib/orderStatus';
+import { formatPrice } from '@/lib/price';
 import { dashboard } from '@/routes';
 import admin from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
@@ -84,10 +86,19 @@ interface Order {
     items_count: number;
 }
 
+interface FavoriteProduct {
+    id: number;
+    title: string;
+    article_number: string | null;
+    standard_price: string;
+    custom_price: string | null;
+}
+
 const props = defineProps<{
     customer: Customer;
     deliveryAddresses: DeliveryAddress[];
     orders: Order[];
+    favoriteProducts: FavoriteProduct[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -104,24 +115,29 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-        pending: 'bg-yellow-500',
-        confirmed: 'bg-blue-500',
-        completed: 'bg-green-500',
-        cancelled: 'bg-red-500',
-    };
-    return colors[status] || 'bg-gray-500';
-};
+// Custom prices for favorite products (sparse: only deviating prices)
+const customPriceInputs = ref<Record<number, string>>(
+    Object.fromEntries(props.favoriteProducts.map((p) => [p.id, p.custom_price ?? ''])),
+);
+const savingPrices = ref(false);
 
-const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-        pending: 'In afwachting',
-        confirmed: 'Bevestigd',
-        completed: 'Voltooid',
-        cancelled: 'Geannuleerd',
-    };
-    return labels[status] || status;
+const saveCustomPrices = () => {
+    savingPrices.value = true;
+    router.post(
+        `/admin/customers/${props.customer.id}/product-prices`,
+        {
+            prices: props.favoriteProducts.map((p) => ({
+                product_id: p.id,
+                custom_price: customPriceInputs.value[p.id] === '' ? null : customPriceInputs.value[p.id],
+            })),
+        },
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                savingPrices.value = false;
+            },
+        },
+    );
 };
 
 // Activation / deactivation / deletion
@@ -633,10 +649,10 @@ const deleteAddress = (addressId: number) => {
                                     <TableCell class="font-medium">#{{ order.id }}</TableCell>
                                     <TableCell>{{ order.created_at }}</TableCell>
                                     <TableCell>{{ order.items_count }}</TableCell>
-                                    <TableCell>€{{ order.total }}</TableCell>
+                                    <TableCell>€{{ formatPrice(order.total) }}</TableCell>
                                     <TableCell>
-                                        <Badge :class="getStatusColor(order.status)">
-                                            {{ getStatusLabel(order.status) }}
+                                        <Badge :class="orderStatusClasses(order.status)">
+                                            {{ orderStatusLabel(order.status) }}
                                         </Badge>
                                     </TableCell>
                                     <TableCell class="text-right">
@@ -650,6 +666,65 @@ const deleteAddress = (addressId: number) => {
                                 </TableRow>
                             </TableBody>
                         </Table>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Custom Prices (favorites) -->
+            <Card>
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <Package class="h-5 w-5" />
+                        Aangepaste prijzen
+                    </CardTitle>
+                    <CardDescription>
+                        Stel afwijkende prijzen in voor producten in de Quick Order-lijst van deze klant.
+                        Een aangepaste prijs geldt zonder kortingspercentage. Laat leeg (of gelijk aan de
+                        standaardprijs) om de standaardprijs te gebruiken.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div v-if="favoriteProducts.length === 0" class="text-center py-8 text-muted-foreground">
+                        Deze klant heeft nog geen producten in de Quick Order-lijst.
+                    </div>
+                    <div v-else class="space-y-4">
+                        <div class="rounded-lg border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Artikelnr</TableHead>
+                                        <TableHead>Product</TableHead>
+                                        <TableHead class="text-right">Standaardprijs</TableHead>
+                                        <TableHead class="w-48">Aangepaste prijs</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow v-for="product in favoriteProducts" :key="product.id">
+                                        <TableCell class="font-mono text-sm">{{ product.article_number || '-' }}</TableCell>
+                                        <TableCell class="font-medium">{{ product.title }}</TableCell>
+                                        <TableCell class="text-right text-muted-foreground">€ {{ formatPrice(product.standard_price) }}</TableCell>
+                                        <TableCell>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-muted-foreground">€</span>
+                                                <Input
+                                                    v-model="customPriceInputs[product.id]"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    :placeholder="product.standard_price"
+                                                    class="w-32"
+                                                />
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </div>
+                        <div class="flex justify-end">
+                            <Button :disabled="savingPrices" @click="saveCustomPrices">
+                                {{ savingPrices ? 'Opslaan...' : 'Prijzen opslaan' }}
+                            </Button>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -804,8 +879,7 @@ const deleteAddress = (addressId: number) => {
                     <div class="mt-6 flex items-center space-x-2">
                         <Checkbox
                             id="edit_show_on_map"
-                            :checked="editShowOnMap"
-                            @update:checked="editShowOnMap = $event"
+                            v-model="editShowOnMap"
                         />
                         <Label for="edit_show_on_map" class="cursor-pointer font-normal leading-snug">
                             Toon bedrijf op kaart op louman-jordaan.nl
@@ -1091,7 +1165,7 @@ const deleteAddress = (addressId: number) => {
                     <div class="flex items-center space-x-2">
                         <Checkbox
                             id="addr_is_default"
-                            v-model:checked="addressForm.is_default"
+                            v-model="addressForm.is_default"
                         />
                         <Label for="addr_is_default" class="text-sm font-normal cursor-pointer">
                             Stel in als standaard afleveradres

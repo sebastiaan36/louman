@@ -51,6 +51,7 @@ class CustomerRegisterController extends Controller
                 'bank_account' => $request->bank_account,
                 'vat_number' => $request->vat_number,
                 'show_on_map' => $request->boolean('show_on_map', true),
+                'terms_accepted_at' => now(),
             ]);
 
             return $user->load('customer');

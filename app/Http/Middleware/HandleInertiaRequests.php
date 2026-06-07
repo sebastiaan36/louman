@@ -37,6 +37,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $customer = $request->user()?->customer;
+        $customer?->loadMissing('customProductPrices');
 
         return [
             ...parent::share($request),
