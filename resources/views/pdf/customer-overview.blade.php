@@ -17,13 +17,12 @@
             line-height: 1.3;
         }
 
-        .page {
-            padding: 14px 16px;
-            page-break-after: always;
+        @page {
+            margin: 18px 16px;
         }
 
-        .page:last-child {
-            page-break-after: avoid;
+        .day-break {
+            page-break-before: always;
         }
 
         /* Page header */
@@ -59,16 +58,24 @@
             margin-top: 2px;
         }
 
-        /* 2-column grid */
+        /* 2-column grid — DomPDF paginates the rows and repeats the header */
         .grid {
             width: 100%;
             border-collapse: separate;
             border-spacing: 5px;
         }
 
-        .grid td {
+        .grid td.cell {
             width: 50%;
             vertical-align: top;
+        }
+
+        .grid thead td {
+            padding: 0;
+        }
+
+        .grid tbody tr {
+            page-break-inside: avoid;
         }
 
         /* Customer card */
@@ -76,7 +83,6 @@
             border: 1.5px solid #bbb;
             padding: 5px 7px;
             min-height: 36px;
-            margin-bottom: 5px;
         }
 
         .card-header {
@@ -178,43 +184,45 @@
 <body>
     @if(count($dayGroups) > 0)
         @foreach($dayGroups as $day => $customers)
-            @foreach(\App\Support\PdfColumnPacker::pages($customers) as $page)
-                @php $pageCustomerCount = count($page['left']) + count($page['right']); @endphp
-                <div class="page">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="day-title">{{ $day === 'onbekend' ? 'Geen leverdag ingesteld' : ucfirst($day) }}</div>
-                            <div class="meta">
-                                {{ $pageCustomerCount }} {{ $pageCustomerCount === 1 ? 'klant' : 'klanten' }} op deze pagina
-                                &nbsp;|&nbsp;
-                                Bestellingenoverzicht &mdash; {{ $generatedAt }}
+            <table class="grid @if(! $loop->first) day-break @endif">
+                <thead>
+                    <tr>
+                        <td colspan="2">
+                            <div class="page-header">
+                                <div class="page-header-left">
+                                    <div class="day-title">{{ $day === 'onbekend' ? 'Geen leverdag ingesteld' : ucfirst($day) }}</div>
+                                    <div class="meta">
+                                        {{ count($customers) }} {{ count($customers) === 1 ? 'klant' : 'klanten' }}
+                                        &nbsp;|&nbsp;
+                                        Bestellingenoverzicht &mdash; {{ $generatedAt }}
+                                    </div>
+                                </div>
+                                <div class="page-header-right">
+                                    <div class="meta">
+                                        Bestellingen in behandeling: <strong>{{ $orderCount }}</strong>
+                                        &nbsp;|&nbsp;
+                                        Totaal klanten: <strong>{{ $customerCount }}</strong>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="page-header-right">
-                            <div class="meta">
-                                Bestellingen in behandeling: <strong>{{ $orderCount }}</strong>
-                                &nbsp;|&nbsp;
-                                Totaal klanten: <strong>{{ $customerCount }}</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <table class="grid">
+                        </td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(array_chunk($customers, 2) as $pair)
                         <tr>
-                            <td>
-                                @foreach($page['left'] as $customer)
-                                    @include('pdf.partials.customer-card', ['customer' => $customer])
-                                @endforeach
+                            <td class="cell">
+                                @include('pdf.partials.customer-card', ['customer' => $pair[0]])
                             </td>
-                            <td>
-                                @foreach($page['right'] as $customer)
-                                    @include('pdf.partials.customer-card', ['customer' => $customer])
-                                @endforeach
+                            <td class="cell">
+                                @isset($pair[1])
+                                    @include('pdf.partials.customer-card', ['customer' => $pair[1]])
+                                @endisset
                             </td>
                         </tr>
-                    </table>
-                </div>
-            @endforeach
+                    @endforeach
+                </tbody>
+            </table>
         @endforeach
     @else
         <div style="padding: 40px; text-align: center; color: #777; font-size: 9pt;">
