@@ -323,8 +323,8 @@ class OrderController extends Controller
             }
         }
 
-        // Sort by article number
-        usort($products, fn ($a, $b) => strcmp($a['article_number'], $b['article_number']));
+        // Sort by article number in natural (numeric-aware) order: 1, 2, 10, 105.
+        usort($products, fn ($a, $b) => strnatcmp($a['article_number'], $b['article_number']));
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.production-list', [
             'products' => $products,
