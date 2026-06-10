@@ -263,7 +263,7 @@
             <div class="contact-section">
                 <p>
                     Vragen over uw bestelling? Neem contact met ons op via<br>
-                    <a href="mailto:info@louman-jordaan.nl">info@louman-jordaan.nl</a> of bel <strong>020 6220771</strong>
+                    <a href="mailto:info@louman-jordaan.nl">info@louman-jordaan.nl</a> of bel <strong>020 4470930</strong>
                 </p>
             </div>
         </div>
@@ -272,7 +272,7 @@
             <strong>Worstmakerij T.F.M. Louman</strong><br>
             Kombuisweg 15<br>
             1041 AV Amsterdam<br>
-            Tel: 020 6220771 • info@louman-jordaan.nl
+            Tel: 020 4470930 • info@louman-jordaan.nl
         </div>
     </div>
 </body>

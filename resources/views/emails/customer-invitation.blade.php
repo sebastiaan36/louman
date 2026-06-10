@@ -101,7 +101,7 @@
             <strong>Worstmakerij T.F.M. Louman</strong><br>
             Kombuisweg 15<br>
             1041 AV Amsterdam<br>
-            Tel: 020 6220771 &bull; info@louman-jordaan.nl
+            Tel: 020 4470930 &bull; info@louman-jordaan.nl
         </div>
     </div>
 </body>
