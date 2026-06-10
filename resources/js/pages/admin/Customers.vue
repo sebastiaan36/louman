@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form, Head, router, usePage } from '@inertiajs/vue3';
-import { Plus, Users } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { Plus, Search, Users } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import { type BreadcrumbItem } from '@/types';
 
 interface Customer {
     id: number;
+    customer_number: string | null;
     company_name: string;
     contact_person: string;
     email: string;
@@ -38,9 +39,32 @@ interface Customer {
     is_active: boolean;
 }
 
-defineProps<{
+interface Filters {
+    search: string | null;
+}
+
+const props = defineProps<{
     customers: Customer[];
+    filters: Filters;
 }>();
+
+const searchQuery = ref(props.filters.search || '');
+
+const updateFilters = () => {
+    const params = new URLSearchParams();
+    if (searchQuery.value) params.set('search', searchQuery.value);
+
+    router.get(`/admin/customers?${params.toString()}`, {}, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+};
+
+watch(searchQuery, () => updateFilters());
+
+const clearSearch = () => {
+    searchQuery.value = '';
+};
 
 const page = usePage();
 const importResults = computed(
@@ -126,14 +150,42 @@ const submitImport = () => {
                 </ul>
             </div>
 
+            <!-- Search -->
+            <div class="rounded-lg border p-4">
+                <div class="grid gap-2 md:w-1/2">
+                    <Label for="search">Zoeken</Label>
+                    <div class="relative">
+                        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            id="search"
+                            v-model="searchQuery"
+                            placeholder="Zoek op klantnummer of bedrijfsnaam..."
+                            class="pl-9"
+                        />
+                    </div>
+                    <Button
+                        v-if="searchQuery"
+                        variant="outline"
+                        size="sm"
+                        class="w-fit"
+                        @click="clearSearch"
+                    >
+                        Wis zoekopdracht
+                    </Button>
+                </div>
+            </div>
+
             <div v-if="customers.length === 0" class="rounded-lg border border-dashed p-12 text-center">
-                <p class="text-muted-foreground">Geen klanten gevonden</p>
+                <p class="text-muted-foreground">
+                    {{ searchQuery ? 'Geen klanten gevonden met deze zoekopdracht' : 'Geen klanten gevonden' }}
+                </p>
             </div>
 
             <div v-else class="rounded-lg border">
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Klantnr.</TableHead>
                             <TableHead>Bedrijfsnaam</TableHead>
                             <TableHead>Contactpersoon</TableHead>
                             <TableHead>Email</TableHead>
@@ -151,6 +203,7 @@ const submitImport = () => {
                             class="cursor-pointer hover:bg-muted/50"
                             @click="viewCustomer(customer.id)"
                         >
+                            <TableCell class="font-mono text-sm text-muted-foreground">{{ customer.customer_number ?? '—' }}</TableCell>
                             <TableCell class="font-medium">{{ customer.company_name }}</TableCell>
                             <TableCell>{{ customer.contact_person }}</TableCell>
                             <TableCell>{{ customer.email }}</TableCell>

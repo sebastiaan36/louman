@@ -115,3 +115,106 @@ test('niet-admin kan quick order lijst niet aanpassen', function () {
         ->post("/admin/customers/{$customer->id}/favorites/{$product->id}/toggle")
         ->assertForbidden();
 });
+
+function customerUpdatePayload(\App\Models\Customer $customer, array $overrides = []): array
+{
+    return array_merge([
+        'company_name' => $customer->company_name,
+        'contact_person' => $customer->contact_person,
+        'phone_number' => $customer->phone_number,
+        'kvk_number' => $customer->kvk_number,
+        'vat_number' => $customer->vat_number,
+        'bank_account' => $customer->bank_account,
+        'street_name' => $customer->street_name,
+        'house_number' => $customer->house_number,
+        'postal_code' => $customer->postal_code,
+        'city' => $customer->city,
+    ], $overrides);
+}
+
+test('admin kan een klantnummer van 3 cijfers instellen', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+
+    $this->actingAs($admin)
+        ->patch("/admin/customers/{$customer->id}", customerUpdatePayload($customer, ['customer_number' => '007']))
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect($customer->fresh()->customer_number)->toBe('007');
+});
+
+test('klantnummer is standaard leeg en mag leeg blijven', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    expect($customer->customer_number)->toBeNull();
+
+    $this->actingAs($admin)
+        ->patch("/admin/customers/{$customer->id}", customerUpdatePayload($customer, ['customer_number' => '']))
+        ->assertRedirect();
+
+    expect($customer->fresh()->customer_number)->toBeNull();
+});
+
+test('klantnummer moet uit precies 3 cijfers bestaan', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+
+    foreach (['12', '1234', 'abc', '1a2'] as $invalid) {
+        $this->actingAs($admin)
+            ->patch("/admin/customers/{$customer->id}", customerUpdatePayload($customer, ['customer_number' => $invalid]))
+            ->assertSessionHasErrors('customer_number');
+    }
+});
+
+test('klantnummer moet uniek zijn', function () {
+    $admin = adminUser();
+    $other = approvedCustomer();
+    $other->update(['customer_number' => '123']);
+    $customer = approvedCustomer();
+
+    $this->actingAs($admin)
+        ->patch("/admin/customers/{$customer->id}", customerUpdatePayload($customer, ['customer_number' => '123']))
+        ->assertSessionHasErrors('customer_number');
+
+    expect($customer->fresh()->customer_number)->toBeNull();
+});
+
+test('klant kan eigen klantnummer behouden bij update', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $customer->update(['customer_number' => '055']);
+
+    $this->actingAs($admin)
+        ->patch("/admin/customers/{$customer->id}", customerUpdatePayload($customer, ['customer_number' => '055', 'company_name' => 'Andere Naam']))
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($customer->fresh()->company_name)->toBe('Andere Naam');
+    expect($customer->fresh()->customer_number)->toBe('055');
+});
+
+test('admin kan klanten zoeken op bedrijfsnaam en klantnummer', function () {
+    $admin = adminUser();
+    $a = approvedCustomer();
+    $a->update(['company_name' => 'Bakker Bart', 'customer_number' => '101']);
+    $b = approvedCustomer();
+    $b->update(['company_name' => 'Slager Sjaak', 'customer_number' => '202']);
+
+    // Zoeken op bedrijfsnaam
+    $this->actingAs($admin)
+        ->get('/admin/customers?search=Bakker')
+        ->assertInertia(fn ($page) => $page
+            ->has('customers', 1)
+            ->where('customers.0.id', $a->id)
+            ->where('filters.search', 'Bakker')
+        );
+
+    // Zoeken op klantnummer
+    $this->actingAs($admin)
+        ->get('/admin/customers?search=202')
+        ->assertInertia(fn ($page) => $page
+            ->has('customers', 1)
+            ->where('customers.0.id', $b->id)
+        );
+});

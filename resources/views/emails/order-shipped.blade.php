@@ -193,7 +193,7 @@
                 Beste {{ $order->customer->contact_person }},
             </p>
             <p>
-                Goed nieuws! Uw bestelling bij <strong>Ambachtelijke Slagerij T.F.M. Louman</strong> is verzonden.
+                Goed nieuws! Uw bestelling bij <strong>Worstmakerij T.F.M. Louman</strong> is verzonden.
                 Hieronder vindt u een overzicht van uw bestelling.
             </p>
 
@@ -269,8 +269,9 @@
         </div>
 
         <div class="footer">
-            <strong>Ambachtelijke Slagerij T.F.M. Louman</strong><br>
-            Goudsbloemstraat 76 • 1015 JR Amsterdam<br>
+            <strong>Worstmakerij T.F.M. Louman</strong><br>
+            Kombuisweg 15<br>
+            1041 AV Amsterdam<br>
             Tel: 020 6220771 • info@louman-jordaan.nl
         </div>
     </div>

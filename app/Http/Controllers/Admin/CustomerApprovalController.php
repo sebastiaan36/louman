@@ -54,14 +54,23 @@ class CustomerApprovalController extends Controller
     /**
      * Display a listing of all customers.
      */
-    public function allCustomers(): Response
+    public function allCustomers(Request $request): Response
     {
+        $search = $request->input('search');
+
         $customers = Customer::with('user')
             ->whereNotNull('approved_at')
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('company_name', 'like', '%'.$search.'%')
+                        ->orWhere('customer_number', 'like', '%'.$search.'%');
+                });
+            })
             ->orderBy('company_name')
             ->get()
             ->map(fn (Customer $customer) => [
                 'id' => $customer->id,
+                'customer_number' => $customer->customer_number,
                 'company_name' => $customer->company_name,
                 'contact_person' => $customer->contact_person,
                 'email' => $customer->user?->email,
@@ -73,6 +82,9 @@ class CustomerApprovalController extends Controller
 
         return Inertia::render('admin/Customers', [
             'customers' => $customers,
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 
@@ -159,6 +171,7 @@ class CustomerApprovalController extends Controller
         $customerData = [
             'id' => $customer->id,
             'company_name' => $customer->company_name,
+            'customer_number' => $customer->customer_number,
             'contact_person' => $customer->contact_person,
             'email' => $customer->user?->email,
             'has_account' => $customer->user !== null,
@@ -310,6 +323,7 @@ class CustomerApprovalController extends Controller
     {
         $validated = $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
+            'customer_number' => ['nullable', 'digits:3', Rule::unique('customers', 'customer_number')->ignore($customer->id)],
             'contact_person' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:20'],
             'kvk_number' => ['required', 'string', 'max:8'],
@@ -322,6 +336,8 @@ class CustomerApprovalController extends Controller
             'packing_slip_email' => ['nullable', 'email', 'max:255'],
         ], [
             'company_name.required' => 'Bedrijfsnaam is verplicht.',
+            'customer_number.digits' => 'Klantnummer moet uit precies 3 cijfers bestaan.',
+            'customer_number.unique' => 'Dit klantnummer is al in gebruik.',
             'contact_person.required' => 'Contactpersoon is verplicht.',
             'phone_number.required' => 'Telefoonnummer is verplicht.',
             'kvk_number.required' => 'KVK nummer is verplicht.',

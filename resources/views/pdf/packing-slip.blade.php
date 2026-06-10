@@ -229,6 +229,7 @@
                 <h3>Klantgegevens</h3>
                 <div class="address-content">
                     <strong>{{ $order->customer->company_name }}</strong><br>
+                    @if($order->customer->customer_number)Klantnr: {{ $order->customer->customer_number }}<br>@endif
                     {{ $order->customer->contact_person }}<br>
                     {{ $order->customer->street_name }} {{ $order->customer->house_number }}<br>
                     {{ $order->customer->postal_code }} {{ $order->customer->city }}<br>

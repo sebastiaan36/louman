@@ -306,7 +306,7 @@
         <div class="footer">
             <p>
                 Deze email is automatisch gegenereerd vanuit het B2B klantportaal.<br>
-                <small>Slagerij Louman • info@louman-joraan.nl</small>
+                <small>Slagerij Louman • info@louman-jordaan.nl</small>
             </p>
         </div>
     </div>

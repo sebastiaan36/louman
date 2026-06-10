@@ -307,6 +307,32 @@ test('bestellingenoverzicht bevat alleen bevestigde bestellingen', function () {
     expect($allProducts->first()['weight'])->toBe('1 kilo');
 });
 
+test('bestellingenoverzicht toont het handmatige klantnummer, leeg als niet ingevuld', function () {
+    $admin = adminUser();
+    $withNumber = approvedCustomer();
+    $withNumber->update(['customer_number' => '077']);
+    $withoutNumber = approvedCustomer();
+
+    $captured = null;
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
+    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
+    Pdf::shouldReceive('loadView')
+        ->once()
+        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
+            $captured = $data;
+
+            return $pdfMock;
+        });
+
+    $this->actingAs($admin)
+        ->get('/admin/orders/customer-overview')
+        ->assertOk();
+
+    $byId = collect($captured['dayGroups'])->flatMap(fn ($customers) => $customers)->keyBy('id');
+    expect($byId[$withNumber->id]['number'])->toBe('077');
+    expect($byId[$withoutNumber->id]['number'])->toBeNull();
+});
+
 test('bestellingenoverzicht bevat bestelnotities per klant', function () {
     $admin = adminUser();
     $customer = approvedCustomer();

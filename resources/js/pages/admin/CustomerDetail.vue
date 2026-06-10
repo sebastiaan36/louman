@@ -43,6 +43,7 @@ import { type BreadcrumbItem } from '@/types';
 interface Customer {
     id: number;
     company_name: string;
+    customer_number: string | null;
     contact_person: string;
     email: string;
     has_account: boolean;
@@ -249,6 +250,7 @@ const updateCategoryAndDiscount = () => {
 const editCustomerDialogOpen = ref(false);
 const form = useForm({
     company_name: props.customer.company_name,
+    customer_number: props.customer.customer_number || '',
     contact_person: props.customer.contact_person,
     phone_number: props.customer.phone_number,
     kvk_number: props.customer.kvk_number,
@@ -263,6 +265,7 @@ const form = useForm({
 
 const openEditCustomerDialog = () => {
     form.company_name = props.customer.company_name;
+    form.customer_number = props.customer.customer_number || '';
     form.contact_person = props.customer.contact_person;
     form.phone_number = props.customer.phone_number;
     form.kvk_number = props.customer.kvk_number;
@@ -367,6 +370,7 @@ const deleteAddress = (addressId: number) => {
                         </Badge>
                     </h1>
                     <p class="text-sm text-muted-foreground">
+                        <span v-if="customer.customer_number">Klantnummer {{ customer.customer_number }} · </span>
                         Klant sinds {{ customer.created_at }}
                         <span v-if="!customer.is_active && customer.deactivated_at">
                             · gedeactiveerd op {{ customer.deactivated_at }}
@@ -929,6 +933,20 @@ const deleteAddress = (addressId: number) => {
                                 required
                             />
                             <InputError :message="form.errors.company_name" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="customer_number">Klantnummer</Label>
+                            <Input
+                                id="customer_number"
+                                v-model="form.customer_number"
+                                type="text"
+                                inputmode="numeric"
+                                maxlength="3"
+                                class="mt-1"
+                                placeholder="3 cijfers, optioneel"
+                            />
+                            <InputError :message="form.errors.customer_number" class="mt-2" />
                         </div>
 
                         <div>

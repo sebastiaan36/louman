@@ -4,7 +4,16 @@
             <div class="card-name">{{ $customer['company_name'] }}</div>
         </div>
         <div class="card-header-right">
-            <div class="card-phone">Klantnr. {{ $customer['id'] }}@if($customer['phone_number']) &nbsp;&middot;&nbsp; Tel. {{ $customer['phone_number'] }}@endif</div>
+            @php
+                $contactParts = [];
+                if (! empty($customer['number'])) {
+                    $contactParts[] = 'Klantnr. '.e($customer['number']);
+                }
+                if (! empty($customer['phone_number'])) {
+                    $contactParts[] = 'Tel. '.e($customer['phone_number']);
+                }
+            @endphp
+            <div class="card-phone">{!! implode(' &nbsp;&middot;&nbsp; ', $contactParts) !!}</div>
             @if($customer['is_pickup'])
                 <div class="pickup-badge">Ophalen</div>
             @endif

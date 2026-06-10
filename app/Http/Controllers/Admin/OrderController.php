@@ -266,6 +266,7 @@ class OrderController extends Controller
             usort($products, fn ($a, $b) => strcmp($a['article_number'], $b['article_number']));
             $rawGroups[$day][] = [
                 'id' => $customer->id,
+                'number' => $customer->customer_number,
                 'company_name' => $customer->company_name,
                 'phone_number' => $customer->phone_number,
                 'is_pickup' => $customer->delivery_day === 'ophalen',
