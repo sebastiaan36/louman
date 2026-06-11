@@ -941,9 +941,9 @@ const deleteAddress = (addressId: number) => {
                                 v-model="form.customer_number"
                                 type="text"
                                 inputmode="numeric"
-                                maxlength="3"
+                                maxlength="4"
                                 class="mt-1"
-                                placeholder="3 cijfers, optioneel"
+                                placeholder="1 t/m 4 cijfers, optioneel"
                             />
                             <InputError :message="form.errors.customer_number" class="mt-2" />
                         </div>

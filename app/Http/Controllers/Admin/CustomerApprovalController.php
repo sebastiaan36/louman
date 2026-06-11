@@ -323,7 +323,7 @@ class CustomerApprovalController extends Controller
     {
         $validated = $request->validate([
             'company_name' => ['nullable', 'string', 'max:255'],
-            'customer_number' => ['nullable', 'digits:3', Rule::unique('customers', 'customer_number')->ignore($customer->id)],
+            'customer_number' => ['nullable', 'digits_between:1,4', Rule::unique('customers', 'customer_number')->ignore($customer->id)],
             'contact_person' => ['nullable', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'kvk_number' => ['nullable', 'string', 'max:8'],
@@ -335,7 +335,7 @@ class CustomerApprovalController extends Controller
             'city' => ['nullable', 'string', 'max:255'],
             'packing_slip_email' => ['nullable', 'email', 'max:255'],
         ], [
-            'customer_number.digits' => 'Klantnummer moet uit precies 3 cijfers bestaan.',
+            'customer_number.digits_between' => 'Klantnummer mag uit 1 tot 4 cijfers bestaan.',
             'customer_number.unique' => 'Dit klantnummer is al in gebruik.',
             'packing_slip_email.email' => 'Pakbon email moet een geldig email adres zijn.',
         ]);

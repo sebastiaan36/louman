@@ -156,11 +156,23 @@ test('klantnummer is standaard leeg en mag leeg blijven', function () {
     expect($customer->fresh()->customer_number)->toBeNull();
 });
 
-test('klantnummer moet uit precies 3 cijfers bestaan', function () {
+test('klantnummer mag uit 1 tot 4 cijfers bestaan', function () {
+    $admin = adminUser();
+
+    foreach (['1', '12', '123', '1234'] as $valid) {
+        $customer = approvedCustomer();
+        $this->actingAs($admin)
+            ->patch("/admin/customers/{$customer->id}", customerUpdatePayload($customer, ['customer_number' => $valid]))
+            ->assertSessionHasNoErrors();
+        expect($customer->fresh()->customer_number)->toBe($valid);
+    }
+});
+
+test('een klantnummer van meer dan 4 cijfers of niet-cijfers wordt geweigerd', function () {
     $admin = adminUser();
     $customer = approvedCustomer();
 
-    foreach (['12', '1234', 'abc', '1a2'] as $invalid) {
+    foreach (['12345', 'abc', '1a2'] as $invalid) {
         $this->actingAs($admin)
             ->patch("/admin/customers/{$customer->id}", customerUpdatePayload($customer, ['customer_number' => $invalid]))
             ->assertSessionHasErrors('customer_number');
