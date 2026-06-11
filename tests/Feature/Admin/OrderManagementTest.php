@@ -463,8 +463,11 @@ test('bulk voltooien verstuurt verzendmail per order', function () {
 });
 
 test('admin kan een bestelling aanmaken met een gekozen status', function () {
+    Mail::fake();
+
     $admin = adminUser();
-    $customer = approvedCustomer();
+    $user = customerUser();
+    $customer = Customer::factory()->approved()->create(['user_id' => $user->id]);
     $product = Product::factory()->create(['price' => 10, 'in_stock' => true]);
 
     $this->actingAs($admin)
@@ -480,6 +483,9 @@ test('admin kan een bestelling aanmaken met een gekozen status', function () {
     $order = $customer->orders()->latest()->first();
     expect($order->status)->toBe('confirmed');
     expect((float) $order->total)->toBe(20.0);
+
+    // De klant krijgt een bevestigingsmail, ook bij een admin-aangemaakte bestelling.
+    Mail::assertSent(\App\Mail\OrderConfirmation::class, fn ($mail) => $mail->order->id === $order->id && $mail->hasTo($user->email));
 });
 
 test('admin bestelling aanmaken vereist een geldige status', function () {
@@ -510,4 +516,50 @@ test('admin haalt de aangepaste prijzen van een klant op via het prices-endpoint
         ->getJson("/admin/orders/customer/{$customer->id}/prices")
         ->assertOk()
         ->assertJsonPath("custom_prices.{$product->id}", '42.50');
+});
+
+test('admin kan bestellingen zoeken op klantnummer en bedrijfsnaam', function () {
+    $admin = adminUser();
+    $a = approvedCustomer();
+    $a->update(['company_name' => 'Bakker Bart', 'customer_number' => '101']);
+    $b = approvedCustomer();
+    $b->update(['company_name' => 'Slager Sjaak', 'customer_number' => '202']);
+    $orderA = Order::factory()->create(['customer_id' => $a->id]);
+    $orderB = Order::factory()->create(['customer_id' => $b->id]);
+
+    // Zoeken op klantnummer
+    $this->actingAs($admin)
+        ->get('/admin/orders?search=202')
+        ->assertInertia(fn ($page) => $page
+            ->has('orders.data', 1)
+            ->where('orders.data.0.id', $orderB->id)
+        );
+
+    // Zoeken op bedrijfsnaam
+    $this->actingAs($admin)
+        ->get('/admin/orders?search=Bakker')
+        ->assertInertia(fn ($page) => $page
+            ->has('orders.data', 1)
+            ->where('orders.data.0.id', $orderA->id)
+        );
+});
+
+test('aanmaken met "nog een order" maakt de bestelling en gaat terug naar het aanmaakscherm', function () {
+    Mail::fake();
+
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create(['price' => 10, 'in_stock' => true]);
+
+    $this->actingAs($admin)
+        ->post('/admin/orders', [
+            'customer_id' => $customer->id,
+            'delivery_address_id' => null,
+            'status' => 'confirmed',
+            'items' => [['product_id' => $product->id, 'quantity' => 1]],
+            'create_another' => true,
+        ])
+        ->assertRedirect(route('admin.orders.create'));
+
+    expect($customer->orders()->count())->toBe(1);
 });

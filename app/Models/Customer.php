@@ -24,6 +24,7 @@ class Customer extends Model
         'customer_number',
         'contact_person',
         'phone_number',
+        'mobile_number',
         'street_name',
         'house_number',
         'postal_code',

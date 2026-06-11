@@ -91,6 +91,7 @@ class ProductController extends Controller
                 'title' => $product->title,
                 'category' => $product->category?->name,
                 'price' => $product->getPriceForCustomer($customer),
+                'price_per_kg' => $product->price_per_kg,
                 'weight' => $product->weight,
                 'article_number' => $product->article_number,
                 'thumbnail_url' => $product->thumbnail_url,

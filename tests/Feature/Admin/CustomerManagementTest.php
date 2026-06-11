@@ -257,3 +257,29 @@ test('admin kan klantgegevens opslaan met lege velden', function () {
     expect($fresh->kvk_number)->toBeNull();
     expect($fresh->city)->toBeNull();
 });
+
+test('admin kan een mobiel telefoonnummer opslaan', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+
+    $this->actingAs($admin)
+        ->patch("/admin/customers/{$customer->id}", customerUpdatePayload($customer, ['mobile_number' => '0612345678']))
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($customer->fresh()->mobile_number)->toBe('0612345678');
+});
+
+test('csv-import werkt het mobiele telefoonnummer bij', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+
+    $csv = "id;mobile_number\n{$customer->id};0612345678\n";
+    $file = \Illuminate\Http\UploadedFile::fake()->createWithContent('klanten.csv', $csv);
+
+    $this->actingAs($admin)
+        ->post('/admin/customers/import', ['csv_file' => $file])
+        ->assertRedirect();
+
+    expect($customer->fresh()->mobile_number)->toBe('0612345678');
+});

@@ -141,6 +141,7 @@ class ProductController extends Controller
                 'subcategory_id' => $product->subcategory_id,
                 'title' => $product->title,
                 'price' => $product->price,
+                'price_per_kg' => $product->price_per_kg,
                 'suggested_retail_price' => $product->suggested_retail_price,
                 'description' => $product->description,
                 'ingredients' => implode(', ', $product->ingredients ?? []),

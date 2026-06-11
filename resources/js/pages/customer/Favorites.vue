@@ -53,6 +53,10 @@ const quantities = ref<Record<number, number>>(
     }, {} as Record<number, number>)
 );
 
+const viewProduct = (productId: number) => {
+    router.visit(`/customer/products/${productId}`);
+};
+
 const handleFavoriteToggle = (productId: number) => {
     router.post(`/customer/favorites/${productId}/toggle`, {}, {
         preserveScroll: true,
@@ -135,7 +139,7 @@ const decrementQuantity = (productId: number) => {
                         <TableBody>
                             <TableRow v-for="product in favorites" :key="product.id">
                                 <!-- Thumbnail -->
-                                <TableCell>
+                                <TableCell class="cursor-pointer" @click="viewProduct(product.id)">
                                     <div class="w-16 h-16 rounded overflow-hidden">
                                         <img
                                             v-if="product.thumbnail_url"
@@ -153,7 +157,7 @@ const decrementQuantity = (productId: number) => {
                                 </TableCell>
 
                                 <!-- Product Title -->
-                                <TableCell class="font-medium">
+                                <TableCell class="font-medium cursor-pointer hover:underline" @click="viewProduct(product.id)">
                                     {{ product.title }}
                                 </TableCell>
 

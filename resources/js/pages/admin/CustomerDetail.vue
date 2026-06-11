@@ -2,7 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
 import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit, Plus, Trash2, Ban, CheckCircle2 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,7 @@ interface Customer {
     email: string;
     has_account: boolean;
     phone_number: string;
+    mobile_number: string | null;
     packing_slip_email: string | null;
     kvk_number: string;
     vat_number: string;
@@ -121,6 +122,48 @@ const customPriceInputs = ref<Record<number, string>>(
     Object.fromEntries(props.favoriteProducts.map((p) => [p.id, p.custom_price ?? ''])),
 );
 const savingPrices = ref(false);
+
+// Sorting of the Quick Order products table
+type FavoriteSortKey = 'article_number' | 'title' | 'standard_price' | 'custom_price';
+const sortKey = ref<FavoriteSortKey>('article_number');
+const sortAsc = ref(true);
+
+const sortBy = (key: FavoriteSortKey) => {
+    if (sortKey.value === key) {
+        sortAsc.value = !sortAsc.value;
+    } else {
+        sortKey.value = key;
+        sortAsc.value = true;
+    }
+};
+
+const sortedFavoriteProducts = computed(() => {
+    const dir = sortAsc.value ? 1 : -1;
+
+    return [...props.favoriteProducts].sort((a, b) => {
+        let cmp = 0;
+        switch (sortKey.value) {
+            case 'article_number':
+                cmp = (a.article_number ?? '').localeCompare(b.article_number ?? '', undefined, { numeric: true, sensitivity: 'base' });
+                break;
+            case 'title':
+                cmp = a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+                break;
+            case 'standard_price':
+                cmp = parseFloat(a.standard_price) - parseFloat(b.standard_price);
+                break;
+            case 'custom_price': {
+                // Products without a custom price sort last.
+                const av = a.custom_price !== null ? parseFloat(a.custom_price) : Infinity;
+                const bv = b.custom_price !== null ? parseFloat(b.custom_price) : Infinity;
+                cmp = av - bv;
+                break;
+            }
+        }
+
+        return cmp * dir;
+    });
+});
 
 const saveCustomPrices = () => {
     savingPrices.value = true;
@@ -253,6 +296,7 @@ const form = useForm({
     customer_number: props.customer.customer_number || '',
     contact_person: props.customer.contact_person,
     phone_number: props.customer.phone_number,
+    mobile_number: props.customer.mobile_number || '',
     kvk_number: props.customer.kvk_number,
     vat_number: props.customer.vat_number,
     bank_account: props.customer.bank_account,
@@ -268,6 +312,7 @@ const openEditCustomerDialog = () => {
     form.customer_number = props.customer.customer_number || '';
     form.contact_person = props.customer.contact_person;
     form.phone_number = props.customer.phone_number;
+    form.mobile_number = props.customer.mobile_number || '';
     form.kvk_number = props.customer.kvk_number;
     form.vat_number = props.customer.vat_number;
     form.bank_account = props.customer.bank_account;
@@ -453,6 +498,13 @@ const deleteAddress = (addressId: number) => {
                             <div>
                                 <p class="text-sm font-medium">Telefoon</p>
                                 <p class="text-sm text-muted-foreground">{{ customer.phone_number }}</p>
+                            </div>
+                        </div>
+                        <div v-if="customer.mobile_number" class="flex items-start gap-3">
+                            <Phone class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">Mobiel</p>
+                                <p class="text-sm text-muted-foreground">{{ customer.mobile_number }}</p>
                             </div>
                         </div>
                         <div v-if="customer.packing_slip_email" class="flex items-start gap-3">
@@ -696,14 +748,22 @@ const deleteAddress = (addressId: number) => {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Artikelnr</TableHead>
-                                        <TableHead>Product</TableHead>
-                                        <TableHead class="text-right">Standaardprijs</TableHead>
-                                        <TableHead class="w-48">Aangepaste prijs</TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="sortBy('article_number')">
+                                            Artikelnr <span v-if="sortKey === 'article_number'">{{ sortAsc ? '▲' : '▼' }}</span>
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer select-none" @click="sortBy('title')">
+                                            Product <span v-if="sortKey === 'title'">{{ sortAsc ? '▲' : '▼' }}</span>
+                                        </TableHead>
+                                        <TableHead class="cursor-pointer select-none text-right" @click="sortBy('standard_price')">
+                                            Standaardprijs <span v-if="sortKey === 'standard_price'">{{ sortAsc ? '▲' : '▼' }}</span>
+                                        </TableHead>
+                                        <TableHead class="w-48 cursor-pointer select-none" @click="sortBy('custom_price')">
+                                            Aangepaste prijs <span v-if="sortKey === 'custom_price'">{{ sortAsc ? '▲' : '▼' }}</span>
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow v-for="product in favoriteProducts" :key="product.id">
+                                    <TableRow v-for="product in sortedFavoriteProducts" :key="product.id">
                                         <TableCell class="font-mono text-sm">{{ product.article_number || '-' }}</TableCell>
                                         <TableCell class="font-medium">{{ product.title }}</TableCell>
                                         <TableCell class="text-right text-muted-foreground">€ {{ formatPrice(product.standard_price) }}</TableCell>
@@ -968,6 +1028,17 @@ const deleteAddress = (addressId: number) => {
                                 class="mt-1"
                             />
                             <InputError :message="form.errors.phone_number" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="mobile_number">Mobiel telefoonnummer</Label>
+                            <Input
+                                id="mobile_number"
+                                v-model="form.mobile_number"
+                                type="text"
+                                class="mt-1"
+                            />
+                            <InputError :message="form.errors.mobile_number" class="mt-2" />
                         </div>
 
                         <div>

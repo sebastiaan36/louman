@@ -307,7 +307,7 @@ const submitImport = () => {
                     <div class="rounded-md bg-muted p-3 text-xs text-muted-foreground space-y-1">
                         <p class="font-medium">Verwachte kolomnamen (eerste rij):</p>
                         <p class="font-mono break-all leading-relaxed">
-                            id, company_name, contact_person, phone_number, street_name, house_number,
+                            id, company_name, contact_person, phone_number, mobile_number, street_name, house_number,
                             postal_code, city, packing_slip_email, customer_category, discount_percentage,
                             delivery_day, route_order, show_on_map
                         </p>

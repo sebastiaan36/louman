@@ -9,6 +9,7 @@ interface Product {
     id: number;
     title: string;
     price: string;
+    price_per_kg?: string | null;
     weight: string | null;
     thumbnail_url: string | null;
     is_in_stock: boolean;
@@ -80,6 +81,9 @@ const formattedPrice = computed(() => formatEuro(props.product.price));
                         {{ formattedPrice }}
                     </span>
                     <span class="text-[10px] text-muted-foreground">ex. BTW</span>
+                    <span v-if="product.price_per_kg" class="text-xs text-muted-foreground">
+                        {{ formatEuro(product.price_per_kg) }} per kg
+                    </span>
                 </div>
                 <span v-if="product.weight" class="text-sm text-muted-foreground">
                     circa {{ product.weight }}

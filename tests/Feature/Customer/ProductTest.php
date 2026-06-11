@@ -59,3 +59,38 @@ test('klant ziet productdetails', function () {
             ->where('product.title', $product->title)
         );
 });
+
+test('prijs per kg wordt meegegeven in het productoverzicht', function () {
+    $user = customerUser();
+    approvedCustomer($user);
+
+    Product::factory()->create(['price_per_kg' => 12.50]);
+    Product::factory()->create(['price_per_kg' => null]);
+
+    $this->actingAs($user)
+        ->get('/customer/products')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('products', 2)
+            ->where('products.0.price_per_kg', '12.50')
+            ->where('products.1.price_per_kg', null)
+        );
+});
+
+test('admin kan de prijs per kg op een product opslaan', function () {
+    $admin = adminUser();
+    $product = Product::factory()->create(['price_per_kg' => null]);
+
+    $this->actingAs($admin)
+        ->patch("/admin/products/{$product->id}", [
+            'title' => $product->title,
+            'price' => '10.00',
+            'price_per_kg' => '15.95',
+            'description' => $product->description,
+            'article_number' => $product->article_number,
+            'in_stock' => '1',
+        ])
+        ->assertRedirect();
+
+    expect((float) $product->fresh()->price_per_kg)->toBe(15.95);
+});

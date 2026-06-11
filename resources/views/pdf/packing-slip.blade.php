@@ -211,7 +211,7 @@
                     Kombuisweg 15<br>
                     1041 AV Amsterdam<br>
                     Tel: 020 4470930<br>
-                    E-mail: info@louman-jordaan.nl
+                    E-mail: worstmakerijlouman@gmail.com
                 </div>
             </div>
             <div class="header-right">
@@ -343,7 +343,7 @@
         <!-- Footer -->
         <div class="footer">
             <p>Bedankt voor uw bestelling bij Worstmakerij T.F.M. Louman</p>
-            <p>Kombuisweg 15 • 1041 AV Amsterdam • Tel: 020 4470930 • info@louman-jordaan.nl</p>
+            <p>Kombuisweg 15 • 1041 AV Amsterdam • Tel: 020 4470930 • worstmakerijlouman@gmail.com</p>
         </div>
     </div>
 </body>

@@ -246,7 +246,7 @@ const downloadBulkPackingSlips = () => {
                             <Input
                                 id="search"
                                 v-model="searchQuery"
-                                placeholder="Bestelnummer of klant..."
+                                placeholder="Bestelnummer, klantnummer of bedrijfsnaam..."
                                 class="pl-9"
                             />
                         </div>

@@ -47,6 +47,7 @@ interface Product {
     subcategory_id: number | null;
     title: string;
     price: string;
+    price_per_kg: string | null;
     suggested_retail_price: string | null;
     description: string;
     ingredients: string;
@@ -94,6 +95,7 @@ const form = ref({
     subcategory_id: props.product?.subcategory_id?.toString() || 'none',
     title: props.product?.title || '',
     price: props.product?.price || '',
+    price_per_kg: props.product?.price_per_kg || '',
     suggested_retail_price: props.product?.suggested_retail_price || '',
     description: props.product?.description || '',
     ingredients: props.product?.ingredients || '',
@@ -185,6 +187,9 @@ const submit = () => {
     }
     formData.append('title', form.value.title);
     formData.append('price', form.value.price);
+    if (form.value.price_per_kg) {
+        formData.append('price_per_kg', form.value.price_per_kg);
+    }
     if (form.value.suggested_retail_price) {
         formData.append('suggested_retail_price', form.value.suggested_retail_price);
     }
@@ -412,6 +417,19 @@ const cancel = () => {
                                 placeholder="0.00"
                             />
                             <InputError :message="errors?.price" />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="price_per_kg">Prijs per kg (€)</Label>
+                            <Input
+                                id="price_per_kg"
+                                v-model="form.price_per_kg"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="optioneel"
+                            />
+                            <InputError :message="errors?.price_per_kg" />
                         </div>
 
                         <div class="grid gap-2">

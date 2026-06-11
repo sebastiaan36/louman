@@ -113,6 +113,17 @@ const confirmWithoutMap = () => {
                         />
                         <InputError :message="errors.phone_number" />
                     </div>
+
+                    <div class="grid gap-2">
+                        <Label for="mobile_number">Mobiel telefoonnummer (optioneel)</Label>
+                        <Input
+                            id="mobile_number"
+                            type="tel"
+                            name="mobile_number"
+                            placeholder="06-12345678"
+                        />
+                        <InputError :message="errors.mobile_number" />
+                    </div>
                 </div>
 
                 <!-- Address Section -->

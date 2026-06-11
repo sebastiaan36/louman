@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OrderCancelled;
+use App\Mail\OrderConfirmation;
 use App\Mail\OrderShipped;
 use App\Models\AuditLog;
 use App\Models\Customer;
@@ -51,9 +52,10 @@ class OrderController extends Controller
                         $q->orWhere('orders.id', $searchId);
                     }
                 }
-                // Search by customer company name
+                // Search by customer company name or customer number
                 $q->orWhereHas('customer', function ($customerQuery) use ($search) {
-                    $customerQuery->where('company_name', 'like', '%'.$search.'%');
+                    $customerQuery->where('company_name', 'like', '%'.$search.'%')
+                        ->orWhere('customer_number', 'like', '%'.$search.'%');
                 });
             });
         }
@@ -214,6 +216,24 @@ class OrderController extends Controller
             ]);
 
             return back()->with('error', 'Er ging iets mis bij het aanmaken van de bestelling.');
+        }
+
+        // Send the order confirmation to the customer — mail errors must not block.
+        try {
+            $confirmationEmail = $customer->packing_slip_email ?: $customer->user?->email;
+            if ($confirmationEmail) {
+                Mail::to($confirmationEmail)->send(new OrderConfirmation($order));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send order confirmation to customer', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        if ($request->boolean('create_another')) {
+            return to_route('admin.orders.create')
+                ->with('success', 'Bestelling aangemaakt. Maak de volgende bestelling.');
         }
 
         return to_route('admin.orders.show', $order)

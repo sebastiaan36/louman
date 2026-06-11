@@ -25,6 +25,7 @@ class Product extends Model
         'title',
         'photo',
         'price',
+        'price_per_kg',
         'description',
         'ingredients',
         'allergens',
@@ -46,6 +47,7 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
+            'price_per_kg' => 'decimal:2',
             'suggested_retail_price' => 'decimal:2',
             'ingredients' => 'array',
             'allergens' => 'array',

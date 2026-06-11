@@ -35,6 +35,7 @@ class ProductRequest extends FormRequest
                 'max:5120', // 5MB
             ],
             'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'price_per_kg' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'suggested_retail_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'description' => ['required', 'string', 'max:5000'],
             'ingredients' => ['nullable', 'string', 'max:1000'],
@@ -75,6 +76,7 @@ class ProductRequest extends FormRequest
             'title' => 'naam',
             'photo' => 'foto',
             'price' => 'prijs',
+            'price_per_kg' => 'prijs per kg',
             'suggested_retail_price' => 'verkoopadviesprijs',
             'description' => 'omschrijving',
             'ingredients' => 'ingrediënten',

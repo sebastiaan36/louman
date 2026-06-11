@@ -44,6 +44,7 @@ class CustomerRegisterController extends Controller
                 'company_name' => $request->company_name,
                 'contact_person' => $request->contact_person,
                 'phone_number' => $request->phone_number,
+                'mobile_number' => $request->mobile_number,
                 'street_name' => $request->street_name,
                 'house_number' => $request->house_number,
                 'postal_code' => $request->postal_code,

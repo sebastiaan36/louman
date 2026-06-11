@@ -262,7 +262,7 @@ const errors = ref<Record<string, string>>({});
 
 const submitting = ref(false);
 
-const submit = () => {
+const submit = (createAnother = false) => {
     errors.value = {};
 
     if (!selectedCustomer.value) {
@@ -287,6 +287,7 @@ const submit = () => {
             quantity: i.quantity,
         })),
         notes: notes.value || null,
+        create_another: createAnother,
     }, {
         onError: (e) => {
             errors.value = e;
@@ -521,10 +522,18 @@ const submit = () => {
                 </div>
 
                 <!-- Actions -->
-                <div class="flex gap-3 pt-2">
-                    <Button @click="submit" :disabled="submitting">
+                <div class="flex flex-wrap gap-3 pt-2">
+                    <Button @click="submit(false)" :disabled="submitting">
                         <Plus class="h-4 w-4 mr-2" />
                         Bestelling aanmaken
+                    </Button>
+                    <Button
+                        class="bg-orange-500 text-white hover:bg-orange-600"
+                        :disabled="submitting"
+                        @click="submit(true)"
+                    >
+                        <Plus class="h-4 w-4 mr-2" />
+                        Aanmaken + nog een order maken
                     </Button>
                     <Button variant="outline" as="a" href="/admin/orders">Annuleren</Button>
                 </div>

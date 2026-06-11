@@ -176,6 +176,7 @@ class CustomerApprovalController extends Controller
             'email' => $customer->user?->email,
             'has_account' => $customer->user !== null,
             'phone_number' => $customer->phone_number,
+            'mobile_number' => $customer->mobile_number,
             'kvk_number' => $customer->kvk_number,
             'vat_number' => $customer->vat_number,
             'bank_account' => $customer->bank_account,
@@ -326,6 +327,7 @@ class CustomerApprovalController extends Controller
             'customer_number' => ['nullable', 'digits_between:1,4', Rule::unique('customers', 'customer_number')->ignore($customer->id)],
             'contact_person' => ['nullable', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:20'],
+            'mobile_number' => ['nullable', 'string', 'max:20'],
             'kvk_number' => ['nullable', 'string', 'max:8'],
             'vat_number' => ['nullable', 'string', 'max:14'],
             'bank_account' => ['nullable', 'string', 'max:34'],
@@ -539,7 +541,7 @@ class CustomerApprovalController extends Controller
             fwrite($handle, "\xEF\xBB\xBF");
 
             fputcsv($handle, [
-                'id', 'company_name', 'contact_person', 'email', 'phone_number',
+                'id', 'company_name', 'contact_person', 'email', 'phone_number', 'mobile_number',
                 'street_name', 'house_number', 'postal_code', 'city',
                 'kvk_number', 'bank_account', 'vat_number', 'packing_slip_email',
                 'customer_category', 'discount_percentage', 'delivery_day',
@@ -555,6 +557,7 @@ class CustomerApprovalController extends Controller
                     // Single-quote prefix tells Excel to treat the value as text,
                     // preserving leading zeros. The import strips this prefix automatically.
                     "'".$customer->phone_number,
+                    $customer->mobile_number ? "'".$customer->mobile_number : '',
                     $customer->street_name,
                     $customer->house_number,
                     $customer->postal_code,
@@ -678,6 +681,7 @@ class CustomerApprovalController extends Controller
             'company_name' => ['company_name'],
             'contact_person' => ['contact_person'],
             'phone_number' => ['phone_number'],
+            'mobile_number' => ['mobile_number'],
             'street_name' => ['street_name'],
             'house_number' => ['house_number'],
             'postal_code' => ['postal_code'],
