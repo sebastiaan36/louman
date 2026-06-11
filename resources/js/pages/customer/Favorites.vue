@@ -89,7 +89,7 @@ const decrementQuantity = (productId: number) => {
     <Head title="Quick Order" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
             <div>
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <Zap class="h-6 w-6" />
@@ -130,7 +130,7 @@ const decrementQuantity = (productId: number) => {
                             <TableRow>
                                 <TableHead class="w-20">Foto</TableHead>
                                 <TableHead>Product</TableHead>
-                                <TableHead>Gewicht</TableHead>
+                                <TableHead class="hidden sm:table-cell">Gewicht</TableHead>
                                 <TableHead class="text-right">Prijs</TableHead>
                                 <TableHead class="text-center w-40">Aantal</TableHead>
                                 <TableHead class="w-32"></TableHead>
@@ -162,7 +162,7 @@ const decrementQuantity = (productId: number) => {
                                 </TableCell>
 
                                 <!-- Weight -->
-                                <TableCell>
+                                <TableCell class="hidden sm:table-cell">
                                     <span v-if="product.weight" class="text-sm text-muted-foreground">
                                         circa {{ product.weight }}
                                     </span>

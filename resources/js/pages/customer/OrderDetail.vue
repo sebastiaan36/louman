@@ -73,27 +73,29 @@ const backToOrders = () => {
     <Head :title="`Bestelling ${order.order_number}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
-            <div class="flex items-center justify-between">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold">Bestelling {{ order.order_number }}</h1>
                     <p class="text-sm text-muted-foreground">
                         Geplaatst op {{ order.created_at }}
                     </p>
                 </div>
-                <a
-                    v-if="order.status === 'completed'"
-                    :href="`/customer/orders/${order.id}/invoice`"
-                    target="_blank"
-                >
-                    <Button variant="outline">
-                        <Download class="h-4 w-4 mr-2" />
-                        Factuur downloaden
+                <div class="flex flex-wrap gap-2">
+                    <a
+                        v-if="order.status === 'completed'"
+                        :href="`/customer/orders/${order.id}/invoice`"
+                        target="_blank"
+                    >
+                        <Button variant="outline">
+                            <Download class="h-4 w-4 mr-2" />
+                            Factuur downloaden
+                        </Button>
+                    </a>
+                    <Button variant="outline" @click="backToOrders">
+                        ← Terug naar bestellingen
                     </Button>
-                </a>
-                <Button variant="outline" @click="backToOrders">
-                    ← Terug naar bestellingen
-                </Button>
+                </div>
             </div>
 
             <div class="grid gap-6 lg:grid-cols-3">
@@ -104,16 +106,16 @@ const backToOrders = () => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead class="w-20">Foto</TableHead>
+                                    <TableHead class="hidden sm:table-cell w-20">Foto</TableHead>
                                     <TableHead>Product</TableHead>
-                                    <TableHead>Prijs</TableHead>
+                                    <TableHead class="hidden md:table-cell">Prijs</TableHead>
                                     <TableHead>Aantal</TableHead>
                                     <TableHead>Subtotaal</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-for="(item, index) in order.items" :key="index">
-                                    <TableCell>
+                                    <TableCell class="hidden sm:table-cell">
                                         <img
                                             v-if="item.product_thumbnail"
                                             :src="item.product_thumbnail"
@@ -128,7 +130,7 @@ const backToOrders = () => {
                                         </div>
                                     </TableCell>
                                     <TableCell class="font-medium">{{ item.product_title }}</TableCell>
-                                    <TableCell>{{ formatPrice(item.price) }}</TableCell>
+                                    <TableCell class="hidden md:table-cell">{{ formatPrice(item.price) }}</TableCell>
                                     <TableCell>{{ item.quantity }}x</TableCell>
                                     <TableCell class="font-medium">{{ formatPrice(item.subtotal) }}</TableCell>
                                 </TableRow>

@@ -142,7 +142,7 @@ const clearFilters = () => {
     <Head title="Producten" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
             <div>
                 <h1 class="text-2xl font-bold">Producten</h1>
                 <p class="text-sm text-muted-foreground">
@@ -196,7 +196,7 @@ const clearFilters = () => {
 
             <!-- Filters -->
             <div class="rounded-lg border p-4">
-                <div class="grid gap-4 md:grid-cols-4">
+                <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div class="grid gap-2">
                         <Label for="search">Zoeken</Label>
                         <div class="relative">

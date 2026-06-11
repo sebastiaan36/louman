@@ -115,7 +115,7 @@ const backToProducts = () => {
     <Head :title="product.title" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
             <div class="flex items-center justify-between">
                 <Button variant="outline" @click="backToProducts">
                     ← Terug naar producten

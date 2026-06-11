@@ -51,7 +51,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
             <!-- Admin Statistics -->
             <div v-if="isAdmin && stats" class="grid gap-4 md:grid-cols-3">
                 <!-- Pending Orders Card -->

@@ -215,7 +215,7 @@ const submitOrder = () => {
     <Head title="Winkelwagen" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
             <div>
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <ShoppingCart class="h-6 w-6" />
@@ -250,9 +250,9 @@ const submitOrder = () => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead class="w-24">Foto</TableHead>
+                                    <TableHead class="hidden sm:table-cell w-24">Foto</TableHead>
                                     <TableHead>Product</TableHead>
-                                    <TableHead>Prijs</TableHead>
+                                    <TableHead class="hidden md:table-cell">Prijs</TableHead>
                                     <TableHead class="w-40">Aantal</TableHead>
                                     <TableHead>Subtotaal</TableHead>
                                     <TableHead class="w-20"></TableHead>
@@ -260,7 +260,7 @@ const submitOrder = () => {
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-for="item in cartItems" :key="item.id">
-                                    <TableCell>
+                                    <TableCell class="hidden sm:table-cell">
                                         <img
                                             v-if="item.product_thumbnail"
                                             :src="item.product_thumbnail"
@@ -290,7 +290,7 @@ const submitOrder = () => {
                                             </Badge>
                                         </div>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell class="hidden md:table-cell">
                                         {{ formatPrice(item.product_price) }}
                                     </TableCell>
                                     <TableCell>
