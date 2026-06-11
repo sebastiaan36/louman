@@ -218,3 +218,30 @@ test('admin kan klanten zoeken op bedrijfsnaam en klantnummer', function () {
             ->where('customers.0.id', $b->id)
         );
 });
+
+test('admin kan klantgegevens opslaan met lege velden', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+
+    $this->actingAs($admin)
+        ->patch("/admin/customers/{$customer->id}", [
+            'company_name' => '',
+            'contact_person' => '',
+            'phone_number' => '',
+            'kvk_number' => '',
+            'vat_number' => '',
+            'bank_account' => '',
+            'street_name' => '',
+            'house_number' => '',
+            'postal_code' => '',
+            'city' => '',
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('success');
+
+    $fresh = $customer->fresh();
+    expect($fresh->company_name)->toBeNull();
+    expect($fresh->kvk_number)->toBeNull();
+    expect($fresh->city)->toBeNull();
+});

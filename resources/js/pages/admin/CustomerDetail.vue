@@ -924,13 +924,12 @@ const deleteAddress = (addressId: number) => {
                         <h3 class="text-sm font-semibold">Contactgegevens</h3>
 
                         <div>
-                            <Label for="company_name">Bedrijfsnaam *</Label>
+                            <Label for="company_name">Bedrijfsnaam</Label>
                             <Input
                                 id="company_name"
                                 v-model="form.company_name"
                                 type="text"
                                 class="mt-1"
-                                required
                             />
                             <InputError :message="form.errors.company_name" class="mt-2" />
                         </div>
@@ -950,25 +949,23 @@ const deleteAddress = (addressId: number) => {
                         </div>
 
                         <div>
-                            <Label for="contact_person">Contactpersoon *</Label>
+                            <Label for="contact_person">Contactpersoon</Label>
                             <Input
                                 id="contact_person"
                                 v-model="form.contact_person"
                                 type="text"
                                 class="mt-1"
-                                required
                             />
                             <InputError :message="form.errors.contact_person" class="mt-2" />
                         </div>
 
                         <div>
-                            <Label for="phone_number">Telefoonnummer *</Label>
+                            <Label for="phone_number">Telefoonnummer</Label>
                             <Input
                                 id="phone_number"
                                 v-model="form.phone_number"
                                 type="text"
                                 class="mt-1"
-                                required
                             />
                             <InputError :message="form.errors.phone_number" class="mt-2" />
                         </div>
@@ -992,37 +989,34 @@ const deleteAddress = (addressId: number) => {
                         <h3 class="text-sm font-semibold">Bedrijfsgegevens</h3>
 
                         <div>
-                            <Label for="kvk_number">KVK Nummer *</Label>
+                            <Label for="kvk_number">KVK Nummer</Label>
                             <Input
                                 id="kvk_number"
                                 v-model="form.kvk_number"
                                 type="text"
                                 class="mt-1"
-                                required
                             />
                             <InputError :message="form.errors.kvk_number" class="mt-2" />
                         </div>
 
                         <div>
-                            <Label for="vat_number">BTW Nummer *</Label>
+                            <Label for="vat_number">BTW Nummer</Label>
                             <Input
                                 id="vat_number"
                                 v-model="form.vat_number"
                                 type="text"
                                 class="mt-1"
-                                required
                             />
                             <InputError :message="form.errors.vat_number" class="mt-2" />
                         </div>
 
                         <div>
-                            <Label for="bank_account">IBAN *</Label>
+                            <Label for="bank_account">IBAN</Label>
                             <Input
                                 id="bank_account"
                                 v-model="form.bank_account"
                                 type="text"
                                 class="mt-1"
-                                required
                             />
                             <InputError :message="form.errors.bank_account" class="mt-2" />
                         </div>
@@ -1033,49 +1027,45 @@ const deleteAddress = (addressId: number) => {
                         <h3 class="text-sm font-semibold">Adresgegevens</h3>
 
                         <div>
-                            <Label for="street_name">Straatnaam *</Label>
+                            <Label for="street_name">Straatnaam</Label>
                             <Input
                                 id="street_name"
                                 v-model="form.street_name"
                                 type="text"
                                 class="mt-1"
-                                required
                             />
                             <InputError :message="form.errors.street_name" class="mt-2" />
                         </div>
 
                         <div>
-                            <Label for="house_number">Huisnummer *</Label>
+                            <Label for="house_number">Huisnummer</Label>
                             <Input
                                 id="house_number"
                                 v-model="form.house_number"
                                 type="text"
                                 class="mt-1"
-                                required
                             />
                             <InputError :message="form.errors.house_number" class="mt-2" />
                         </div>
 
                         <div>
-                            <Label for="postal_code">Postcode *</Label>
+                            <Label for="postal_code">Postcode</Label>
                             <Input
                                 id="postal_code"
                                 v-model="form.postal_code"
                                 type="text"
                                 class="mt-1"
-                                required
                             />
                             <InputError :message="form.errors.postal_code" class="mt-2" />
                         </div>
 
                         <div>
-                            <Label for="city">Plaats *</Label>
+                            <Label for="city">Plaats</Label>
                             <Input
                                 id="city"
                                 v-model="form.city"
                                 type="text"
                                 class="mt-1"
-                                required
                             />
                             <InputError :message="form.errors.city" class="mt-2" />
                         </div>
