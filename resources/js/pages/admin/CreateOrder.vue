@@ -304,7 +304,7 @@ const submit = (createAnother = false) => {
     <Head title="Nieuwe bestelling" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6 max-w-3xl">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6 max-w-3xl">
             <div>
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <ShoppingCart class="h-6 w-6" />

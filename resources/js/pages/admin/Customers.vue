@@ -114,8 +114,8 @@ const submitImport = () => {
     <Head title="Klanten" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
-            <div class="flex items-start justify-between">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold flex items-center gap-2">
                         <Users class="h-6 w-6" />
@@ -125,7 +125,7 @@ const submitImport = () => {
                         Overzicht van alle goedgekeurde klanten
                     </p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <a href="/admin/customers/export">
                         <Button variant="outline">CSV downloaden</Button>
                     </a>
@@ -187,12 +187,12 @@ const submitImport = () => {
                         <TableRow>
                             <TableHead>Klantnr.</TableHead>
                             <TableHead>Bedrijfsnaam</TableHead>
-                            <TableHead>Contactpersoon</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Telefoon</TableHead>
-                            <TableHead>Plaats</TableHead>
+                            <TableHead class="hidden md:table-cell">Contactpersoon</TableHead>
+                            <TableHead class="hidden lg:table-cell">Email</TableHead>
+                            <TableHead class="hidden lg:table-cell">Telefoon</TableHead>
+                            <TableHead class="hidden md:table-cell">Plaats</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead>Goedgekeurd op</TableHead>
+                            <TableHead class="hidden lg:table-cell">Goedgekeurd op</TableHead>
                             <TableHead></TableHead>
                         </TableRow>
                     </TableHeader>
@@ -205,16 +205,16 @@ const submitImport = () => {
                         >
                             <TableCell class="font-mono text-sm text-muted-foreground">{{ customer.customer_number ?? '—' }}</TableCell>
                             <TableCell class="font-medium">{{ customer.company_name }}</TableCell>
-                            <TableCell>{{ customer.contact_person }}</TableCell>
-                            <TableCell>{{ customer.email }}</TableCell>
-                            <TableCell>{{ customer.phone_number }}</TableCell>
-                            <TableCell>{{ customer.city }}</TableCell>
+                            <TableCell class="hidden md:table-cell">{{ customer.contact_person }}</TableCell>
+                            <TableCell class="hidden lg:table-cell">{{ customer.email }}</TableCell>
+                            <TableCell class="hidden lg:table-cell">{{ customer.phone_number }}</TableCell>
+                            <TableCell class="hidden md:table-cell">{{ customer.city }}</TableCell>
                             <TableCell>
                                 <Badge :variant="customer.is_active ? 'default' : 'destructive'">
                                     {{ customer.is_active ? 'Actief' : 'Inactief' }}
                                 </Badge>
                             </TableCell>
-                            <TableCell>{{ customer.approved_at }}</TableCell>
+                            <TableCell class="hidden lg:table-cell">{{ customer.approved_at }}</TableCell>
                             <TableCell class="text-right">
                                 <Button size="sm" variant="outline" @click.stop="viewCustomer(customer.id)">
                                     Bekijk & bewerk

@@ -203,8 +203,8 @@ const downloadBulkPackingSlips = () => {
     <Head title="Bestellingen" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
-            <div class="flex items-start justify-between">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold flex items-center gap-2">
                         <ShoppingCart class="h-6 w-6" />
@@ -214,7 +214,7 @@ const downloadBulkPackingSlips = () => {
                         Beheer alle klantbestellingen
                     </p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <a href="/admin/orders/production-list" target="_blank">
                         <Button variant="outline">
                             <ClipboardList class="h-4 w-4 mr-2" />
@@ -238,7 +238,7 @@ const downloadBulkPackingSlips = () => {
 
             <!-- Filters -->
             <div class="rounded-lg border p-4">
-                <div class="grid gap-4 md:grid-cols-4">
+                <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div class="grid gap-2">
                         <Label for="search">Zoeken</Label>
                         <div class="relative">
@@ -344,9 +344,9 @@ const downloadBulkPackingSlips = () => {
                             </TableHead>
                             <TableHead>Bestelnummer</TableHead>
                             <TableHead>Klant</TableHead>
-                            <TableHead>Datum</TableHead>
+                            <TableHead class="hidden md:table-cell">Datum</TableHead>
                             <TableHead>Totaal</TableHead>
-                            <TableHead>Producten</TableHead>
+                            <TableHead class="hidden lg:table-cell">Producten</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead class="text-right">Acties</TableHead>
                         </TableRow>
@@ -370,9 +370,9 @@ const downloadBulkPackingSlips = () => {
                                     </span>
                                 </div>
                             </TableCell>
-                            <TableCell>{{ order.created_at }}</TableCell>
+                            <TableCell class="hidden md:table-cell">{{ order.created_at }}</TableCell>
                             <TableCell class="font-medium">{{ formatPrice(order.total) }}</TableCell>
-                            <TableCell>{{ order.item_count }} {{ order.item_count === 1 ? 'product' : 'producten' }}</TableCell>
+                            <TableCell class="hidden lg:table-cell">{{ order.item_count }} {{ order.item_count === 1 ? 'product' : 'producten' }}</TableCell>
                             <TableCell>
                                 <Badge :class="orderStatusClasses(order.status)">
                                     {{ order.status_label }}

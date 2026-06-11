@@ -71,8 +71,8 @@ const confirmDelete = () => {
     <Head title="Beheerders" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
-            <div class="flex items-start justify-between">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold flex items-center gap-2">
                         <ShieldCheck class="h-6 w-6" />

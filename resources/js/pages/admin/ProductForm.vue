@@ -266,7 +266,7 @@ const cancel = () => {
     <Head :title="isEdit ? 'Product bewerken' : 'Product toevoegen'" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
             <div>
                 <h1 class="text-2xl font-bold">
                     {{ isEdit ? 'Product bewerken' : 'Product toevoegen' }}

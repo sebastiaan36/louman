@@ -134,8 +134,8 @@ const deleteProduct = (id: number) => {
     <Head :title="filters.private_label ? 'Private label producten' : 'Producten'" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
-            <div class="flex items-center justify-between">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold">
                         {{ filters.private_label ? 'Private label producten' : 'Producten' }}
@@ -145,7 +145,7 @@ const deleteProduct = (id: number) => {
                     </p>
                 </div>
 
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <a href="/admin/products/export">
                         <Button variant="outline">CSV downloaden</Button>
                     </a>
@@ -158,7 +158,7 @@ const deleteProduct = (id: number) => {
 
             <!-- Filters -->
             <div class="rounded-lg border p-4">
-                <div class="grid gap-4 md:grid-cols-3">
+                <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                     <div class="grid gap-2">
                         <Label for="search">Zoeken</Label>
                         <div class="relative">
@@ -226,18 +226,18 @@ const deleteProduct = (id: number) => {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead class="w-20">Foto</TableHead>
+                            <TableHead class="hidden sm:table-cell w-20">Foto</TableHead>
                             <TableHead>Naam</TableHead>
-                            <TableHead>Categorie</TableHead>
+                            <TableHead class="hidden md:table-cell">Categorie</TableHead>
                             <TableHead>Prijs</TableHead>
-                            <TableHead>Artikelnr</TableHead>
+                            <TableHead class="hidden lg:table-cell">Artikelnr</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead class="text-right">Acties</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <TableRow v-for="product in products" :key="product.id">
-                            <TableCell>
+                            <TableCell class="hidden sm:table-cell">
                                 <img
                                     v-if="product.photo_url"
                                     :src="product.photo_url"
@@ -258,11 +258,11 @@ const deleteProduct = (id: number) => {
                                     Private label
                                 </Badge>
                             </TableCell>
-                            <TableCell>{{ product.category || '-' }}</TableCell>
+                            <TableCell class="hidden md:table-cell">{{ product.category || '-' }}</TableCell>
                             <TableCell>
                                 <span class="font-medium">{{ formatPrice(product.price) }}</span>
                             </TableCell>
-                            <TableCell class="font-mono text-sm">{{ product.article_number }}</TableCell>
+                            <TableCell class="hidden lg:table-cell font-mono text-sm">{{ product.article_number }}</TableCell>
                             <TableCell>
                                 <Badge :variant="product.is_active ? 'default' : 'secondary'">
                                     {{ product.is_active ? 'Actief' : 'Inactief' }}

@@ -215,15 +215,15 @@ const backToOrders = () => {
     <Head :title="`Bestelling ${order.order_number}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
-            <div class="flex items-center justify-between">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold">Bestelling {{ order.order_number }}</h1>
                     <p class="text-sm text-muted-foreground">
                         Geplaatst op {{ order.created_at }}
                     </p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <Button v-if="canEditOrder()" variant="outline" @click="openEditDialog">
                         Bestelling aanpassen
                     </Button>
@@ -242,16 +242,16 @@ const backToOrders = () => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead class="w-20">Foto</TableHead>
+                                    <TableHead class="hidden sm:table-cell w-20">Foto</TableHead>
                                     <TableHead>Product</TableHead>
-                                    <TableHead>Prijs</TableHead>
+                                    <TableHead class="hidden md:table-cell">Prijs</TableHead>
                                     <TableHead>Aantal</TableHead>
                                     <TableHead>Subtotaal</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-for="(item, index) in order.items" :key="index">
-                                    <TableCell>
+                                    <TableCell class="hidden sm:table-cell">
                                         <img
                                             v-if="item.product_thumbnail"
                                             :src="item.product_thumbnail"
@@ -271,7 +271,7 @@ const backToOrders = () => {
                                             — {{ item.product_weight }}
                                         </span>
                                     </TableCell>
-                                    <TableCell>{{ formatPrice(item.price) }}</TableCell>
+                                    <TableCell class="hidden md:table-cell">{{ formatPrice(item.price) }}</TableCell>
                                     <TableCell>{{ item.quantity }}x</TableCell>
                                     <TableCell class="font-medium">{{ formatPrice(item.subtotal) }}</TableCell>
                                 </TableRow>

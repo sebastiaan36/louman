@@ -112,15 +112,15 @@ const saveOrder = () => {
     <Head title="Rijroute" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
-            <div class="flex items-center justify-between">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold">Rijroute</h1>
                     <p class="text-sm text-muted-foreground">
                         Sleep klanten om de bezorgroute per dag in te stellen
                     </p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
                     <span v-if="saving" class="text-sm text-muted-foreground">Opslaan...</span>
                     <Select :model-value="exportDay" @update:model-value="(value) => (exportDay = value as string)">
                         <SelectTrigger class="w-44">

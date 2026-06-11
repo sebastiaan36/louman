@@ -403,7 +403,7 @@ const deleteAddress = (addressId: number) => {
     <Head :title="`Klant: ${customer.company_name}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-6 p-6">
+        <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
             <!-- Customer Info Header -->
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
