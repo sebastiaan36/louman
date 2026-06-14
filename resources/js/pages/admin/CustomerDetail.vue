@@ -129,7 +129,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Custom prices for favorite products (sparse: only deviating prices)
 const customPriceInputs = ref<Record<number, string>>(
-    Object.fromEntries(props.favoriteProducts.map((p) => [p.id, p.custom_price ?? ''])),
+    Object.fromEntries(props.favoriteProducts.map((p) => [p.id, (p.custom_price ?? '').replace('.', ',')])),
 );
 const savingPrices = ref(false);
 
@@ -227,11 +227,12 @@ const saveCustomPrices = () => {
         `/admin/customers/${props.customer.id}/product-prices`,
         {
             prices: props.favoriteProducts.map((p) => {
-                const value = customPriceInputs.value[p.id];
+                // Accept a comma decimal separator and convert it back to a dot.
+                const value = (customPriceInputs.value[p.id] ?? '').trim().replace(',', '.');
 
                 return {
                     product_id: p.id,
-                    custom_price: value === '' || value === undefined ? null : value,
+                    custom_price: value === '' ? null : value,
                 };
             }),
         },
@@ -868,10 +869,9 @@ const deleteAddress = (addressId: number) => {
                                                 <span class="text-muted-foreground">€</span>
                                                 <Input
                                                     v-model="customPriceInputs[product.id]"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    :placeholder="product.standard_price"
+                                                    type="text"
+                                                    inputmode="decimal"
+                                                    :placeholder="formatPrice(product.standard_price)"
                                                     class="w-32"
                                                 />
                                             </div>
