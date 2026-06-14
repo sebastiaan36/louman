@@ -94,3 +94,17 @@ test('admin kan de prijs per kg op een product opslaan', function () {
 
     expect((float) $product->fresh()->price_per_kg)->toBe(15.95);
 });
+
+test('prijs per kg wordt meegegeven op de productdetailpagina', function () {
+    $user = customerUser();
+    approvedCustomer($user);
+    $product = Product::factory()->create(['price_per_kg' => 8.18]);
+
+    $this->actingAs($user)
+        ->get("/customer/products/{$product->id}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('customer/ProductDetail')
+            ->where('product.price_per_kg', '8.18')
+        );
+});

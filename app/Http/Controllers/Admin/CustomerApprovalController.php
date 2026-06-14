@@ -227,8 +227,21 @@ class CustomerApprovalController extends Controller
                 'id' => $product->id,
                 'title' => $product->title,
                 'article_number' => $product->article_number,
+                'weight' => $product->weight,
                 'standard_price' => number_format((float) $product->price, 2, '.', ''),
                 'custom_price' => $customer->customPriceFor($product->id),
+            ]);
+
+        $availableProducts = Product::where('is_active', true)
+            ->with('visibleToCustomers:id')
+            ->orderBy('title')
+            ->get()
+            ->map(fn (Product $product) => [
+                'id' => $product->id,
+                'title' => $product->title,
+                'article_number' => $product->article_number,
+                'is_private_label' => $product->is_private_label,
+                'visible_customer_ids' => $product->visibleToCustomers->pluck('id')->all(),
             ]);
 
         return Inertia::render('admin/CustomerDetail', [
@@ -236,6 +249,7 @@ class CustomerApprovalController extends Controller
             'deliveryAddresses' => $deliveryAddresses,
             'orders' => $orders,
             'favoriteProducts' => $favoriteProducts,
+            'availableProducts' => $availableProducts,
         ]);
     }
 
@@ -394,7 +408,7 @@ class CustomerApprovalController extends Controller
             }
 
             $product = $products->get($productId);
-            $price = $row['custom_price'];
+            $price = $row['custom_price'] ?? null;
 
             $isStandard = $price === null || $price === ''
                 || round((float) $price, 2) === round((float) $product->price, 2);

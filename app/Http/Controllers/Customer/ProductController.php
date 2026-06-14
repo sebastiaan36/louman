@@ -145,6 +145,7 @@ class ProductController extends Controller
                 'category' => $product->category?->name,
                 'category_id' => $product->category_id,
                 'price' => $product->getPriceForCustomer($customer),
+                'price_per_kg' => $product->price_per_kg,
                 'suggested_retail_price' => $product->suggested_retail_price,
                 'description' => $product->description,
                 'ingredients' => $product->ingredients,

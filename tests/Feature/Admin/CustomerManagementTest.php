@@ -283,3 +283,38 @@ test('csv-import werkt het mobiele telefoonnummer bij', function () {
 
     expect($customer->fresh()->mobile_number)->toBe('0612345678');
 });
+
+test('klantpagina geeft beschikbare producten mee voor de quick order', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create();
+
+    $this->actingAs($admin)
+        ->get("/admin/customers/{$customer->id}")
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/CustomerDetail')
+            ->has('availableProducts', 1)
+            ->where('availableProducts.0.id', $product->id)
+        );
+});
+
+test('aangepaste prijzen opslaan zonder custom_price-veld geeft geen fout', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create();
+    $customer->favoriteProducts()->attach($product->id);
+    $customer->customProductPrices()->create(['product_id' => $product->id, 'custom_price' => 5]);
+
+    // custom_price ontbreekt bewust in de payload (zoals JSON undefined weglaat)
+    $this->actingAs($admin)
+        ->post("/admin/customers/{$customer->id}/product-prices", [
+            'prices' => [
+                ['product_id' => $product->id],
+            ],
+        ])
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    // Ontbrekende/lege prijs betekent: terug naar standaardprijs (custom prijs verwijderd)
+    expect($customer->customProductPrices()->where('product_id', $product->id)->exists())->toBeFalse();
+});

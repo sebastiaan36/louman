@@ -92,8 +92,17 @@ interface FavoriteProduct {
     id: number;
     title: string;
     article_number: string | null;
+    weight: string | null;
     standard_price: string;
     custom_price: string | null;
+}
+
+interface AvailableProduct {
+    id: number;
+    title: string;
+    article_number: string | null;
+    is_private_label: boolean;
+    visible_customer_ids: number[];
 }
 
 const props = defineProps<{
@@ -101,6 +110,7 @@ const props = defineProps<{
     deliveryAddresses: DeliveryAddress[];
     orders: Order[];
     favoriteProducts: FavoriteProduct[];
+    availableProducts: AvailableProduct[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -122,6 +132,52 @@ const customPriceInputs = ref<Record<number, string>>(
     Object.fromEntries(props.favoriteProducts.map((p) => [p.id, p.custom_price ?? ''])),
 );
 const savingPrices = ref(false);
+
+// Add products to the Quick Order (favorites) list
+const productSearch = ref('');
+const showProductDropdown = ref(false);
+
+const isVisibleToCustomer = (product: AvailableProduct): boolean => {
+    if (!product.is_private_label) return true;
+    return product.visible_customer_ids.includes(props.customer.id);
+};
+
+const addableProducts = computed(() => {
+    const favoriteIds = new Set(props.favoriteProducts.map((p) => p.id));
+    const q = productSearch.value.toLowerCase();
+
+    return props.availableProducts
+        .filter((p) => !favoriteIds.has(p.id))
+        .filter(isVisibleToCustomer)
+        .filter((p) =>
+            q === ''
+                ? true
+                : p.title.toLowerCase().includes(q) || (p.article_number?.toLowerCase().includes(q) ?? false),
+        )
+        .slice(0, 8);
+});
+
+const hideProductDropdown = () => {
+    window.setTimeout(() => (showProductDropdown.value = false), 150);
+};
+
+const toggleFavorite = (productId: number) => {
+    router.post(`/admin/customers/${props.customer.id}/favorites/${productId}/toggle`, {}, {
+        preserveScroll: true,
+    });
+};
+
+const addFavorite = (productId: number) => {
+    productSearch.value = '';
+    showProductDropdown.value = false;
+    toggleFavorite(productId);
+};
+
+const removeFavorite = (product: FavoriteProduct) => {
+    if (confirm(`"${product.title}" verwijderen uit de Quick Order-lijst van deze klant?`)) {
+        toggleFavorite(product.id);
+    }
+};
 
 // Sorting of the Quick Order products table
 type FavoriteSortKey = 'article_number' | 'title' | 'standard_price' | 'custom_price';
@@ -170,10 +226,14 @@ const saveCustomPrices = () => {
     router.post(
         `/admin/customers/${props.customer.id}/product-prices`,
         {
-            prices: props.favoriteProducts.map((p) => ({
-                product_id: p.id,
-                custom_price: customPriceInputs.value[p.id] === '' ? null : customPriceInputs.value[p.id],
-            })),
+            prices: props.favoriteProducts.map((p) => {
+                const value = customPriceInputs.value[p.id];
+
+                return {
+                    product_id: p.id,
+                    custom_price: value === '' || value === undefined ? null : value,
+                };
+            }),
         },
         {
             preserveScroll: true,
@@ -739,7 +799,37 @@ const deleteAddress = (addressId: number) => {
                         standaardprijs) om de standaardprijs te gebruiken.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent class="space-y-4">
+                    <!-- Add a product to the Quick Order list -->
+                    <div class="grid gap-2">
+                        <Label for="add_favorite">Product toevoegen aan Quick Order</Label>
+                        <div class="relative">
+                            <Input
+                                id="add_favorite"
+                                v-model="productSearch"
+                                placeholder="Zoek op naam of artikelnummer..."
+                                autocomplete="off"
+                                @focus="showProductDropdown = true"
+                                @blur="hideProductDropdown"
+                            />
+                            <div
+                                v-if="showProductDropdown && addableProducts.length > 0"
+                                class="absolute z-20 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-md"
+                            >
+                                <button
+                                    v-for="p in addableProducts"
+                                    :key="p.id"
+                                    type="button"
+                                    class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+                                    @mousedown.prevent="addFavorite(p.id)"
+                                >
+                                    <span>{{ p.title }}</span>
+                                    <span class="font-mono text-xs text-muted-foreground">{{ p.article_number }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div v-if="favoriteProducts.length === 0" class="text-center py-8 text-muted-foreground">
                         Deze klant heeft nog geen producten in de Quick Order-lijst.
                     </div>
@@ -760,12 +850,18 @@ const deleteAddress = (addressId: number) => {
                                         <TableHead class="w-48 cursor-pointer select-none" @click="sortBy('custom_price')">
                                             Aangepaste prijs <span v-if="sortKey === 'custom_price'">{{ sortAsc ? '▲' : '▼' }}</span>
                                         </TableHead>
+                                        <TableHead class="w-12"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     <TableRow v-for="product in sortedFavoriteProducts" :key="product.id">
                                         <TableCell class="font-mono text-sm">{{ product.article_number || '-' }}</TableCell>
-                                        <TableCell class="font-medium">{{ product.title }}</TableCell>
+                                        <TableCell class="font-medium">
+                                            {{ product.title }}
+                                            <span v-if="product.weight" class="block text-xs font-normal text-muted-foreground">
+                                                circa {{ product.weight }}
+                                            </span>
+                                        </TableCell>
                                         <TableCell class="text-right text-muted-foreground">€ {{ formatPrice(product.standard_price) }}</TableCell>
                                         <TableCell>
                                             <div class="flex items-center gap-2">
@@ -779,6 +875,17 @@ const deleteAddress = (addressId: number) => {
                                                     class="w-32"
                                                 />
                                             </div>
+                                        </TableCell>
+                                        <TableCell class="text-right">
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                class="h-8 w-8"
+                                                title="Verwijderen uit Quick Order"
+                                                @click="removeFavorite(product)"
+                                            >
+                                                <Trash2 class="h-4 w-4 text-destructive" />
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 </TableBody>

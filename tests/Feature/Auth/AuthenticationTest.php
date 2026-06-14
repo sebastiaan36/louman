@@ -84,3 +84,39 @@ test('users are rate limited', function () {
 
     $response->assertTooManyRequests();
 });
+test('remember me keeps the login for 45 days', function () {
+    $user = User::factory()->create();
+
+    $response = $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+        'remember' => 'on',
+    ]);
+
+    $this->assertAuthenticated();
+
+    $recaller = collect($response->headers->getCookies())
+        ->first(fn ($cookie) => str_starts_with($cookie->getName(), 'remember_'));
+
+    expect($recaller)->not->toBeNull();
+
+    $expected = now()->addMinutes(\App\Providers\AppServiceProvider::REMEMBER_MINUTES)->timestamp;
+    expect($recaller->getExpiresTime())->toBeGreaterThan($expected - 120)
+        ->and($recaller->getExpiresTime())->toBeLessThan($expected + 120);
+});
+
+test('without remember me no long-lived cookie is set', function () {
+    $user = User::factory()->create();
+
+    $response = $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+
+    $recaller = collect($response->headers->getCookies())
+        ->first(fn ($cookie) => str_starts_with($cookie->getName(), 'remember_'));
+
+    expect($recaller)->toBeNull();
+});

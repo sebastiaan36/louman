@@ -81,7 +81,7 @@ const formattedPrice = computed(() => formatEuro(props.product.price));
                         {{ formattedPrice }}
                     </span>
                     <span class="text-[10px] text-muted-foreground">ex. BTW</span>
-                    <span v-if="product.price_per_kg" class="text-xs text-muted-foreground">
+                    <span v-if="product.price_per_kg" class="mt-2 text-xs text-muted-foreground">
                         {{ formatEuro(product.price_per_kg) }} per kg
                     </span>
                 </div>
@@ -94,20 +94,20 @@ const formattedPrice = computed(() => formatEuro(props.product.price));
         <CardFooter v-if="showActions" class="p-4 pt-0 gap-2">
             <Button
                 variant="outline"
-                class="flex-1"
+                class="flex-1 min-w-0"
                 @click="emit('viewDetails')"
             >
-                <Eye class="h-4 w-4 mr-2" />
+                <Eye class="h-4 w-4 mr-2 shrink-0" />
                 Details
             </Button>
             <Button
-                class="flex-1"
+                class="flex-1 min-w-0"
                 :disabled="!product.is_in_stock"
                 :title="!product.is_in_stock ? 'Niet op voorraad' : undefined"
                 @click="emit('addToCart')"
             >
-                <ShoppingCart class="h-4 w-4 mr-2" />
-                {{ product.in_cart ? 'Toegevoegd' : 'Toevoegen' }}
+                <ShoppingCart class="h-4 w-4 mr-2 shrink-0" />
+                <span class="truncate">{{ product.in_cart ? 'Toegevoegd' : 'Toevoegen' }}</span>
             </Button>
         </CardFooter>
 

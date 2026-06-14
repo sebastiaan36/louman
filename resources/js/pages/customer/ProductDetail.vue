@@ -31,6 +31,7 @@ interface Product {
     category: string | null;
     category_id: number | null;
     price: string;
+    price_per_kg: string | null;
     suggested_retail_price: string | null;
     description: string;
     ingredients: string[] | null;
@@ -214,6 +215,9 @@ const backToProducts = () => {
                                 {{ formattedPrice }}
                             </span>
                             <span class="text-xs text-muted-foreground">ex. BTW</span>
+                            <span v-if="product.price_per_kg" class="text-sm text-muted-foreground mt-2">
+                                {{ formatEuro(product.price_per_kg) }} per kg
+                            </span>
                             <span v-if="product.suggested_retail_price" class="text-xs text-muted-foreground mt-1">
                                 Adviesprijs: {{ formatEuro(product.suggested_retail_price) }} per 1000 gram
                             </span>

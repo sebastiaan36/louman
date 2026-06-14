@@ -98,8 +98,8 @@ const showPassword = ref(false);
 
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" name="remember" :tabindex="3" />
-                        <span>Onthoud mij</span>
+                        <Checkbox id="remember" name="remember" :default-value="true" :tabindex="3" />
+                        <span>45 dagen ingelogd blijven</span>
                     </Label>
                 </div>
 
