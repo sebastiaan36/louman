@@ -61,7 +61,10 @@ table.card > tbody > tr > td {
    contact info sits right-aligned at the same height as the company name. */
 table.card-header {
     width: 100%;
-    border-collapse: collapse;
+    /* separate, not collapse: some mPDF versions do not render collapsed cell
+       borders (the divider lines), while separate borders render reliably. */
+    border-collapse: separate;
+    border-spacing: 0;
     margin-bottom: 4px;
 }
 
@@ -113,7 +116,8 @@ table.card-header > tbody > tr > td {
 /* Products table inside card */
 .products {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .products td {
@@ -149,7 +153,8 @@ table.card-header > tbody > tr > td {
    shrinks a block div to its content width inside a cell. */
 table.notes {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin-top: 3px;
 }
 
