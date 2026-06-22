@@ -61,15 +61,15 @@ table.card > tbody > tr > td {
    contact info sits right-aligned at the same height as the company name. */
 table.card-header {
     width: 100%;
-    /* separate, not collapse: some mPDF versions do not render collapsed cell
-       borders (the divider lines), while separate borders render reliably. */
     border-collapse: separate;
     border-spacing: 0;
     margin-bottom: 4px;
+    /* Border on the TABLE, not the cells: on some PHP/mPDF builds cell (td)
+       borders are not drawn while table borders are (like the outer card box). */
+    border-bottom: 1px solid #ddd;
 }
 
 table.card-header > tbody > tr > td {
-    border-bottom: 1px solid #ddd;
     padding-bottom: 3px;
     vertical-align: top;
 }
@@ -156,10 +156,11 @@ table.notes {
     border-collapse: separate;
     border-spacing: 0;
     margin-top: 3px;
+    /* Border on the table, not the cell (see card-header). */
+    border-top: 1px solid #ddd;
 }
 
 table.notes td {
-    border-top: 1px solid #ddd;
     padding: 3px 7px 0 7px;
     font-size: 6.5pt;
     color: #444;
