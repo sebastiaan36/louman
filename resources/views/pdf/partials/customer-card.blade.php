@@ -27,15 +27,17 @@
                 </tr>
             </table>
             @if(!empty($customer['products']))
-                <table class="products">
-                    @foreach($customer['products'] as $product)
+                @foreach($customer['products'] as $product)
+                    {{-- One table per product so the divider line is a table border
+                         (cell borders are not drawn on the production mPDF build). --}}
+                    <table class="product @unless($loop->first) product-divider @endunless">
                         <tr>
                             <td class="art">{{ $product['article_number'] }}</td>
                             <td class="name">{{ $product['title'] }}@if(! empty($product['weight'])) <span class="weight">— {{ $product['weight'] }}</span>@endif</td>
                             <td class="qty">{{ $product['quantity'] }}</td>
                         </tr>
-                    @endforeach
-                </table>
+                    </table>
+                @endforeach
             @endif
             @if(!empty($customer['packaging_notes']))
                 <table class="notes">

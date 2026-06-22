@@ -113,40 +113,41 @@ table.card-header > tbody > tr > td {
     border-radius: 3px;
 }
 
-/* Products table inside card */
-.products {
+/* One table per product line; the divider between products is a table border
+   (top), because cell borders are not drawn on the production mPDF build. */
+table.product {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
 }
 
-.products td {
+table.product.product-divider {
+    border-top: 1px solid #e5e5e5;
+}
+
+table.product td {
     font-size: 7pt;
     padding: 1px 0;
     vertical-align: top;
 }
 
-.products .art {
+table.product .art {
     color: #888;
     width: 59px;
     padding-left: 7px;
     padding-right: 5px;
 }
 
-.products .weight {
+table.product .weight {
     color: #999;
 }
 
-.products .qty {
+table.product .qty {
     text-align: right;
     font-weight: bold;
     width: 33px;
     padding-left: 4px;
     padding-right: 7px;
-}
-
-.products tr:not(:last-child) td {
-    border-bottom: 1px solid #f0f0f0;
 }
 
 /* A table (not a div) so the divider line spans the full card width — mPDF
