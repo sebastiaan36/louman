@@ -145,17 +145,22 @@ table.card-header > tbody > tr > td {
     border-bottom: 1px solid #f0f0f0;
 }
 
-.notes {
+/* A table (not a div) so the divider line spans the full card width — mPDF
+   shrinks a block div to its content width inside a cell. */
+table.notes {
+    width: 100%;
+    border-collapse: collapse;
     margin-top: 3px;
-    padding-top: 3px;
-    padding-left: 7px;
-    padding-right: 7px;
+}
+
+table.notes td {
     border-top: 1px solid #ddd;
+    padding: 3px 7px 0 7px;
     font-size: 6.5pt;
     color: #444;
     line-height: 1.25;
 }
 
-.notes strong {
+table.notes strong {
     color: #222;
 }

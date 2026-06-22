@@ -38,14 +38,14 @@
                 </table>
             @endif
             @if(!empty($customer['packaging_notes']))
-                <div class="notes">
-                    <strong>Verpakking:</strong> {{ $customer['packaging_notes'] }}
-                </div>
+                <table class="notes">
+                    <tr><td><strong>Verpakking:</strong> {{ $customer['packaging_notes'] }}</td></tr>
+                </table>
             @endif
             @if(!empty($customer['notes']))
-                <div class="notes">
-                    <strong>Notitie:</strong> {{ implode(' • ', $customer['notes']) }}
-                </div>
+                <table class="notes">
+                    <tr><td><strong>Notitie:</strong> {{ implode(' • ', $customer['notes']) }}</td></tr>
+                </table>
             @endif
         </td>
     </tr>
