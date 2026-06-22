@@ -51,8 +51,10 @@ table.card {
     margin-bottom: 5px;
 }
 
+/* Only vertical padding on the card cell, so divider lines run edge-to-edge;
+   horizontal insets are applied to the inner content instead. */
 table.card > tbody > tr > td {
-    padding: 5px 7px;
+    padding: 5px 0;
 }
 
 /* Real table (not display:table divs, which mPDF lays out poorly) so the
@@ -71,10 +73,12 @@ table.card-header > tbody > tr > td {
 
 .card-header-left {
     text-align: left;
+    padding-left: 7px;
 }
 
 .card-header-right {
     text-align: right;
+    padding-right: 7px;
 }
 
 .card-name {
@@ -120,7 +124,8 @@ table.card-header > tbody > tr > td {
 
 .products .art {
     color: #888;
-    width: 52px;
+    width: 59px;
+    padding-left: 7px;
     padding-right: 5px;
 }
 
@@ -131,8 +136,9 @@ table.card-header > tbody > tr > td {
 .products .qty {
     text-align: right;
     font-weight: bold;
-    width: 26px;
+    width: 33px;
     padding-left: 4px;
+    padding-right: 7px;
 }
 
 .products tr:not(:last-child) td {
@@ -142,6 +148,8 @@ table.card-header > tbody > tr > td {
 .notes {
     margin-top: 3px;
     padding-top: 3px;
+    padding-left: 7px;
+    padding-right: 7px;
     border-top: 1px solid #ddd;
     font-size: 6.5pt;
     color: #444;
