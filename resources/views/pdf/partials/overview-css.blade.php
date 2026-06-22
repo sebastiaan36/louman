@@ -55,17 +55,26 @@ table.card > tbody > tr > td {
     padding: 5px 7px;
 }
 
-.card-header {
+/* Real table (not display:table divs, which mPDF lays out poorly) so the
+   contact info sits right-aligned at the same height as the company name. */
+table.card-header {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 4px;
+}
+
+table.card-header > tbody > tr > td {
     border-bottom: 1px solid #ddd;
     padding-bottom: 3px;
-    margin-bottom: 4px;
-    display: table;
-    width: 100%;
+    vertical-align: top;
 }
 
 .card-header-left {
-    display: table-cell;
-    vertical-align: top;
+    text-align: left;
+}
+
+.card-header-right {
+    text-align: right;
 }
 
 .card-name {
@@ -76,13 +85,6 @@ table.card > tbody > tr > td {
 .card-phone {
     font-size: 6.5pt;
     color: #555;
-    margin-top: 1px;
-}
-
-.card-header-right {
-    display: table-cell;
-    vertical-align: top;
-    text-align: right;
 }
 
 .card-empty-label {
