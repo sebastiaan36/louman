@@ -50,6 +50,7 @@ interface Customer {
     phone_number: string;
     mobile_number: string | null;
     packing_slip_email: string | null;
+    packaging_notes: string | null;
     kvk_number: string;
     vat_number: string;
     bank_account: string;
@@ -95,6 +96,8 @@ interface FavoriteProduct {
     weight: string | null;
     standard_price: string;
     custom_price: string | null;
+    standard_price_per_kg: string | null;
+    custom_price_per_kg: string | null;
 }
 
 interface AvailableProduct {
@@ -130,6 +133,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 // Custom prices for favorite products (sparse: only deviating prices)
 const customPriceInputs = ref<Record<number, string>>(
     Object.fromEntries(props.favoriteProducts.map((p) => [p.id, (p.custom_price ?? '').replace('.', ',')])),
+);
+const customPricePerKgInputs = ref<Record<number, string>>(
+    Object.fromEntries(props.favoriteProducts.map((p) => [p.id, (p.custom_price_per_kg ?? '').replace('.', ',')])),
 );
 const savingPrices = ref(false);
 
@@ -229,10 +235,12 @@ const saveCustomPrices = () => {
             prices: props.favoriteProducts.map((p) => {
                 // Accept a comma decimal separator and convert it back to a dot.
                 const value = (customPriceInputs.value[p.id] ?? '').trim().replace(',', '.');
+                const perKg = (customPricePerKgInputs.value[p.id] ?? '').trim().replace(',', '.');
 
                 return {
                     product_id: p.id,
                     custom_price: value === '' ? null : value,
+                    custom_price_per_kg: perKg === '' ? null : perKg,
                 };
             }),
         },
@@ -366,6 +374,7 @@ const form = useForm({
     postal_code: props.customer.postal_code,
     city: props.customer.city,
     packing_slip_email: props.customer.packing_slip_email || '',
+    packaging_notes: props.customer.packaging_notes || '',
 });
 
 const openEditCustomerDialog = () => {
@@ -382,6 +391,7 @@ const openEditCustomerDialog = () => {
     form.postal_code = props.customer.postal_code;
     form.city = props.customer.city;
     form.packing_slip_email = props.customer.packing_slip_email || '';
+    form.packaging_notes = props.customer.packaging_notes || '';
     form.clearErrors();
     editCustomerDialogOpen.value = true;
 };
@@ -851,6 +861,7 @@ const deleteAddress = (addressId: number) => {
                                         <TableHead class="w-48 cursor-pointer select-none" @click="sortBy('custom_price')">
                                             Aangepaste prijs <span v-if="sortKey === 'custom_price'">{{ sortAsc ? '▲' : '▼' }}</span>
                                         </TableHead>
+                                        <TableHead class="w-48">Aangepaste prijs per kg</TableHead>
                                         <TableHead class="w-12"></TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -872,6 +883,18 @@ const deleteAddress = (addressId: number) => {
                                                     type="text"
                                                     inputmode="decimal"
                                                     :placeholder="formatPrice(product.standard_price)"
+                                                    class="w-32"
+                                                />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-muted-foreground">€</span>
+                                                <Input
+                                                    v-model="customPricePerKgInputs[product.id]"
+                                                    type="text"
+                                                    inputmode="decimal"
+                                                    :placeholder="product.standard_price_per_kg ? formatPrice(product.standard_price_per_kg) : 'per kg'"
                                                     class="w-32"
                                                 />
                                             </div>
@@ -1158,6 +1181,21 @@ const deleteAddress = (addressId: number) => {
                                 placeholder="optioneel"
                             />
                             <InputError :message="form.errors.packing_slip_email" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="packaging_notes">Verpakkingsafspraken</Label>
+                            <Textarea
+                                id="packaging_notes"
+                                v-model="form.packaging_notes"
+                                class="mt-1"
+                                rows="3"
+                                placeholder="Bijv. per 5 stuks vacuüm verpakken (optioneel)"
+                            />
+                            <p class="mt-1 text-xs text-muted-foreground">
+                                Wordt getoond op het bestellingenoverzicht.
+                            </p>
+                            <InputError :message="form.errors.packaging_notes" class="mt-2" />
                         </div>
 
                     </div>

@@ -177,6 +177,7 @@ class CustomerApprovalController extends Controller
             'has_account' => $customer->user !== null,
             'phone_number' => $customer->phone_number,
             'mobile_number' => $customer->mobile_number,
+            'packaging_notes' => $customer->packaging_notes,
             'kvk_number' => $customer->kvk_number,
             'vat_number' => $customer->vat_number,
             'bank_account' => $customer->bank_account,
@@ -230,6 +231,8 @@ class CustomerApprovalController extends Controller
                 'weight' => $product->weight,
                 'standard_price' => number_format((float) $product->price, 2, '.', ''),
                 'custom_price' => $customer->customPriceFor($product->id),
+                'standard_price_per_kg' => $product->price_per_kg,
+                'custom_price_per_kg' => $customer->customPricePerKgFor($product->id),
             ]);
 
         $availableProducts = Product::where('is_active', true)
@@ -350,6 +353,7 @@ class CustomerApprovalController extends Controller
             'postal_code' => ['nullable', 'string', 'max:7'],
             'city' => ['nullable', 'string', 'max:255'],
             'packing_slip_email' => ['nullable', 'email', 'max:255'],
+            'packaging_notes' => ['nullable', 'string', 'max:2000'],
         ], [
             'customer_number.digits_between' => 'Klantnummer mag uit 1 tot 4 cijfers bestaan.',
             'customer_number.unique' => 'Dit klantnummer is al in gebruik.',
@@ -390,9 +394,12 @@ class CustomerApprovalController extends Controller
             'prices' => ['array'],
             'prices.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'prices.*.custom_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'prices.*.custom_price_per_kg' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
         ], [
             'prices.*.custom_price.numeric' => 'Vul een geldig bedrag in.',
             'prices.*.custom_price.min' => 'De prijs mag niet negatief zijn.',
+            'prices.*.custom_price_per_kg.numeric' => 'Vul een geldig bedrag in.',
+            'prices.*.custom_price_per_kg.min' => 'De prijs mag niet negatief zijn.',
         ]);
 
         $rows = collect($validated['prices'] ?? []);
@@ -408,17 +415,24 @@ class CustomerApprovalController extends Controller
             }
 
             $product = $products->get($productId);
+
             $price = $row['custom_price'] ?? null;
+            $unitIsCustom = $price !== null && $price !== ''
+                && round((float) $price, 2) !== round((float) $product->price, 2);
 
-            $isStandard = $price === null || $price === ''
-                || round((float) $price, 2) === round((float) $product->price, 2);
+            $pricePerKg = $row['custom_price_per_kg'] ?? null;
+            $perKgIsCustom = $pricePerKg !== null && $pricePerKg !== ''
+                && ($product->price_per_kg === null || round((float) $pricePerKg, 2) !== round((float) $product->price_per_kg, 2));
 
-            if ($isStandard) {
+            if (! $unitIsCustom && ! $perKgIsCustom) {
                 $customer->customProductPrices()->where('product_id', $productId)->delete();
             } else {
                 $customer->customProductPrices()->updateOrCreate(
                     ['product_id' => $productId],
-                    ['custom_price' => $price],
+                    [
+                        'custom_price' => $unitIsCustom ? $price : null,
+                        'custom_price_per_kg' => $perKgIsCustom ? $pricePerKg : null,
+                    ],
                 );
             }
         }

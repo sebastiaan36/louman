@@ -33,6 +33,7 @@ class Customer extends Model
         'bank_account',
         'vat_number',
         'packing_slip_email',
+        'packaging_notes',
         'customer_category',
         'discount_percentage',
         'delivery_day',
@@ -141,6 +142,21 @@ class Customer extends Model
         }
 
         return $this->customProductPrices()->where('product_id', $productId)->value('custom_price');
+    }
+
+    /**
+     * Get the custom price per kg for a product, or null if none is set.
+     * Reads from the loaded relation when available to avoid N+1 queries.
+     */
+    public function customPricePerKgFor(int $productId): ?string
+    {
+        if ($this->relationLoaded('customProductPrices')) {
+            $row = $this->customProductPrices->firstWhere('product_id', $productId);
+
+            return $row?->custom_price_per_kg;
+        }
+
+        return $this->customProductPrices()->where('product_id', $productId)->value('custom_price_per_kg');
     }
 
     /**

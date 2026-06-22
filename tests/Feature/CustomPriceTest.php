@@ -131,3 +131,48 @@ test('bestelregel legt de aangepaste prijs vast als snapshot', function () {
     $orderItem = $customer->orders()->latest()->first()->items()->first();
     expect((float) $orderItem->price)->toBe(70.0);
 });
+
+test('pricePerKgForCustomer geeft de aangepaste of standaard prijs per kg', function () {
+    $customer = approvedCustomer();
+    $product = Product::factory()->create(['price_per_kg' => 8]);
+
+    expect($product->pricePerKgForCustomer($customer))->toBe('8.00');
+
+    $customer->customProductPrices()->create([
+        'product_id' => $product->id,
+        'custom_price_per_kg' => 6.5,
+    ]);
+
+    expect($product->pricePerKgForCustomer($customer->fresh()->load('customProductPrices')))->toBe('6.50');
+});
+
+test('admin slaat een aangepaste prijs per kg op', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $product = Product::factory()->create(['price' => 10, 'price_per_kg' => 8]);
+    $customer->favoriteProducts()->attach($product->id);
+
+    $this->actingAs($admin)
+        ->post("/admin/customers/{$customer->id}/product-prices", [
+            'prices' => [['product_id' => $product->id, 'custom_price_per_kg' => '6.50']],
+        ])
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect((float) $customer->customPricePerKgFor($product->id))->toBe(6.50);
+    expect($customer->customPriceFor($product->id))->toBeNull();
+});
+
+test('klant ziet aangepaste prijs per kg in de webshop', function () {
+    $user = customerUser();
+    $customer = approvedCustomer($user);
+    $product = Product::factory()->create(['price_per_kg' => 8]);
+    $customer->customProductPrices()->create([
+        'product_id' => $product->id,
+        'custom_price_per_kg' => 6.5,
+    ]);
+
+    $this->actingAs($user)
+        ->get('/customer/products')
+        ->assertInertia(fn ($page) => $page->where('products.0.price_per_kg', '6.50'));
+});

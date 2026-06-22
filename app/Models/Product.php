@@ -187,6 +187,17 @@ class Product extends Model
     }
 
     /**
+     * Get the price per kg for a specific customer: a custom price per kg set
+     * for this (customer, product) wins, otherwise the standard price per kg.
+     */
+    public function pricePerKgForCustomer(Customer $customer): ?string
+    {
+        $customPricePerKg = $this->id ? $customer->customPricePerKgFor($this->id) : null;
+
+        return $customPricePerKg ?? $this->price_per_kg;
+    }
+
+    /**
      * Get the VAT rate (9%).
      */
     public static function getVatRate(): float

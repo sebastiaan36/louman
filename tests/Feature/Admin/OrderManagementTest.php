@@ -563,3 +563,42 @@ test('aanmaken met "nog een order" maakt de bestelling en gaat terug naar het aa
 
     expect($customer->orders()->count())->toBe(1);
 });
+
+test('pakbon kan worden gegenereerd voor een klant zonder account', function () {
+    $admin = adminUser();
+    $customer = Customer::factory()->approved()->create([
+        'user_id' => null,
+        'packing_slip_email' => null,
+    ]);
+    $order = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
+    $product = Product::factory()->create();
+    OrderItem::factory()->create(['order_id' => $order->id, 'product_id' => $product->id]);
+
+    $this->actingAs($admin)
+        ->get("/admin/orders/{$order->id}/packing-slip")
+        ->assertOk();
+});
+
+test('bestellingenoverzicht bevat de verpakkingsafspraken van de klant', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+    $customer->update(['packaging_notes' => 'Vacuüm verpakken']);
+
+    $captured = null;
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
+    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
+    Pdf::shouldReceive('loadView')
+        ->once()
+        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
+            $captured = $data;
+
+            return $pdfMock;
+        });
+
+    $this->actingAs($admin)
+        ->get('/admin/orders/customer-overview')
+        ->assertOk();
+
+    $byId = collect($captured['dayGroups'])->flatMap(fn ($customers) => $customers)->keyBy('id');
+    expect($byId[$customer->id]['packaging_notes'])->toBe('Vacuüm verpakken');
+});

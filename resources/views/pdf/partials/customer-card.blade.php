@@ -33,6 +33,11 @@
             @endforeach
         </table>
     @endif
+    @if(!empty($customer['packaging_notes']))
+        <div class="notes">
+            <strong>Verpakking:</strong> {{ $customer['packaging_notes'] }}
+        </div>
+    @endif
     @if(!empty($customer['notes']))
         <div class="notes">
             <strong>Notitie:</strong> {{ implode(' • ', $customer['notes']) }}

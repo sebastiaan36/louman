@@ -234,7 +234,7 @@
                     </div>
                     <div class="info-row">
                         <div class="info-label">Email:</div>
-                        <div class="info-value">{{ $order->customer->user->email }}</div>
+                        <div class="info-value">{{ $order->customer->user?->email ?? $order->customer->packing_slip_email }}</div>
                     </div>
                     @if($order->customer->discount_percentage > 0)
                         <div class="info-row">

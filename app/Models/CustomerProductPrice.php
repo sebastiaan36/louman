@@ -16,6 +16,7 @@ class CustomerProductPrice extends Model
         'customer_id',
         'product_id',
         'custom_price',
+        'custom_price_per_kg',
     ];
 
     /**
@@ -27,6 +28,7 @@ class CustomerProductPrice extends Model
     {
         return [
             'custom_price' => 'decimal:2',
+            'custom_price_per_kg' => 'decimal:2',
         ];
     }
 

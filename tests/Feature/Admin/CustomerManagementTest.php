@@ -318,3 +318,15 @@ test('aangepaste prijzen opslaan zonder custom_price-veld geeft geen fout', func
     // Ontbrekende/lege prijs betekent: terug naar standaardprijs (custom prijs verwijderd)
     expect($customer->customProductPrices()->where('product_id', $product->id)->exists())->toBeFalse();
 });
+
+test('admin kan verpakkingsafspraken bij een klant opslaan', function () {
+    $admin = adminUser();
+    $customer = approvedCustomer();
+
+    $this->actingAs($admin)
+        ->patch("/admin/customers/{$customer->id}", customerUpdatePayload($customer, ['packaging_notes' => 'Per 5 stuks vacuüm verpakken']))
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($customer->fresh()->packaging_notes)->toBe('Per 5 stuks vacuüm verpakken');
+});

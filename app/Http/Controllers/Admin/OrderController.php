@@ -292,6 +292,7 @@ class OrderController extends Controller
                 'is_pickup' => $customer->delivery_day === 'ophalen',
                 'products' => array_values($products),
                 'notes' => $customerNotes[$customer->id] ?? [],
+                'packaging_notes' => $customer->packaging_notes,
             ];
         }
 
