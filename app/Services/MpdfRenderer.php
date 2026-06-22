@@ -87,16 +87,12 @@ class MpdfRenderer
             'orientation' => 'P',
             'margin_left' => 4.2,
             'margin_right' => 4.2,
-            'margin_top' => 18,
+            'margin_top' => 24,
             'margin_bottom' => 6,
-            'margin_header' => 4,
+            'margin_header' => 5,
             'margin_footer' => 0,
             'default_font' => 'dejavusans',
             'default_font_size' => 8,
-            // Column-major fill: only move to column 2 once column 1 is full,
-            // instead of mPDF's default balancing. Required by the <columns>
-            // based newspaper flow in the customer overview.
-            'keepColumns' => true,
             'tempDir' => $tempDir,
         ];
 

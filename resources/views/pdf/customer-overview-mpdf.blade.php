@@ -44,24 +44,33 @@
         }
 
         /*
-         * Column-major flow is produced by mPDF's native <columns> tag (see
-         * the body) combined with the keepColumns config flag — NOT by CSS
-         * column-count, which mPDF 8.x silently ignores. mPDF measures and
-         * breaks itself; PHP only supplies the flat list of cards.
+         * 2-column grid. mPDF paginates the rows and keeps each row (a pair of
+         * cards) together via page-break-inside: avoid, so a card is never
+         * split across a page. Cards flow row-major: left, then right.
          */
+        .grid {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 5px;
+        }
 
-        /* Customer card — must never split across columns or pages.
-           An explicit background is required: in mPDF column mode a bordered
-           block without a background hits an undefined-key error when it is
-           relocated to the next column. */
-        .card {
+        /* The card box (border/background) lives on the cell: mPDF does not
+           render a full border on a <div> inside a <td>, but a <td> border
+           renders correctly. Empty cells (odd customer out) get no border. */
+        .grid td.cell {
+            width: 50%;
+            vertical-align: top;
             border: 1.5px solid #bbb;
             background-color: #ffffff;
             padding: 5px 7px;
-            margin-bottom: 5px;
-            min-height: 36px;
+        }
+
+        .grid td.cell-empty {
+            width: 50%;
+        }
+
+        .grid tr {
             page-break-inside: avoid;
-            break-inside: avoid;
         }
 
         .card-header {
@@ -165,8 +174,9 @@
         @foreach($dayGroups as $day => $customers)
             @php $headerName = 'day'.$loop->index; @endphp
 
-            {{-- Define the running header for this day, then activate it. mPDF
-                 keeps it on every overflow page until the next day switches it. --}}
+            {{-- Define this day's running header, then activate it. Using
+                 sethtmlpageheader switches the header for the following pages;
+                 it repeats automatically until the next day switches it. --}}
             <htmlpageheader name="{{ $headerName }}">
                 <div class="page-header">
                     <div class="page-header-left">
@@ -187,19 +197,25 @@
                 </div>
             </htmlpageheader>
 
-            @if($loop->first)
-                <sethtmlpageheader name="{{ $headerName }}" value="on" show-this-page="1" />
-            @else
-                <pagebreak header="{{ $headerName }}" />
-            @endif
+            @unless($loop->first)
+                <pagebreak />
+            @endunless
+            <sethtmlpageheader name="{{ $headerName }}" value="on" show-this-page="1" />
 
-            {{-- mPDF native columns: with keepColumns=on this fills column 1
-                 top→bottom completely, then column 2, then the next page. --}}
-            <columns column-count="2" column-gap="10" />
-            @foreach($customers as $customer)
-                @include('pdf.partials.customer-card', ['customer' => $customer])
-            @endforeach
-            <columns column-count="1" />
+            <table class="grid">
+                @foreach(array_chunk($customers, 2) as $pair)
+                    <tr>
+                        <td class="cell">
+                            @include('pdf.partials.customer-card', ['customer' => $pair[0]])
+                        </td>
+                        <td class="{{ isset($pair[1]) ? 'cell' : 'cell-empty' }}">
+                            @isset($pair[1])
+                                @include('pdf.partials.customer-card', ['customer' => $pair[1]])
+                            @endisset
+                        </td>
+                    </tr>
+                @endforeach
+            </table>
         @endforeach
     @else
         <div style="padding: 40px; text-align: center; color: #777; font-size: 9pt;">
