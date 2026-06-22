@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Services\MpdfRenderer;
 use App\Support\OrderStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -309,14 +310,14 @@ class OrderController extends Controller
             }
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.customer-overview', [
-            'dayGroups' => $dayGroups,
-            'orderCount' => $orders->count(),
-            'customerCount' => $allCustomers->count(),
-            'generatedAt' => now()->format('d-m-Y H:i'),
-        ]);
-
-        return $pdf->stream('bestellingenoverzicht-'.now()->format('Y-m-d').'.pdf');
+        return app(MpdfRenderer::class)
+            ->loadView('pdf.customer-overview-mpdf', [
+                'dayGroups' => $dayGroups,
+                'orderCount' => $orders->count(),
+                'customerCount' => $allCustomers->count(),
+                'generatedAt' => now()->format('d-m-Y H:i'),
+            ])
+            ->stream('bestellingenoverzicht-'.now()->format('Y-m-d').'.pdf');
     }
 
     /**

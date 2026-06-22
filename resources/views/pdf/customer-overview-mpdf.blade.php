@@ -4,32 +4,17 @@
     <meta charset="UTF-8">
     <title>Bestellingenoverzicht</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: 'dejavusans', sans-serif;
             font-size: 8pt;
             color: #222;
             line-height: 1.3;
         }
 
-        @page {
-            margin: 18px 16px;
-        }
-
-        .day-break {
-            page-break-before: always;
-        }
-
-        /* Page header */
+        /* Repeating page header (mPDF running header — replaces the old <thead>) */
         .page-header {
             border-bottom: 2px solid #222;
             padding-bottom: 5px;
-            margin-bottom: 10px;
             display: table;
             width: 100%;
         }
@@ -58,31 +43,25 @@
             margin-top: 2px;
         }
 
-        /* 2-column grid — DomPDF paginates the rows and repeats the header */
-        .grid {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 5px;
-        }
+        /*
+         * Column-major flow is produced by mPDF's native <columns> tag (see
+         * the body) combined with the keepColumns config flag — NOT by CSS
+         * column-count, which mPDF 8.x silently ignores. mPDF measures and
+         * breaks itself; PHP only supplies the flat list of cards.
+         */
 
-        .grid td.cell {
-            width: 50%;
-            vertical-align: top;
-        }
-
-        .grid thead td {
-            padding: 0;
-        }
-
-        .grid tbody tr {
-            page-break-inside: avoid;
-        }
-
-        /* Customer card */
+        /* Customer card — must never split across columns or pages.
+           An explicit background is required: in mPDF column mode a bordered
+           block without a background hits an undefined-key error when it is
+           relocated to the next column. */
         .card {
             border: 1.5px solid #bbb;
+            background-color: #ffffff;
             padding: 5px 7px;
+            margin-bottom: 5px;
             min-height: 36px;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         .card-header {
@@ -184,45 +163,43 @@
 <body>
     @if(count($dayGroups) > 0)
         @foreach($dayGroups as $day => $customers)
-            <table class="grid @if(! $loop->first) day-break @endif">
-                <thead>
-                    <tr>
-                        <td colspan="2">
-                            <div class="page-header">
-                                <div class="page-header-left">
-                                    <div class="day-title">{{ $day === 'onbekend' ? 'Geen leverdag ingesteld' : ucfirst($day) }}</div>
-                                    <div class="meta">
-                                        {{ count($customers) }} {{ count($customers) === 1 ? 'klant' : 'klanten' }}
-                                        &nbsp;|&nbsp;
-                                        Bestellingenoverzicht &mdash; {{ $generatedAt }}
-                                    </div>
-                                </div>
-                                <div class="page-header-right">
-                                    <div class="meta">
-                                        Bestellingen in behandeling: <strong>{{ $orderCount }}</strong>
-                                        &nbsp;|&nbsp;
-                                        Totaal klanten: <strong>{{ $customerCount }}</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach(array_chunk($customers, 2) as $pair)
-                        <tr>
-                            <td class="cell">
-                                @include('pdf.partials.customer-card', ['customer' => $pair[0]])
-                            </td>
-                            <td class="cell">
-                                @isset($pair[1])
-                                    @include('pdf.partials.customer-card', ['customer' => $pair[1]])
-                                @endisset
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            @php $headerName = 'day'.$loop->index; @endphp
+
+            {{-- Define the running header for this day, then activate it. mPDF
+                 keeps it on every overflow page until the next day switches it. --}}
+            <htmlpageheader name="{{ $headerName }}">
+                <div class="page-header">
+                    <div class="page-header-left">
+                        <div class="day-title">{{ $day === 'onbekend' ? 'Geen leverdag ingesteld' : ucfirst($day) }}</div>
+                        <div class="meta">
+                            {{ count($customers) }} {{ count($customers) === 1 ? 'klant' : 'klanten' }}
+                            &nbsp;|&nbsp;
+                            Bestellingenoverzicht &mdash; {{ $generatedAt }}
+                        </div>
+                    </div>
+                    <div class="page-header-right">
+                        <div class="meta">
+                            Bestellingen in behandeling: <strong>{{ $orderCount }}</strong>
+                            &nbsp;|&nbsp;
+                            Totaal klanten: <strong>{{ $customerCount }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </htmlpageheader>
+
+            @if($loop->first)
+                <sethtmlpageheader name="{{ $headerName }}" value="on" show-this-page="1" />
+            @else
+                <pagebreak header="{{ $headerName }}" />
+            @endif
+
+            {{-- mPDF native columns: with keepColumns=on this fills column 1
+                 top→bottom completely, then column 2, then the next page. --}}
+            <columns column-count="2" column-gap="10" />
+            @foreach($customers as $customer)
+                @include('pdf.partials.customer-card', ['customer' => $customer])
+            @endforeach
+            <columns column-count="1" />
         @endforeach
     @else
         <div style="padding: 40px; text-align: center; color: #777; font-size: 9pt;">

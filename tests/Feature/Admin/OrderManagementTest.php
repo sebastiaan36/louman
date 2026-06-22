@@ -282,21 +282,13 @@ test('bestellingenoverzicht bevat alleen bevestigde bestellingen', function () {
         'quantity' => 2,
     ]);
 
-    $captured = null;
-    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
-    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
-
-    Pdf::shouldReceive('loadView')
-        ->once()
-        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
-            $captured = $data;
-
-            return $pdfMock;
-        });
+    $overview = mockOverviewPdf();
 
     $this->actingAs($admin)
         ->get('/admin/orders/customer-overview')
         ->assertOk();
+
+    $captured = $overview->data;
 
     expect($captured['orderCount'])->toBe(1);
 
@@ -313,20 +305,13 @@ test('bestellingenoverzicht toont het handmatige klantnummer, leeg als niet inge
     $withNumber->update(['customer_number' => '077']);
     $withoutNumber = approvedCustomer();
 
-    $captured = null;
-    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
-    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
-    Pdf::shouldReceive('loadView')
-        ->once()
-        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
-            $captured = $data;
-
-            return $pdfMock;
-        });
+    $overview = mockOverviewPdf();
 
     $this->actingAs($admin)
         ->get('/admin/orders/customer-overview')
         ->assertOk();
+
+    $captured = $overview->data;
 
     $byId = collect($captured['dayGroups'])->flatMap(fn ($customers) => $customers)->keyBy('id');
     expect($byId[$withNumber->id]['number'])->toBe('077');
@@ -348,21 +333,13 @@ test('bestellingenoverzicht bevat bestelnotities per klant', function () {
         'quantity' => 1,
     ]);
 
-    $captured = null;
-    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
-    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
-
-    Pdf::shouldReceive('loadView')
-        ->once()
-        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
-            $captured = $data;
-
-            return $pdfMock;
-        });
+    $overview = mockOverviewPdf();
 
     $this->actingAs($admin)
         ->get('/admin/orders/customer-overview')
         ->assertOk();
+
+    $captured = $overview->data;
 
     $customerWithNotes = collect($captured['dayGroups'])
         ->flatMap(fn ($customers) => $customers)
@@ -376,21 +353,13 @@ test('bestellingenoverzicht markeert ophaalklanten en stuurt klantnummer mee', f
     $pickupCustomer = Customer::factory()->approved()->create(['delivery_day' => 'ophalen']);
     $deliverCustomer = Customer::factory()->approved()->create(['delivery_day' => 'maandag']);
 
-    $captured = null;
-    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
-    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
-
-    Pdf::shouldReceive('loadView')
-        ->once()
-        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
-            $captured = $data;
-
-            return $pdfMock;
-        });
+    $overview = mockOverviewPdf();
 
     $this->actingAs($admin)
         ->get('/admin/orders/customer-overview')
         ->assertOk();
+
+    $captured = $overview->data;
 
     $all = collect($captured['dayGroups'])->flatMap(fn ($customers) => $customers);
 
@@ -584,21 +553,56 @@ test('bestellingenoverzicht bevat de verpakkingsafspraken van de klant', functio
     $customer = approvedCustomer();
     $customer->update(['packaging_notes' => 'Vacuüm verpakken']);
 
-    $captured = null;
-    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
-    $pdfMock->shouldReceive('stream')->andReturn(response('', 200));
-    Pdf::shouldReceive('loadView')
-        ->once()
-        ->andReturnUsing(function ($view, $data) use (&$captured, $pdfMock) {
-            $captured = $data;
-
-            return $pdfMock;
-        });
+    $overview = mockOverviewPdf();
 
     $this->actingAs($admin)
         ->get('/admin/orders/customer-overview')
         ->assertOk();
 
+    $captured = $overview->data;
+
     $byId = collect($captured['dayGroups'])->flatMap(fn ($customers) => $customers)->keyBy('id');
     expect($byId[$customer->id]['packaging_notes'])->toBe('Vacuüm verpakken');
+});
+
+/**
+ * Bind a fake MpdfRenderer that captures the view data passed to loadView()
+ * and returns an empty PDF response, so the customer-overview controller can
+ * be asserted on without actually rendering mPDF.
+ */
+function mockOverviewPdf(): object
+{
+    $holder = new stdClass;
+    $holder->data = null;
+
+    $mock = Mockery::mock(\App\Services\MpdfRenderer::class);
+    $mock->shouldReceive('loadView')
+        ->once()
+        ->andReturnUsing(function ($view, $data) use ($holder, $mock) {
+            $holder->data = $data;
+
+            return $mock;
+        });
+    $mock->shouldReceive('stream')->andReturn(response('', 200));
+
+    app()->instance(\App\Services\MpdfRenderer::class, $mock);
+
+    return $holder;
+}
+
+test('bestellingenoverzicht genereert een echte mPDF-PDF zonder fouten', function () {
+    $admin = adminUser();
+    $product = Product::factory()->create();
+
+    foreach (['maandag', 'dinsdag'] as $day) {
+        $customer = Customer::factory()->approved()->create(['delivery_day' => $day]);
+        $order = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
+        OrderItem::factory()->create(['order_id' => $order->id, 'product_id' => $product->id]);
+    }
+
+    $response = $this->actingAs($admin)->get('/admin/orders/customer-overview');
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('application/pdf');
+    expect(substr($response->getContent(), 0, 4))->toBe('%PDF');
 });
