@@ -44,7 +44,10 @@ table.card {
     width: 100%;
     border: 1.5px solid #bbb;
     background-color: #ffffff;
-    border-collapse: collapse;
+    /* separate (not collapse): mPDF drops the outer border of a table that
+       collapses its borders when it contains a nested table (the products). */
+    border-collapse: separate;
+    border-spacing: 0;
     margin-bottom: 5px;
 }
 
