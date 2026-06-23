@@ -139,6 +139,49 @@ const customPricePerKgInputs = ref<Record<number, string>>(
 );
 const savingPrices = ref(false);
 
+// Parse a product's free-text weight to kilograms (e.g. "1500 gram", "500 g",
+// "1,5 kg", "per kg"). Returns null when there is no usable numeric weight.
+const productWeightInKg = (weight: string | null): number | null => {
+    const raw = (weight ?? '').toLowerCase();
+
+    const kilo = raw.match(/([\d.,]+)\s*(kilo|kg)\b/);
+    if (kilo) {
+        return parseFloat(kilo[1].replace(',', '.'));
+    }
+
+    const gram = raw.match(/([\d.,]+)\s*(gram|gr|g)\b/);
+    if (gram) {
+        return parseFloat(gram[1].replace(',', '.')) / 1000;
+    }
+
+    if (/per\s*kg|\bkg\b/.test(raw)) {
+        return 1;
+    }
+
+    return null;
+};
+
+const toCommaMoney = (value: number): string => (Math.round(value * 100) / 100).toFixed(2).replace('.', ',');
+
+// Entering a custom unit price fills in the custom price per kg (and vice
+// versa), derived from the product weight. Reads the value from the event so
+// only the other field is updated — no two-way watcher loop.
+const syncCustomPricePerKg = (product: FavoriteProduct, event: Event) => {
+    const kg = productWeightInKg(product.weight);
+    const price = parseFloat((event.target as HTMLInputElement).value.replace(',', '.'));
+    if (kg && kg > 0 && !Number.isNaN(price)) {
+        customPricePerKgInputs.value[product.id] = toCommaMoney(price / kg);
+    }
+};
+
+const syncCustomPrice = (product: FavoriteProduct, event: Event) => {
+    const kg = productWeightInKg(product.weight);
+    const perKg = parseFloat((event.target as HTMLInputElement).value.replace(',', '.'));
+    if (kg && kg > 0 && !Number.isNaN(perKg)) {
+        customPriceInputs.value[product.id] = toCommaMoney(perKg * kg);
+    }
+};
+
 // Add products to the Quick Order (favorites) list
 const productSearch = ref('');
 const showProductDropdown = ref(false);
@@ -884,6 +927,7 @@ const deleteAddress = (addressId: number) => {
                                                     inputmode="decimal"
                                                     :placeholder="formatPrice(product.standard_price)"
                                                     class="w-32"
+                                                    @input="syncCustomPricePerKg(product, $event)"
                                                 />
                                             </div>
                                         </TableCell>
@@ -896,6 +940,7 @@ const deleteAddress = (addressId: number) => {
                                                     inputmode="decimal"
                                                     :placeholder="product.standard_price_per_kg ? formatPrice(product.standard_price_per_kg) : 'per kg'"
                                                     class="w-32"
+                                                    @input="syncCustomPrice(product, $event)"
                                                 />
                                             </div>
                                         </TableCell>
