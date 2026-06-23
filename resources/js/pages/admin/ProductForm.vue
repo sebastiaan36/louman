@@ -127,6 +127,49 @@ watch(() => form.value.category_id, () => {
     form.value.subcategory_id = 'none';
 });
 
+// Parse the free-text weight field to kilograms, e.g. "1500 gram", "500 g",
+// "1,5 kg", "per kg". Returns null when there is no usable numeric weight.
+const weightInKg = (): number | null => {
+    const raw = (form.value.weight || '').toString().toLowerCase();
+
+    const kilo = raw.match(/([\d.,]+)\s*(kilo|kg)\b/);
+    if (kilo) {
+        return parseFloat(kilo[1].replace(',', '.'));
+    }
+
+    const gram = raw.match(/([\d.,]+)\s*(gram|gr|g)\b/);
+    if (gram) {
+        return parseFloat(gram[1].replace(',', '.')) / 1000;
+    }
+
+    if (/per\s*kg|\bkg\b/.test(raw)) {
+        return 1;
+    }
+
+    return null;
+};
+
+const toMoney = (value: number): string => (Math.round(value * 100) / 100).toFixed(2);
+
+// Entering a unit price fills in the price per kg (and vice versa), based on
+// the product weight. The value is read from the event so we only ever update
+// the other field — no two-way watcher loop.
+const syncPricePerKgFromPrice = (event: Event) => {
+    const kg = weightInKg();
+    const price = parseFloat((event.target as HTMLInputElement).value.replace(',', '.'));
+    if (kg && kg > 0 && !Number.isNaN(price)) {
+        form.value.price_per_kg = toMoney(price / kg);
+    }
+};
+
+const syncPriceFromPricePerKg = (event: Event) => {
+    const kg = weightInKg();
+    const perKg = parseFloat((event.target as HTMLInputElement).value.replace(',', '.'));
+    if (kg && kg > 0 && !Number.isNaN(perKg)) {
+        form.value.price = toMoney(perKg * kg);
+    }
+};
+
 const toggleVisibleCustomer = (id: number, checked: boolean | 'indeterminate') => {
     if (checked === true) {
         if (!form.value.visible_customer_ids.includes(id)) {
@@ -415,6 +458,7 @@ const cancel = () => {
                                 min="0"
                                 required
                                 placeholder="0.00"
+                                @input="syncPricePerKgFromPrice"
                             />
                             <InputError :message="errors?.price" />
                         </div>
@@ -428,7 +472,11 @@ const cancel = () => {
                                 step="0.01"
                                 min="0"
                                 placeholder="optioneel"
+                                @input="syncPriceFromPricePerKg"
                             />
+                            <p class="text-xs text-muted-foreground">
+                                Prijs en prijs per kg worden automatisch uit elkaar berekend op basis van het gewicht.
+                            </p>
                             <InputError :message="errors?.price_per_kg" />
                         </div>
 
