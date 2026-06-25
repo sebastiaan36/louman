@@ -171,3 +171,16 @@ test('een aangepaste prijs op een private-labelproduct blijft ongewijzigd', func
 
     expect($privateLabel->getPriceForCustomer($customer))->toBe('65.00');
 });
+
+test('admin productenlijst bevat de prijs per kg', function () {
+    $admin = adminUser();
+    Product::factory()->create(['title' => 'Worst', 'price_per_kg' => '8.50']);
+    Product::factory()->create(['title' => 'Zonder kg', 'price_per_kg' => null]);
+
+    $products = collect(
+        $this->actingAs($admin)->get('/admin/products')->assertOk()->viewData('page')['props']['products']
+    )->keyBy('title');
+
+    expect((float) $products['Worst']['price_per_kg'])->toBe(8.5);
+    expect($products['Zonder kg']['price_per_kg'])->toBeNull();
+});

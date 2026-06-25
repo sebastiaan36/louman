@@ -39,6 +39,7 @@ interface Product {
     title: string;
     category: string | null;
     price: string;
+    price_per_kg: string | null;
     article_number: string;
     in_stock: boolean;
     photo_url: string | null;
@@ -230,6 +231,7 @@ const deleteProduct = (id: number) => {
                             <TableHead>Naam</TableHead>
                             <TableHead class="hidden md:table-cell">Categorie</TableHead>
                             <TableHead>Prijs</TableHead>
+                            <TableHead class="hidden sm:table-cell">Prijs per kg</TableHead>
                             <TableHead class="hidden lg:table-cell">Artikelnr</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead class="text-right">Acties</TableHead>
@@ -261,6 +263,10 @@ const deleteProduct = (id: number) => {
                             <TableCell class="hidden md:table-cell">{{ product.category || '-' }}</TableCell>
                             <TableCell>
                                 <span class="font-medium">{{ formatPrice(product.price) }}</span>
+                            </TableCell>
+                            <TableCell class="hidden sm:table-cell">
+                                <span v-if="product.price_per_kg" class="text-muted-foreground">{{ formatPrice(product.price_per_kg) }}</span>
+                                <span v-else class="text-muted-foreground">-</span>
                             </TableCell>
                             <TableCell class="hidden lg:table-cell font-mono text-sm">{{ product.article_number }}</TableCell>
                             <TableCell>

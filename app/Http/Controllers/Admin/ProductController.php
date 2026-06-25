@@ -60,6 +60,7 @@ class ProductController extends Controller
             'title' => $product->title,
             'category' => $product->category?->name,
             'price' => $product->price,
+            'price_per_kg' => $product->price_per_kg,
             'article_number' => $product->article_number,
             'in_stock' => $product->in_stock,
             'photo_url' => $product->thumbnail_url,

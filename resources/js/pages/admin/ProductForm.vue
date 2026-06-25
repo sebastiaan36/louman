@@ -474,11 +474,12 @@ const cancel = () => {
                                 placeholder="optioneel"
                                 @input="syncPriceFromPricePerKg"
                             />
-                            <p class="text-xs text-muted-foreground">
-                                Prijs en prijs per kg worden automatisch uit elkaar berekend op basis van het gewicht.
-                            </p>
                             <InputError :message="errors?.price_per_kg" />
                         </div>
+
+                        <p class="-mt-2 text-xs text-muted-foreground sm:col-span-2">
+                            Prijs en prijs per kg worden automatisch uit elkaar berekend op basis van het gewicht.
+                        </p>
 
                         <div class="grid gap-2">
                             <Label for="suggested_retail_price">Verkoopadviesprijs (€)</Label>
