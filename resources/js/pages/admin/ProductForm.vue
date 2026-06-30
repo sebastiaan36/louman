@@ -72,9 +72,21 @@ const props = defineProps<{
     categories: Category[];
     customers: CustomerOption[];
     errors?: Record<string, string>;
+    filters?: { search?: string | null; sort?: string | null; private_label?: string | boolean | null };
 }>();
 
 const isEdit = computed(() => !!props.product);
+
+// The list's active sort/search/filter as a query string, so saving or
+// cancelling returns to the same list view.
+const listQuery = computed(() => {
+    const params = new URLSearchParams();
+    if (props.filters?.search) params.set('search', props.filters.search);
+    if (props.filters?.sort) params.set('sort', props.filters.sort);
+    if (props.filters?.private_label) params.set('private_label', '1');
+    const query = params.toString();
+    return query ? `?${query}` : '';
+});
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -83,7 +95,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Producten',
-        href: '/admin/products',
+        href: `/admin/products${listQuery.value}`,
     },
     {
         title: isEdit.value ? 'Product bewerken' : 'Product toevoegen',
@@ -283,8 +295,10 @@ const submit = () => {
         formData.append('photo', photoFile.value);
     }
 
+    // Keep the list filters on the update URL so the redirect returns to the
+    // same sort/search view.
     const url = isEdit.value
-        ? `/admin/products/${props.product?.id}`
+        ? `/admin/products/${props.product?.id}${listQuery.value}`
         : '/admin/products';
 
     // For Laravel, we need to add _method for PUT/PATCH
@@ -301,7 +315,7 @@ const submit = () => {
 };
 
 const cancel = () => {
-    router.visit('/admin/products');
+    router.visit(`/admin/products${listQuery.value}`);
 };
 </script>
 

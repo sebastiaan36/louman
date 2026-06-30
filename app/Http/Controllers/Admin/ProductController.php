@@ -127,7 +127,7 @@ class ProductController extends Controller
     /**
      * Show the form for editing a product.
      */
-    public function edit(Product $product): Response
+    public function edit(Request $request, Product $product): Response
     {
         $categories = Category::with('children')
             ->whereNull('parent_id')
@@ -158,6 +158,8 @@ class ProductController extends Controller
             ],
             'categories' => $categories,
             'customers' => $this->customersForSelect(),
+            // Carry the list's sort/search/filter so editing returns to it.
+            'filters' => $request->only(['search', 'sort', 'private_label']),
         ]);
     }
 
@@ -191,7 +193,7 @@ class ProductController extends Controller
             $product->is_private_label ? $visibleCustomerIds : []
         );
 
-        return redirect()->route('admin.products.index')
+        return redirect()->route('admin.products.index', $request->only(['search', 'sort', 'private_label']))
             ->with('success', 'Product bijgewerkt.');
     }
 

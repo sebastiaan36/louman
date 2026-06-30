@@ -92,6 +92,17 @@ watch([searchQuery, selectedSort], ([search, sort]) => {
     });
 }, { deep: true });
 
+// Active list filters as a query string, so editing a product can return to
+// the same sort/search/filter afterwards.
+const listQuery = computed(() => {
+    const params = new URLSearchParams();
+    if (props.filters.search) params.set('search', props.filters.search);
+    if (props.filters.sort && props.filters.sort !== 'newest') params.set('sort', props.filters.sort);
+    if (props.filters.private_label) params.set('private_label', '1');
+    const query = params.toString();
+    return query ? `?${query}` : '';
+});
+
 const page = usePage();
 const importResults = computed(
     () =>
@@ -276,7 +287,7 @@ const deleteProduct = (id: number) => {
                             </TableCell>
                             <TableCell class="text-right">
                                 <div class="flex gap-2 justify-end">
-                                    <Link :href="`/admin/products/${product.id}/edit`">
+                                    <Link :href="`/admin/products/${product.id}/edit${listQuery}`">
                                         <Button size="sm" variant="outline">Bewerken</Button>
                                     </Link>
                                     <Button
