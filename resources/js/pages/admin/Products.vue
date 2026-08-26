@@ -83,7 +83,9 @@ const sortOptions = [
 watch([searchQuery, selectedSort], ([search, sort]) => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
-    if (sort && sort !== 'newest') params.set('sort', sort);
+    // Always send the sort, including 'newest' — the server remembers the last
+    // one, so leaving it out would silently restore the previous choice.
+    params.set('sort', sort || 'newest');
     if (props.filters.private_label) params.set('private_label', '1');
 
     router.get(`/admin/products?${params.toString()}`, {}, {
@@ -97,7 +99,7 @@ watch([searchQuery, selectedSort], ([search, sort]) => {
 const listQuery = computed(() => {
     const params = new URLSearchParams();
     if (props.filters.search) params.set('search', props.filters.search);
-    if (props.filters.sort && props.filters.sort !== 'newest') params.set('sort', props.filters.sort);
+    params.set('sort', props.filters.sort || 'newest');
     if (props.filters.private_label) params.set('private_label', '1');
     const query = params.toString();
     return query ? `?${query}` : '';

@@ -19,17 +19,24 @@ use Intervention\Image\ImageManager;
 class ProductController extends Controller
 {
     /**
+     * Where the products list remembers its sort order between visits.
+     */
+    private const SortSessionKey = 'admin.products.sort';
+
+    /**
+     * The sort orders the products list accepts.
+     *
+     * @var list<string>
+     */
+    private const ALLOWED_SORTS = ['newest', 'article_asc', 'article_desc', 'price_asc', 'price_desc', 'popularity'];
+
+    /**
      * Display a listing of products.
      */
     public function index(Request $request): Response
     {
         $search = $request->input('search');
-        $sort = $request->input('sort', 'newest');
-
-        $allowedSorts = ['newest', 'article_asc', 'article_desc', 'price_asc', 'price_desc', 'popularity'];
-        if (! in_array($sort, $allowedSorts)) {
-            $sort = 'newest';
-        }
+        $sort = $this->resolveSort($request);
 
         $privateLabel = $request->boolean('private_label');
 
@@ -76,6 +83,29 @@ class ProductController extends Controller
                 'private_label' => $privateLabel,
             ],
         ]);
+    }
+
+    /**
+     * Determine the sort order for the products list.
+     *
+     * The chosen order is remembered in the session, so returning to the list
+     * after editing a product keeps it — also when the return trip loses the
+     * query string. An explicit ?sort= in the URL always wins and replaces
+     * what was remembered.
+     */
+    private function resolveSort(Request $request): string
+    {
+        $sort = $request->has('sort')
+            ? $request->input('sort')
+            : $request->session()->get(self::SortSessionKey, 'newest');
+
+        if (! in_array($sort, self::ALLOWED_SORTS, true)) {
+            $sort = 'newest';
+        }
+
+        $request->session()->put(self::SortSessionKey, $sort);
+
+        return $sort;
     }
 
     /**

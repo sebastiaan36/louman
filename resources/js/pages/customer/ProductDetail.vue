@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { Zap, ShoppingCart, Minus, Plus, Clock } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import PriceNotice from '@/components/PriceNotice.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -122,6 +123,8 @@ const backToProducts = () => {
                     ← Terug naar producten
                 </Button>
             </div>
+
+            <PriceNotice />
 
             <!-- Order Deadline -->
             <Card :class="{ 'border-orange-500': orderDeadline.is_urgent }">

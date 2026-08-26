@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { Clock, Search } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
+import PriceNotice from '@/components/PriceNotice.vue';
 import ProductCard from '@/components/ProductCard.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -149,6 +150,8 @@ const clearFilters = () => {
                     Blader door onze productcatalogus
                 </p>
             </div>
+
+            <PriceNotice />
 
             <!-- Order Deadline -->
             <Card :class="{ 'border-orange-500': orderDeadline.is_urgent }">

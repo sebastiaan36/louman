@@ -3,6 +3,7 @@ import { Zap, ShoppingCart, Eye } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { inCartButtonClasses } from '@/lib/cart';
 import { formatEuro } from '@/lib/price';
 
 interface Product {
@@ -91,23 +92,26 @@ const formattedPrice = computed(() => formatEuro(props.product.price));
             </div>
         </CardContent>
 
-        <CardFooter v-if="showActions" class="p-4 pt-0 gap-2">
+        <!-- Details keeps the width of its own label; the cart button takes what
+             is left. Neither shrinks below its text, and if a narrow card cannot
+             fit both they wrap instead of cutting a label off. -->
+        <CardFooter v-if="showActions" class="p-4 pt-0 gap-2 flex-wrap">
             <Button
                 variant="outline"
-                class="flex-1 min-w-0"
                 @click="emit('viewDetails')"
             >
                 <Eye class="h-4 w-4 mr-2 shrink-0" />
                 Details
             </Button>
             <Button
-                class="flex-1 min-w-0"
+                class="flex-1"
+                :class="product.in_cart ? inCartButtonClasses : ''"
                 :disabled="!product.is_in_stock"
                 :title="!product.is_in_stock ? 'Niet op voorraad' : undefined"
                 @click="emit('addToCart')"
             >
                 <ShoppingCart class="h-4 w-4 mr-2 shrink-0" />
-                <span class="truncate">{{ product.in_cart ? 'Toegevoegd' : 'Toevoegen' }}</span>
+                {{ product.in_cart ? 'Toegevoegd' : 'Toevoegen' }}
             </Button>
         </CardFooter>
 

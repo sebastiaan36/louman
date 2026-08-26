@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ShoppingCart, Trash2, Minus, Plus, MapPin, Clock } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import PriceNotice from '@/components/PriceNotice.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -225,6 +226,8 @@ const submitOrder = () => {
                     {{ itemCount }} {{ itemCount === 1 ? 'product' : 'producten' }} in je winkelwagen
                 </p>
             </div>
+
+            <PriceNotice v-if="cartItems.length > 0" />
 
             <!-- Empty State -->
             <div v-if="cartItems.length === 0" class="rounded-lg border border-dashed p-12 text-center space-y-4">

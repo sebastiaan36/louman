@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Zap, ShoppingCart, X, Minus, Plus } from 'lucide-vue-next';
 import { ref } from 'vue';
+import PriceNotice from '@/components/PriceNotice.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { useCart } from '@/composables/useCart';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { inCartButtonClasses } from '@/lib/cart';
 import { formatEuro as formatPrice } from '@/lib/price';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
@@ -99,6 +101,8 @@ const decrementQuantity = (productId: number) => {
                     Je opgeslagen producten voor snelle herbestelling
                 </p>
             </div>
+
+            <PriceNotice v-if="favorites.length > 0" />
 
             <!-- Empty State -->
             <div v-if="favorites.length === 0" class="rounded-lg border border-dashed p-12 text-center space-y-4">
@@ -213,6 +217,7 @@ const decrementQuantity = (productId: number) => {
                                     <div class="flex items-center gap-2 justify-end">
                                         <Button
                                             size="sm"
+                                            :class="product.in_cart ? inCartButtonClasses : ''"
                                             :disabled="!product.is_in_stock"
                                             :title="!product.is_in_stock ? 'Niet op voorraad' : undefined"
                                             @click="handleAddToCart(product.id)"

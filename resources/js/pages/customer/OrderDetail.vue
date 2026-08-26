@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { Download } from 'lucide-vue-next';
+import PriceNotice from '@/components/PriceNotice.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -97,6 +98,8 @@ const backToOrders = () => {
                     </Button>
                 </div>
             </div>
+
+            <PriceNotice />
 
             <div class="grid gap-6 lg:grid-cols-3">
                 <!-- Order Items -->
