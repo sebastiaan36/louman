@@ -17,7 +17,7 @@ class DeliveryAddressFactory extends Factory
     {
         return [
             'customer_id' => Customer::factory()->approved(),
-            'name' => fake()->company() . ' - Magazijn',
+            'name' => fake()->company().' - Magazijn',
             'street_name' => fake()->streetName(),
             'house_number' => (string) fake()->numberBetween(1, 200),
             'postal_code' => '1234 AB',

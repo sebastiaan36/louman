@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Customer;
 use App\Notifications\CustomerApproved;
 use Illuminate\Support\Facades\Notification;
 

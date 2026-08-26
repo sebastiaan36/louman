@@ -17,8 +17,7 @@ class CustomerRegistered extends Notification implements ShouldQueue
      */
     public function __construct(
         public Customer $customer
-    ) {
-    }
+    ) {}
 
     /**
      * Get the notification's delivery channels.
@@ -40,7 +39,7 @@ class CustomerRegistered extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('Nieuwe Klantregistratie')
             ->greeting('Nieuwe klant geregistreerd')
-            ->line("Er heeft zich een nieuwe klant geregistreerd bij het B2B portaal.")
+            ->line('Er heeft zich een nieuwe klant geregistreerd bij het B2B portaal.')
             ->line("**Bedrijfsnaam:** {$this->customer->company_name}")
             ->line("**Contactpersoon:** {$this->customer->contact_person}")
             ->line("**Email:** {$this->customer->user->email}")

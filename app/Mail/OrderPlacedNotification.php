@@ -11,7 +11,6 @@ use Illuminate\Mail\Mailables\Envelope;
 
 class OrderPlacedNotification extends Mailable
 {
-
     /**
      * Create a new message instance.
      */
@@ -27,7 +26,7 @@ class OrderPlacedNotification extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Nieuwe bestelling ontvangen - #' . $this->order->id,
+            subject: 'Nieuwe bestelling ontvangen - #'.$this->order->id,
         );
     }
 
@@ -57,7 +56,7 @@ class OrderPlacedNotification extends Mailable
         ]);
 
         return [
-            Attachment::fromData(fn () => $pdf->output(), 'pakbon-' . $this->order->id . '.pdf')
+            Attachment::fromData(fn () => $pdf->output(), 'pakbon-'.$this->order->id.'.pdf')
                 ->withMime('application/pdf'),
         ];
     }

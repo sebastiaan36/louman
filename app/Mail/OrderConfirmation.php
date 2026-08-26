@@ -9,7 +9,6 @@ use Illuminate\Mail\Mailables\Envelope;
 
 class OrderConfirmation extends Mailable
 {
-
     /**
      * Create a new message instance.
      */
@@ -25,7 +24,7 @@ class OrderConfirmation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bestelbevestiging #' . $this->order->id . ' - Slagerij Louman',
+            subject: 'Bestelbevestiging #'.$this->order->id.' - Slagerij Louman',
         );
     }
 
