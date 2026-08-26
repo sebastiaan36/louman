@@ -32,6 +32,8 @@ class Product extends Model
         'nutrition_facts',
         'weight',
         'article_number',
+        'external_id',
+        'synced_at',
         'in_stock',
         'is_active',
         'is_private_label',
@@ -55,6 +57,7 @@ class Product extends Model
             'in_stock' => 'boolean',
             'is_active' => 'boolean',
             'is_private_label' => 'boolean',
+            'synced_at' => 'datetime',
         ];
     }
 

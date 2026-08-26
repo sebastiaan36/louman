@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\CustomerRegistered;
+use App\Services\WebhookDispatcher;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -60,6 +61,8 @@ class CustomerRegisterController extends Controller
         });
 
         event(new Registered($user));
+
+        app(WebhookDispatcher::class)->customerRegistered($user->customer);
 
         $registrationEmail = Setting::get(Setting::MAIL_REGISTRATION_NOTIFICATION);
         if ($registrationEmail) {

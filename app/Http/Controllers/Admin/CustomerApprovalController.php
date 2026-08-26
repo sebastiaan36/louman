@@ -12,6 +12,7 @@ use App\Models\DeliveryAddress;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\CustomerApproved;
+use App\Services\WebhookDispatcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -289,6 +290,8 @@ class CustomerApprovalController extends Controller
         ]);
 
         $customer->user?->notify(new CustomerApproved);
+
+        app(WebhookDispatcher::class)->customerApproved($customer);
 
         AuditLog::record('customer.approved', "Klant {$customer->company_name} goedgekeurd", $customer, [
             'customer_category' => $validated['customer_category'],

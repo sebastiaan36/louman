@@ -7,12 +7,15 @@ use App\Models\CartItem;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\SessionGuard;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Cookie\CookieJar;
+use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -39,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureRouteBindings();
+        $this->configureRateLimiting();
 
         Event::listen(MessageSending::class, AddCcToOutgoingMail::class);
         Event::listen(Login::class, fn (Login $event) => $this->limitRememberCookieLifetime($event));
@@ -97,6 +101,21 @@ class AppServiceProvider extends ServiceProvider
             return CartItem::where('id', $value)
                 ->where('customer_id', $user->customer->id)
                 ->firstOrFail();
+        });
+    }
+
+    /**
+     * Cap how hard the integration API can be hit. The limit is per token, so
+     * one runaway process cannot crowd out the other integrations.
+     */
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('integration', function (Request $request): Limit {
+            $client = $request->user();
+
+            return $client
+                ? Limit::perMinute(300)->by('api-client:'.$client->getKey())
+                : Limit::perMinute(30)->by('ip:'.$request->ip());
         });
     }
 

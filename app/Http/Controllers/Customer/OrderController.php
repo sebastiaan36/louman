@@ -8,6 +8,7 @@ use App\Mail\OrderConfirmation;
 use App\Mail\OrderPlacedNotification;
 use App\Models\Order;
 use App\Models\Setting;
+use App\Services\WebhookDispatcher;
 use App\Support\OrderStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -200,6 +201,8 @@ class OrderController extends Controller
 
             return back()->with('error', 'Er ging iets mis bij het plaatsen van de bestelling. Probeer het opnieuw.');
         }
+
+        app(WebhookDispatcher::class)->orderCreated($order);
 
         // Send mails after transaction — mail errors should not block order creation
         try {

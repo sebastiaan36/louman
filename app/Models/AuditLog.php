@@ -44,4 +44,26 @@ class AuditLog extends Model
             'ip_address' => request()->ip(),
         ]);
     }
+
+    /**
+     * Record a change made through the integration API. There is no user
+     * behind it, so the acting client is stored in the metadata instead.
+     *
+     * @param  array<string, mixed>  $metadata
+     */
+    public static function recordForApiClient(ApiClient $client, string $action, string $description, ?Model $subject = null, array $metadata = []): void
+    {
+        static::create([
+            'user_id' => null,
+            'action' => $action,
+            'subject_type' => $subject ? class_basename($subject) : null,
+            'subject_id' => $subject?->getKey(),
+            'description' => $description,
+            'metadata' => array_merge($metadata, [
+                'api_client_id' => $client->id,
+                'api_client' => $client->name,
+            ]),
+            'ip_address' => request()->ip(),
+        ]);
+    }
 }

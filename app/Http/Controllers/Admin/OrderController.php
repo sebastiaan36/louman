@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Orders\ApplyOrderStatusChange;
 use App\Http\Controllers\Controller;
-use App\Mail\OrderCancelled;
 use App\Mail\OrderConfirmation;
-use App\Mail\OrderShipped;
 use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\Setting;
 use App\Services\MpdfRenderer;
+use App\Services\WebhookDispatcher;
 use App\Support\OrderStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -218,6 +217,8 @@ class OrderController extends Controller
 
             return back()->with('error', 'Er ging iets mis bij het aanmaken van de bestelling.');
         }
+
+        app(WebhookDispatcher::class)->orderCreated($order);
 
         // Send the order confirmation to the customer — mail errors must not block.
         try {
@@ -447,44 +448,7 @@ class OrderController extends Controller
      */
     private function applyStatusChange(Order $order, string $newStatus): void
     {
-        $previousStatus = $order->status;
-
-        $order->update(['status' => $newStatus]);
-
-        // Send shipped notification to customer when order is completed
-        if ($newStatus === 'completed' && $previousStatus !== 'completed') {
-            $order->load(['customer.user', 'deliveryAddress', 'items.product']);
-            $shippedEmail = $order->customer->packing_slip_email ?: $order->customer->user?->email;
-
-            if ($shippedEmail) {
-                try {
-                    Mail::to($shippedEmail)->send(new OrderShipped($order));
-                } catch (\Exception $e) {
-                    \Log::error('Failed to send order shipped notification', [
-                        'order_id' => $order->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-        }
-
-        // Notify the configured recipient when an order is cancelled.
-        if ($newStatus === 'cancelled' && $previousStatus !== 'cancelled') {
-            $cancellationEmail = Setting::get(Setting::MAIL_CANCELLATION_NOTIFICATION);
-
-            if ($cancellationEmail) {
-                $order->load(['customer.user', 'deliveryAddress', 'items.product']);
-
-                try {
-                    Mail::to($cancellationEmail)->send(new OrderCancelled($order));
-                } catch (\Exception $e) {
-                    \Log::error('Failed to send order cancelled notification', [
-                        'order_id' => $order->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-        }
+        $previousStatus = app(ApplyOrderStatusChange::class)->handle($order, $newStatus);
 
         AuditLog::record('order.status_updated', "Bestelstatus gewijzigd van {$previousStatus} naar {$newStatus}", $order, [
             'previous_status' => $previousStatus,

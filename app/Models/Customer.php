@@ -22,6 +22,9 @@ class Customer extends Model
         'user_id',
         'company_name',
         'customer_number',
+        'external_id',
+        'synced_at',
+        'invoice_email',
         'contact_person',
         'phone_number',
         'mobile_number',
@@ -54,6 +57,7 @@ class Customer extends Model
             'deactivated_at' => 'datetime',
             'terms_accepted_at' => 'datetime',
             'show_on_map' => 'boolean',
+            'synced_at' => 'datetime',
         ];
     }
 
