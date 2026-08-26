@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CompleteProfileRequest;
+use App\Models\Customer;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -68,7 +69,7 @@ class CompleteProfileController extends Controller
     /**
      * Check whether all required customer profile fields are filled in.
      */
-    private function isComplete(\App\Models\Customer $customer): bool
+    private function isComplete(Customer $customer): bool
     {
         foreach (['contact_person', 'phone_number', 'street_name', 'house_number', 'postal_code', 'city', 'kvk_number', 'bank_account', 'vat_number'] as $field) {
             if (empty($customer->{$field})) {

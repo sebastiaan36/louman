@@ -3,6 +3,7 @@
 use App\Mail\CustomerInvitation;
 use App\Models\Customer;
 use App\Models\CustomerInvitation as CustomerInvitationModel;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 
 test('admin kan klant aanmaken met alleen bedrijfsnaam', function () {
@@ -36,7 +37,7 @@ test('admin kan klant aanmaken met email en uitnodiging wordt verstuurd', functi
     $invitation = CustomerInvitationModel::first();
     expect($invitation)->not->toBeNull();
     expect($invitation->email)->toBe('klant@example.com');
-    expect($invitation->expires_at)->toBeInstanceOf(\DateTimeInterface::class);
+    expect($invitation->expires_at)->toBeInstanceOf(DateTimeInterface::class);
     expect($invitation->expires_at->isFuture())->toBeTrue();
 
     Mail::assertSent(CustomerInvitation::class, fn ($mail) => $mail->hasTo('klant@example.com'));
@@ -62,7 +63,7 @@ test('duplicate email wordt geweigerd', function () {
     Mail::fake();
     $admin = adminUser();
     customerUser(); // schept een user met willekeurig email; we maken zelf één met bekend email
-    \App\Models\User::factory()->create(['email' => 'bestaand@example.com']);
+    User::factory()->create(['email' => 'bestaand@example.com']);
 
     $this->actingAs($admin)
         ->post('/admin/customers', [
@@ -127,7 +128,7 @@ test('uitnodiging vereist een uniek e-mailadres', function () {
     Mail::fake();
     $admin = adminUser();
     $customer = Customer::factory()->create(['user_id' => null]);
-    \App\Models\User::factory()->create(['email' => 'bestaand@klant.nl']);
+    User::factory()->create(['email' => 'bestaand@klant.nl']);
 
     $this->actingAs($admin)
         ->post("/admin/customers/{$customer->id}/invite", [

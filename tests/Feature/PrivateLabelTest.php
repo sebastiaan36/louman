@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Customer;
+use App\Models\CustomerProductPrice;
 use App\Models\Product;
 
 test('klant ziet standaardproducten plus gekoppelde private-labelproducten, niet ongekoppelde', function () {
@@ -162,7 +163,7 @@ test('private-labelproducten zijn uitgesloten van het kortingspercentage', funct
 test('een aangepaste prijs op een private-labelproduct blijft ongewijzigd', function () {
     $customer = Customer::factory()->approved()->create(['discount_percentage' => 20]);
     $privateLabel = Product::factory()->create(['price' => 100, 'is_private_label' => true]);
-    \App\Models\CustomerProductPrice::create([
+    CustomerProductPrice::create([
         'customer_id' => $customer->id,
         'product_id' => $privateLabel->id,
         'custom_price' => 65,

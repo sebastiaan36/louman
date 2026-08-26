@@ -10,11 +10,13 @@ use App\Models\Customer;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductController extends Controller
 {
@@ -255,9 +257,9 @@ class ProductController extends Controller
     /**
      * Approved customers for the private-label visibility multiselect.
      *
-     * @return \Illuminate\Support\Collection<int, array{id: int, company_name: string}>
+     * @return Collection<int, array{id: int, company_name: string}>
      */
-    private function customersForSelect(): \Illuminate\Support\Collection
+    private function customersForSelect(): Collection
     {
         return Customer::approved()
             ->orderBy('company_name')
@@ -383,7 +385,7 @@ class ProductController extends Controller
     /**
      * Parse comma-separated tag string to array.
      */
-    public function export(): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function export(): StreamedResponse
     {
         $products = Product::orderBy('article_number')->get();
 
@@ -526,6 +528,6 @@ class ProductController extends Controller
 
         $id = (int) $value;
 
-        return \App\Models\Category::where('id', $id)->exists() ? $id : null;
+        return Category::where('id', $id)->exists() ? $id : null;
     }
 }

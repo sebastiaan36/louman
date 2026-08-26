@@ -19,7 +19,7 @@ abstract class ApiController extends Controller
      */
     protected function client(Request $request): ApiClient
     {
-        /** @var \App\Models\ApiClient $client */
+        /** @var ApiClient $client */
         $client = $request->user();
 
         return $client;
@@ -29,7 +29,7 @@ abstract class ApiController extends Controller
      * Limit a query to records changed since the given moment, so the caller
      * can poll for deltas instead of pulling everything each run.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     protected function applyUpdatedSince(Builder $query, Request $request, string $column = 'updated_at'): void
     {

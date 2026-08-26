@@ -6,7 +6,7 @@ use App\Models\ApiClient;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ApiClient>
+ * @extends Factory<ApiClient>
  */
 class ApiClientFactory extends Factory
 {

@@ -1,10 +1,12 @@
 <?php
 
 use App\Models\User;
+use App\Providers\AppServiceProvider;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('login screen can be rendered', function () {
     $response = $this->get(route('login'));
@@ -100,7 +102,7 @@ test('remember me keeps the login for 45 days', function () {
 
     expect($recaller)->not->toBeNull();
 
-    $expected = now()->addMinutes(\App\Providers\AppServiceProvider::REMEMBER_MINUTES)->timestamp;
+    $expected = now()->addMinutes(AppServiceProvider::REMEMBER_MINUTES)->timestamp;
     expect($recaller->getExpiresTime())->toBeGreaterThan($expected - 120)
         ->and($recaller->getExpiresTime())->toBeLessThan($expected + 120);
 });

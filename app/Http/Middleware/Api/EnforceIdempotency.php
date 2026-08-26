@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware\Api;
 
+use App\Models\ApiClient;
 use App\Models\ApiIdempotencyKey;
 use Closure;
 use Illuminate\Database\QueryException;
@@ -36,7 +37,7 @@ class EnforceIdempotency
             ], 400);
         }
 
-        /** @var \App\Models\ApiClient $client */
+        /** @var ApiClient $client */
         $client = $request->user();
         $hash = $this->fingerprint($request);
 

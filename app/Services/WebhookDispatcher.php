@@ -27,7 +27,7 @@ class WebhookDispatcher
      * Queue an event for delivery.
      *
      * @param  array<string, mixed>  $data
-     * @return list<\App\Models\WebhookDelivery>
+     * @return list<WebhookDelivery>
      */
     public function dispatch(string $event, array $data): array
     {

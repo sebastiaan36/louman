@@ -1,8 +1,11 @@
 <?php
 
+use App\Models\Order;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('dashboard'));
@@ -53,14 +56,14 @@ test('cijfers-pagina toont alle cijfers inclusief omzet voor admin', function ()
 test('cijfers-pagina rekent jaaromzet en maandgrafiek correct', function () {
     $admin = adminUser();
     $customer = approvedCustomer();
-    $january = \Illuminate\Support\Carbon::create(now()->year, 1, 15, 10);
+    $january = Carbon::create(now()->year, 1, 15, 10);
 
-    \App\Models\Order::factory()->confirmed()->create([
+    Order::factory()->confirmed()->create([
         'customer_id' => $customer->id,
         'total' => 100,
         'created_at' => $january,
     ]);
-    \App\Models\Order::factory()->confirmed()->create([
+    Order::factory()->confirmed()->create([
         'customer_id' => $customer->id,
         'total' => 50,
         'created_at' => $january,

@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Customer;
 use App\Models\Product;
+use Illuminate\Http\UploadedFile;
 
 test('admin ziet lijst van goedgekeurde klanten', function () {
     $admin = adminUser();
@@ -116,7 +118,7 @@ test('niet-admin kan quick order lijst niet aanpassen', function () {
         ->assertForbidden();
 });
 
-function customerUpdatePayload(\App\Models\Customer $customer, array $overrides = []): array
+function customerUpdatePayload(Customer $customer, array $overrides = []): array
 {
     return array_merge([
         'company_name' => $customer->company_name,
@@ -275,7 +277,7 @@ test('csv-import werkt het mobiele telefoonnummer bij', function () {
     $customer = approvedCustomer();
 
     $csv = "id;mobile_number\n{$customer->id};0612345678\n";
-    $file = \Illuminate\Http\UploadedFile::fake()->createWithContent('klanten.csv', $csv);
+    $file = UploadedFile::fake()->createWithContent('klanten.csv', $csv);
 
     $this->actingAs($admin)
         ->post('/admin/customers/import', ['csv_file' => $file])

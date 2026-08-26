@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\CustomerInvitation as CustomerInvitationModel;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 
@@ -36,7 +37,7 @@ class CustomerInvitation extends Mailable
     }
 
     /**
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

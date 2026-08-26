@@ -63,12 +63,12 @@ test('terms pagina is publiek bereikbaar', function () {
 test('mobiel telefoonnummer wordt opgeslagen bij registratie', function () {
     $this->post('/register/customer', validCustomerRegistrationPayload(['mobile_number' => '0612345678']));
 
-    expect(\App\Models\Customer::where('mobile_number', '0612345678')->exists())->toBeTrue();
+    expect(Customer::where('mobile_number', '0612345678')->exists())->toBeTrue();
 });
 
 test('registratie zonder mobiel nummer slaagt', function () {
     $this->post('/register/customer', validCustomerRegistrationPayload())
         ->assertRedirect();
 
-    expect(\App\Models\Customer::query()->count())->toBe(1);
+    expect(Customer::query()->count())->toBe(1);
 });

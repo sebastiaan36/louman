@@ -2,11 +2,12 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Models\DeliveryAddress;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\DeliveryAddress
+ * @mixin DeliveryAddress
  */
 class DeliveryAddressResource extends JsonResource
 {

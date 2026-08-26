@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Services\MpdfRenderer;
 use App\Services\WebhookDispatcher;
 use App\Support\OrderStatus;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -350,7 +351,7 @@ class OrderController extends Controller
         // Sort by article number in natural (numeric-aware) order: 1, 2, 10, 105.
         usort($products, fn ($a, $b) => strnatcmp($a['article_number'], $b['article_number']));
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.production-list', [
+        $pdf = Pdf::loadView('pdf.production-list', [
             'products' => $products,
             'orderCount' => $orders->count(),
             'generatedAt' => now()->format('d-m-Y H:i'),
@@ -386,7 +387,7 @@ class OrderController extends Controller
         }
 
         // Get all active products for adding to order
-        $products = \App\Models\Product::where('is_active', true)
+        $products = Product::where('is_active', true)
             ->orderBy('title')
             ->get()
             ->map(fn ($product) => [
@@ -492,7 +493,7 @@ class OrderController extends Controller
                 }
             } else {
                 // Create new item
-                $product = \App\Models\Product::find($itemData['product_id']);
+                $product = Product::find($itemData['product_id']);
                 if ($product) {
                     $newItem = $order->items()->create([
                         'product_id' => $product->id,
@@ -583,7 +584,7 @@ class OrderController extends Controller
 
         // Generate PDFs
         foreach ($orders as $order) {
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.packing-slip', [
+            $pdf = Pdf::loadView('pdf.packing-slip', [
                 'order' => $order,
                 'companyInfo' => $companyInfo,
                 'logoPath' => $logoPath,

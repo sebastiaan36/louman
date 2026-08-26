@@ -1,10 +1,13 @@
 <?php
 
+use App\Mail\OrderConfirmation;
 use App\Mail\OrderShipped;
 use App\Models\Customer;
+use App\Models\CustomerProductPrice;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Services\MpdfRenderer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
 
@@ -377,7 +380,7 @@ test('admin order-bewerking gebruikt de aangepaste klantprijs voor nieuwe regels
     $admin = adminUser();
     $customer = approvedCustomer();
     $product = Product::factory()->create(['price' => 100]);
-    \App\Models\CustomerProductPrice::create([
+    CustomerProductPrice::create([
         'customer_id' => $customer->id,
         'product_id' => $product->id,
         'custom_price' => 70,
@@ -454,7 +457,7 @@ test('admin kan een bestelling aanmaken met een gekozen status', function () {
     expect((float) $order->total)->toBe(20.0);
 
     // De klant krijgt een bevestigingsmail, ook bij een admin-aangemaakte bestelling.
-    Mail::assertSent(\App\Mail\OrderConfirmation::class, fn ($mail) => $mail->order->id === $order->id && $mail->hasTo($user->email));
+    Mail::assertSent(OrderConfirmation::class, fn ($mail) => $mail->order->id === $order->id && $mail->hasTo($user->email));
 });
 
 test('admin bestelling aanmaken vereist een geldige status', function () {
@@ -475,7 +478,7 @@ test('admin haalt de aangepaste prijzen van een klant op via het prices-endpoint
     $admin = adminUser();
     $customer = approvedCustomer();
     $product = Product::factory()->create();
-    \App\Models\CustomerProductPrice::create([
+    CustomerProductPrice::create([
         'customer_id' => $customer->id,
         'product_id' => $product->id,
         'custom_price' => 42.50,
@@ -575,7 +578,7 @@ function mockOverviewPdf(): object
     $holder = new stdClass;
     $holder->data = null;
 
-    $mock = Mockery::mock(\App\Services\MpdfRenderer::class);
+    $mock = Mockery::mock(MpdfRenderer::class);
     $mock->shouldReceive('loadView')
         ->once()
         ->andReturnUsing(function ($view, $data) use ($holder, $mock) {
@@ -585,7 +588,7 @@ function mockOverviewPdf(): object
         });
     $mock->shouldReceive('stream')->andReturn(response('', 200));
 
-    app()->instance(\App\Services\MpdfRenderer::class, $mock);
+    app()->instance(MpdfRenderer::class, $mock);
 
     return $holder;
 }

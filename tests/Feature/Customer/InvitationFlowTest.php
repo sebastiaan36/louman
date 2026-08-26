@@ -2,8 +2,11 @@
 
 use App\Models\Customer;
 use App\Models\CustomerInvitation;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
-function createInvitation(string $email = 'klant@example.com', ?\DateTimeInterface $expiresAt = null, ?\DateTimeInterface $acceptedAt = null): array
+function createInvitation(string $email = 'klant@example.com', ?DateTimeInterface $expiresAt = null, ?DateTimeInterface $acceptedAt = null): array
 {
     $customer = Customer::factory()->create(['user_id' => null, 'approved_at' => now()]);
     $rawToken = 'raw-token-'.uniqid();
@@ -56,11 +59,11 @@ test('accept maakt user aan, koppelt aan klant, en logt in', function () {
 
     $response->assertRedirect(route('customer.complete-profile.edit'));
 
-    $user = \App\Models\User::where('email', 'nieuw@example.com')->first();
+    $user = User::where('email', 'nieuw@example.com')->first();
     expect($user)->not->toBeNull();
     expect($user->role)->toBe('customer');
     expect($user->email_verified_at)->not->toBeNull();
-    expect(\Illuminate\Support\Facades\Hash::check('GeheimWachtwoord123!', $user->password))->toBeTrue();
+    expect(Hash::check('GeheimWachtwoord123!', $user->password))->toBeTrue();
 
     expect($invitation->customer->fresh()->user_id)->toBe($user->id);
     expect($invitation->fresh()->accepted_at)->not->toBeNull();
@@ -78,8 +81,8 @@ test('accept faalt bij wachtwoord-bevestiging mismatch', function () {
 });
 
 test('accept toont nederlandse melding bij te kort wachtwoord onder strikte regels', function () {
-    \Illuminate\Validation\Rules\Password::defaults(
-        fn () => \Illuminate\Validation\Rules\Password::min(12)->mixedCase()->numbers()->symbols()
+    Password::defaults(
+        fn () => Password::min(12)->mixedCase()->numbers()->symbols()
     );
 
     [, $rawToken] = createInvitation();
@@ -93,8 +96,8 @@ test('accept toont nederlandse melding bij te kort wachtwoord onder strikte rege
 });
 
 test('accept toont nederlandse melding bij ontbrekend symbool onder strikte regels', function () {
-    \Illuminate\Validation\Rules\Password::defaults(
-        fn () => \Illuminate\Validation\Rules\Password::min(12)->mixedCase()->numbers()->symbols()
+    Password::defaults(
+        fn () => Password::min(12)->mixedCase()->numbers()->symbols()
     );
 
     [, $rawToken] = createInvitation();

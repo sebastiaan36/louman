@@ -2,13 +2,14 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Models\Order;
 use App\Models\Product;
 use App\Support\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Order
+ * @mixin Order
  */
 class OrderResource extends JsonResource
 {
