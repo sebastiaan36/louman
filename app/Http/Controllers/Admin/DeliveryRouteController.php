@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DeliveryRouteController extends Controller
 {
-    const DAYS = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag', 'ophalen'];
+    const DAYS = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'ophalen'];
 
     public function index(Request $request): Response
     {
@@ -90,9 +90,8 @@ class DeliveryRouteController extends Controller
 
             foreach ($customers as $customer) {
                 fputcsv($handle, [
-                    $customer->company_name,
-                    // Dash + space prefix keeps the value as text so Excel preserves leading zeros.
-                    $customer->phone_number ? '- '.$customer->phone_number : '',
+                    $this->csvValue($customer->company_name),
+                    $this->csvValue($customer->phone_number),
                     $customer->delivery_day,
                     $customer->route_order ?? '',
                 ], ';');
@@ -103,5 +102,25 @@ class DeliveryRouteController extends Controller
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="rijroute-'.$fileSuffix.'-'.now()->format('Y-m-d').'.csv"',
         ]);
+    }
+
+    /**
+     * Prepare a value for the CSV.
+     *
+     * A spreadsheet treats a field that opens with =, +, - or @ as a formula.
+     * The phone numbers used to be exported with a "- " prefix, which Excel
+     * read as a subtraction: "- 020-6249065" arrived as -6249085. Only those
+     * values get an apostrophe, which marks them as literal text; a normal
+     * phone number like 020-6249065 is written exactly as it is stored.
+     */
+    private function csvValue(?string $value): string
+    {
+        $value = trim((string) $value);
+
+        if ($value !== '' && str_contains('=+-@', $value[0])) {
+            return "'".$value;
+        }
+
+        return $value;
     }
 }

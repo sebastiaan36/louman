@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { Download, GripVertical } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
@@ -34,8 +35,6 @@ const DAY_LABELS: Record<string, string> = {
     woensdag: 'Woensdag',
     donderdag: 'Donderdag',
     vrijdag: 'Vrijdag',
-    zaterdag: 'Zaterdag',
-    zondag: 'Zondag',
     ophalen: 'Ophalen',
 };
 
@@ -122,8 +121,9 @@ const saveOrder = () => {
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
                     <span v-if="saving" class="text-sm text-muted-foreground">Opslaan...</span>
+                    <Label for="export-scope" class="text-sm text-muted-foreground">Downloaden:</Label>
                     <Select :model-value="exportDay" @update:model-value="(value) => (exportDay = value as string)">
-                        <SelectTrigger class="w-44">
+                        <SelectTrigger id="export-scope" class="w-44">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
