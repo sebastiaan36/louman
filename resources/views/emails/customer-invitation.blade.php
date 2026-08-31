@@ -109,8 +109,8 @@
             </ul>
 
             <p>
-                We hebben reeds een account voor je aangemaakt in het Slagerij Louman B2B klantportaal.
-                Klik op de knop hieronder om een wachtwoord in te stellen en je registratie af te ronden.
+                Wij hebben reeds een account voor u aangemaakt in het Slagerij Louman B2B klantportaal.
+                Klik op de knop hieronder om een wachtwoord in te stellen en uw registratie af te ronden.
             </p>
 
             <div class="button-box">

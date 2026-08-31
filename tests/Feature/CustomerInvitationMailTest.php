@@ -46,6 +46,18 @@ test('de uitnodigingsmail herhaalt de prijsafspraak en wat er niet verandert', f
         ->toContain('Facturatie blijft verlopen zoals u gewend bent');
 });
 
+test('de uitnodigingsmail staat volledig in de u-vorm', function () {
+    $html = invitationMailHtml();
+
+    // Alleen de leesbare tekst; klassenamen en attributen tellen niet mee.
+    $text = preg_replace('/\s+/', ' ', strip_tags($html));
+
+    expect($text)
+        ->toContain('Wij hebben reeds een account voor u aangemaakt')
+        ->toContain('uw registratie af te ronden')
+        ->not->toMatch('/\b(je|jij|jouw|jullie)\b/i');
+});
+
 test('de uitnodigingsmail sluit af namens het team', function () {
     expect(invitationMailHtml())
         ->toContain('Met vriendelijke groet')
