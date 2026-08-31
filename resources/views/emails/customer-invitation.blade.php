@@ -68,6 +68,18 @@
             border-top: 1px solid #e9ecef;
         }
         .footer strong { color: #555; }
+        .content ul {
+            margin: 12px 0 20px 0;
+            padding-left: 20px;
+        }
+        .content li {
+            margin-bottom: 8px;
+        }
+        .content h2 {
+            font-size: 16px;
+            margin: 26px 0 6px 0;
+            color: #2c3e50;
+        }
     </style>
 </head>
 <body>
@@ -77,20 +89,61 @@
         </div>
         <div class="header">
             <h1>Welkom bij Slagerij Louman</h1>
-            <p>Maak je account aan voor het B2B klantportaal</p>
+            <p>Maak uw account aan voor het B2B klantportaal</p>
         </div>
 
         <div class="content">
-            <p>Beste contactpersoon van <strong>{{ $companyName }}</strong>,</p>
+            <p>Beste relatie,</p>
 
             <p>
-                We hebben een account voor je aangemaakt in het Slagerij Louman B2B klantportaal.
+                Met trots willen wij u informeren dat de nieuwe website van Slagerij Louman live staat.
+                Naast een vernieuwde uitstraling hebben wij een extra toevoeging gelanceerd:
+                het nieuwe B2B Klantportaal.
+            </p>
+
+            <p>Via het klantportaal kunt u eenvoudig:</p>
+
+            <ul>
+                <li>Online uw wekelijkse of maandelijkse bestellingen plaatsen</li>
+                <li>Aangeven of u zichtbaar wilt zijn als officieel verkooppunt op de website van Louman</li>
+            </ul>
+
+            <p>
+                We hebben reeds een account voor je aangemaakt in het Slagerij Louman B2B klantportaal.
                 Klik op de knop hieronder om een wachtwoord in te stellen en je registratie af te ronden.
             </p>
 
             <div class="button-box">
                 <a href="{{ $acceptUrl }}" class="button">Account aanmaken</a>
             </div>
+
+            <h2>Belangrijk om te weten:</h2>
+
+            <ul>
+                <li>
+                    De getoonde prijzen in het klantportaal zijn onze standaardprijzen. Uw persoonlijk
+                    afgesproken prijzen worden bij de facturatie automatisch toegepast en zijn terug te
+                    zien op uw factuur.
+                </li>
+                <li>Uw huidige prijsafspraken blijven ongewijzigd</li>
+                <li>Leverdagen en levertijden blijven hetzelfde</li>
+                <li>Facturatie blijft verlopen zoals u gewend bent</li>
+            </ul>
+
+            <p>
+                Met dit nieuwe portaal willen wij het bestellen eenvoudiger, overzichtelijker en sneller
+                maken voor onze zakelijke klanten.
+            </p>
+
+            <p>
+                Wij hopen u hiermee nog beter van dienst te kunnen zijn en kijken uit naar een mooie
+                voortzetting van onze samenwerking.
+            </p>
+
+            <p>
+                Met vriendelijke groet,<br>
+                Team Slagerij Louman
+            </p>
 
             <p class="expiry">
                 Deze uitnodiging is geldig tot {{ $expiresAt->format('d-m-Y') }}.
