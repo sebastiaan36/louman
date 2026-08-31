@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Customer;
+use App\Support\DeliveryDay;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,7 +14,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DeliveryRouteController extends Controller
 {
-    const DAYS = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'ophalen'];
+    const DAYS = DeliveryDay::ALL;
 
     public function index(Request $request): Response
     {

@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Services\MpdfRenderer;
 use App\Services\WebhookDispatcher;
+use App\Support\DeliveryDay;
 use App\Support\OrderStatus;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -281,7 +282,7 @@ class OrderController extends Controller
             ->get();
 
         // Group customers by delivery day
-        $dayOrder = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag', 'ophalen'];
+        $dayOrder = DeliveryDay::ALL;
         $rawGroups = [];
         foreach ($allCustomers as $customer) {
             $day = $customer->delivery_day ?: 'onbekend';

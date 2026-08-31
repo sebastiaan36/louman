@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1;
 
+use App\Support\DeliveryDay;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
@@ -51,7 +52,7 @@ class UpdateCustomerRequest extends ApiFormRequest
             'invoice_email' => ['sometimes', 'nullable', 'email', 'max:255'],
             'customer_category' => ['sometimes', 'nullable', 'in:groothandel,broodjeszaak,horeca'],
             'discount_percentage' => ['sometimes', 'nullable', 'in:1,2,3,4,5'],
-            'delivery_day' => ['sometimes', 'nullable', 'in:maandag,dinsdag,woensdag,donderdag,vrijdag,zaterdag,zondag,ophalen'],
+            'delivery_day' => ['sometimes', 'nullable', DeliveryDay::rule()],
             'route_order' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:9999'],
             'packaging_notes' => ['sometimes', 'nullable', 'string', 'max:2000'],
         ];

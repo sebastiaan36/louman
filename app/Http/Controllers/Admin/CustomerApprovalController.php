@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Notifications\CustomerApproved;
 use App\Services\WebhookDispatcher;
+use App\Support\DeliveryDay;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -269,7 +270,7 @@ class CustomerApprovalController extends Controller
         $validated = $request->validate([
             'customer_category' => ['required', 'in:groothandel,broodjeszaak,horeca'],
             'discount_percentage' => ['nullable', 'in:1,2,3,4,5'],
-            'delivery_day' => ['required', 'in:maandag,dinsdag,woensdag,donderdag,vrijdag,zaterdag,zondag,ophalen'],
+            'delivery_day' => ['required', DeliveryDay::rule()],
         ], [
             'customer_category.required' => 'Selecteer een klantcategorie.',
             'customer_category.in' => 'Ongeldige klantcategorie.',
@@ -310,7 +311,7 @@ class CustomerApprovalController extends Controller
         $validated = $request->validate([
             'customer_category' => ['required', 'in:groothandel,broodjeszaak,horeca'],
             'discount_percentage' => ['nullable', 'in:1,2,3,4,5'],
-            'delivery_day' => ['required', 'in:maandag,dinsdag,woensdag,donderdag,vrijdag,zaterdag,zondag,ophalen'],
+            'delivery_day' => ['required', DeliveryDay::rule()],
             'show_on_map' => ['boolean'],
         ], [
             'customer_category.required' => 'Selecteer een klantcategorie.',
@@ -705,7 +706,7 @@ class CustomerApprovalController extends Controller
     {
         $validCategories = ['groothandel', 'broodjeszaak', 'horeca'];
         $validDiscounts = ['1', '2', '3', '4', '5'];
-        $validDays = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag', 'ophalen'];
+        $validDays = DeliveryDay::ALL;
 
         // Map field name → CSV column(s) that drive it
         $fieldMap = [

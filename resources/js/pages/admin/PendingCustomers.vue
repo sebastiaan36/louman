@@ -20,6 +20,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { DELIVERY_DAYS } from '@/lib/deliveryDays';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
@@ -57,15 +58,7 @@ const selectedDiscount = ref<string>('');
 const selectedDeliveryDay = ref<string>('');
 const processing = ref(false);
 
-const deliveryDays = [
-    { value: 'maandag', label: 'Maandag' },
-    { value: 'dinsdag', label: 'Dinsdag' },
-    { value: 'woensdag', label: 'Woensdag' },
-    { value: 'donderdag', label: 'Donderdag' },
-    { value: 'vrijdag', label: 'Vrijdag' },
-    { value: 'zaterdag', label: 'Zaterdag' },
-    { value: 'zondag', label: 'Zondag' },
-];
+const deliveryDays = DELIVERY_DAYS;
 
 const openApprovalDialog = (customerId: number) => {
     selectedCustomerId.value = customerId;

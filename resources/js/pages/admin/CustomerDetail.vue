@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { DELIVERY_DAYS } from '@/lib/deliveryDays';
 import { orderStatusClasses, orderStatusLabel } from '@/lib/orderStatus';
 import { formatPrice } from '@/lib/price';
 import { dashboard } from '@/routes';
@@ -358,16 +359,7 @@ const editDeliveryDay = ref<string>('');
 const editShowOnMap = ref<boolean>(true);
 const processing = ref(false);
 
-const deliveryDays = [
-    { value: 'maandag', label: 'Maandag' },
-    { value: 'dinsdag', label: 'Dinsdag' },
-    { value: 'woensdag', label: 'Woensdag' },
-    { value: 'donderdag', label: 'Donderdag' },
-    { value: 'vrijdag', label: 'Vrijdag' },
-    { value: 'zaterdag', label: 'Zaterdag' },
-    { value: 'zondag', label: 'Zondag' },
-    { value: 'ophalen', label: 'Ophalen' },
-];
+const deliveryDays = DELIVERY_DAYS;
 
 const openEditDialog = () => {
     editCategory.value = props.customer.customer_category || '';
