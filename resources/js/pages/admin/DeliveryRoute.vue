@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { Download, GripVertical } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,11 +18,21 @@ interface Customer {
     route_order: number | null;
 }
 
+interface DayGroup {
+    day: string;
+    customers: Customer[];
+}
+
 const props = defineProps<{
     customers: Customer[];
+    dayGroups: DayGroup[] | null;
     selectedDay: string;
     days: string[];
 }>();
+
+const ALL_DAYS = 'all';
+
+const showingAllDays = computed(() => props.selectedDay === ALL_DAYS);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
@@ -116,7 +126,7 @@ const saveOrder = () => {
                 <div>
                     <h1 class="text-2xl font-bold">Rijroute</h1>
                     <p class="text-sm text-muted-foreground">
-                        Sleep klanten om de bezorgroute per dag in te stellen
+                        {{ showingAllDays ? 'De bezorgroute van de hele week' : 'Sleep klanten om de bezorgroute per dag in te stellen' }}
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
@@ -149,14 +159,56 @@ const saveOrder = () => {
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                        <SelectItem value="all">Alle dagen</SelectItem>
                         <SelectItem v-for="day in days" :key="day" :value="day">
                             {{ DAY_LABELS[day] ?? day }}
                         </SelectItem>
                     </SelectContent>
                 </Select>
+                <span v-if="showingAllDays" class="text-sm text-muted-foreground">
+                    Kies een dag om de volgorde te wijzigen
+                </span>
             </div>
 
-            <div v-if="list.length === 0" class="rounded-lg border border-dashed p-12 text-center">
+            <!-- Alle dagen: alleen lezen. Slepen blijft per dag, omdat een klant
+                 naar een andere dag verplaatsen zijn bezorgdag zou wijzigen. -->
+            <template v-if="showingAllDays">
+                <div
+                    v-for="group in dayGroups ?? []"
+                    :key="group.day"
+                    class="rounded-lg border"
+                >
+                    <div class="flex items-baseline justify-between border-b bg-muted/50 px-4 py-2">
+                        <h2 class="font-semibold">{{ DAY_LABELS[group.day] ?? group.day }}</h2>
+                        <button
+                            type="button"
+                            class="text-sm text-muted-foreground underline-offset-2 hover:underline"
+                            @click="onDayChange(group.day)"
+                        >
+                            {{ group.customers.length }}
+                            {{ group.customers.length === 1 ? 'klant' : 'klanten' }} — volgorde wijzigen
+                        </button>
+                    </div>
+
+                    <p v-if="group.customers.length === 0" class="px-4 py-3 text-sm text-muted-foreground">
+                        Geen klanten op deze dag
+                    </p>
+
+                    <div
+                        v-for="(customer, index) in group.customers"
+                        :key="customer.id"
+                        class="flex items-center gap-4 border-b px-4 py-3 last:border-b-0"
+                    >
+                        <span class="w-8 shrink-0 font-mono text-sm text-muted-foreground">{{ index + 1 }}</span>
+                        <span class="font-medium">{{ customer.company_name }}</span>
+                        <span v-if="customer.street_name" class="text-sm text-muted-foreground">
+                            — {{ customer.street_name }} {{ customer.house_number }}, {{ customer.city }}
+                        </span>
+                    </div>
+                </div>
+            </template>
+
+            <div v-else-if="list.length === 0" class="rounded-lg border border-dashed p-12 text-center">
                 <p class="text-muted-foreground">
                     Geen klanten met leverdag
                     <strong>{{ DAY_LABELS[selectedDay] ?? selectedDay }}</strong>

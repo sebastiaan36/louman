@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Support\DeliveryDay;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,22 +18,67 @@ class DeliveryRouteController extends Controller
 {
     const DAYS = DeliveryDay::ALL;
 
+    /**
+     * Value of ?day= that shows every delivery day at once.
+     */
+    const AllDays = 'all';
+
     public function index(Request $request): Response
     {
-        $day = in_array($request->get('day'), self::DAYS)
-            ? $request->get('day')
-            : 'maandag';
+        $requested = $request->get('day');
+        $showAllDays = $requested === self::AllDays;
 
-        $customers = Customer::approved()
-            ->where('delivery_day', $day)
-            ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
-            ->get(['id', 'company_name', 'street_name', 'house_number', 'city', 'route_order']);
+        $day = $showAllDays
+            ? self::AllDays
+            : (in_array($requested, self::DAYS, true) ? $requested : 'maandag');
 
         return Inertia::render('admin/DeliveryRoute', [
-            'customers' => $customers,
+            'customers' => $showAllDays ? [] : $this->routeFor($day),
+            'dayGroups' => $showAllDays ? $this->routeForAllDays() : null,
             'selectedDay' => $day,
             'days' => self::DAYS,
         ]);
+    }
+
+    /**
+     * The route for one day, in driving order.
+     */
+    private function routeFor(string $day): Collection
+    {
+        return $this->routeQuery()->where('delivery_day', $day)->get();
+    }
+
+    /**
+     * Every day's route at once, so the whole week can be read on one page.
+     * Days without customers are included as an empty group, and a day that is
+     * no longer offered but still on a customer is appended rather than hidden.
+     *
+     * @return list<array{day: string, customers: list<mixed>}>
+     */
+    private function routeForAllDays(): array
+    {
+        $customers = $this->routeQuery()->whereNotNull('delivery_day')->get();
+
+        $days = array_merge(
+            self::DAYS,
+            array_values(array_diff($customers->pluck('delivery_day')->unique()->all(), self::DAYS)),
+        );
+
+        return array_map(fn (string $day): array => [
+            'day' => $day,
+            'customers' => $customers->where('delivery_day', $day)->values()->all(),
+        ], $days);
+    }
+
+    /**
+     * Customers in driving order: by route position, the ones without a
+     * position last, then alphabetically.
+     */
+    private function routeQuery(): Builder
+    {
+        return Customer::approved()
+            ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
+            ->select(['id', 'company_name', 'street_name', 'house_number', 'city', 'route_order', 'delivery_day']);
     }
 
     public function updateOrder(Request $request): RedirectResponse

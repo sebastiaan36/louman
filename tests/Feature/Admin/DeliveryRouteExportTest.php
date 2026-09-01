@@ -152,6 +152,74 @@ test('een klant die nog op zaterdag staat verdwijnt niet uit de export van alle 
     expect($csv)->toContain('Weekendklant BV');
 });
 
+test('de rijroute-pagina toont standaard een enkele dag', function () {
+    $this->actingAs(adminUser())
+        ->get('/admin/delivery-route')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('selectedDay', 'maandag')
+            ->where('dayGroups', null)
+            ->has('customers')
+        );
+});
+
+test('de rijroute-pagina kan alle dagen tegelijk tonen', function () {
+    $admin = adminUser();
+
+    Customer::factory()->approved()->create(['company_name' => 'Maandagklant', 'delivery_day' => 'maandag', 'route_order' => 1]);
+    Customer::factory()->approved()->create(['company_name' => 'Vrijdagklant', 'delivery_day' => 'vrijdag', 'route_order' => 1]);
+
+    $this->actingAs($admin)
+        ->get('/admin/delivery-route?day=all')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/DeliveryRoute')
+            ->where('selectedDay', 'all')
+            ->where('customers', [])
+            ->has('dayGroups', count(DeliveryRouteController::DAYS))
+            ->where('dayGroups.0.day', 'maandag')
+            ->where('dayGroups.0.customers.0.company_name', 'Maandagklant')
+        );
+});
+
+test('alle dagen toont ook een dag zonder klanten', function () {
+    $this->actingAs(adminUser())
+        ->get('/admin/delivery-route?day=all')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('dayGroups.0.day', 'maandag')
+            ->where('dayGroups.0.customers', [])
+        );
+});
+
+test('alle dagen laat een klant met een vervallen bezorgdag niet weg', function () {
+    Customer::factory()->approved()->create([
+        'company_name' => 'Weekendklant BV',
+        'delivery_day' => 'zaterdag',
+        'route_order' => 1,
+    ]);
+
+    $response = $this->actingAs(adminUser())->get('/admin/delivery-route?day=all')->assertOk();
+
+    $groups = collect($response->viewData('page')['props']['dayGroups']);
+    $weekend = $groups->firstWhere('day', 'zaterdag');
+
+    expect($weekend)->not->toBeNull()
+        ->and($weekend['customers'][0]['company_name'])->toBe('Weekendklant BV');
+});
+
+test('de volgorde per dag klopt in de weergave van alle dagen', function () {
+    Customer::factory()->approved()->create(['company_name' => 'Tweede', 'delivery_day' => 'dinsdag', 'route_order' => 2]);
+    Customer::factory()->approved()->create(['company_name' => 'Eerste', 'delivery_day' => 'dinsdag', 'route_order' => 1]);
+
+    $response = $this->actingAs(adminUser())->get('/admin/delivery-route?day=all')->assertOk();
+
+    $groups = collect($response->viewData('page')['props']['dayGroups']);
+    $namen = collect($groups->firstWhere('day', 'dinsdag')['customers'])->pluck('company_name');
+
+    expect($namen->all())->toBe(['Eerste', 'Tweede']);
+});
+
 test('niet-admin heeft geen toegang tot de rijroute-export', function () {
     $customer = approvedCustomer();
 
