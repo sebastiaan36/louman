@@ -17,6 +17,7 @@ use App\Support\DeliveryDay;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -290,7 +291,15 @@ class CustomerApprovalController extends Controller
             'delivery_day' => $validated['delivery_day'],
         ]);
 
-        $customer->user?->notify(new CustomerApproved);
+        // Direct verzenden; een mailstoring mag de goedkeuring niet terugdraaien.
+        try {
+            $customer->user?->notify(new CustomerApproved);
+        } catch (\Exception $e) {
+            Log::error('Failed to send customer approved notification', [
+                'customer_id' => $customer->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         app(WebhookDispatcher::class)->customerApproved($customer);
 

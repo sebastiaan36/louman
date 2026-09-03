@@ -64,7 +64,7 @@ it('writes the status back and notifies the customer when an order is completed'
 
     expect($order->fresh()->status)->toBe('completed');
 
-    Mail::assertQueued(OrderShipped::class, fn (OrderShipped $mail) => $mail->hasTo('pakbon@klant.nl'));
+    Mail::assertSent(OrderShipped::class, fn (OrderShipped $mail) => $mail->hasTo('pakbon@klant.nl'));
 });
 
 it('does not resend the notification when the status is unchanged', function () {
@@ -76,7 +76,7 @@ it('does not resend the notification when the status is unchanged', function () 
         'status' => 'completed',
     ], apiHeaders([ApiAbility::OrdersWrite]))->assertOk();
 
-    Mail::assertNothingQueued();
+    Mail::assertNothingSent();
 });
 
 it('rejects an unknown status', function () {

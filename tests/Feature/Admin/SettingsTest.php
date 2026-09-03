@@ -132,7 +132,7 @@ test('een geannuleerde bestelling stuurt een mail naar het ingestelde adres', fu
         ->patch("/admin/orders/{$order->id}/status", ['status' => 'cancelled'])
         ->assertRedirect();
 
-    Mail::assertQueued(OrderCancelled::class, fn ($mail) => $mail->hasTo('annuleringen@zaak.nl'));
+    Mail::assertSent(OrderCancelled::class, fn ($mail) => $mail->hasTo('annuleringen@zaak.nl'));
 });
 
 test('zonder ingesteld annuleringsadres wordt er geen annuleringsmail verstuurd', function () {

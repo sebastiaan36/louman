@@ -13,6 +13,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -64,13 +65,24 @@ class CustomerRegisterController extends Controller
 
         app(WebhookDispatcher::class)->customerRegistered($user->customer);
 
-        $registrationEmail = Setting::get(Setting::MAIL_REGISTRATION_NOTIFICATION);
-        if ($registrationEmail) {
-            Notification::route('mail', $registrationEmail)
-                ->notify(new CustomerRegistered($user->customer));
-        } else {
-            $admins = User::where('role', 'admin')->get();
-            Notification::send($admins, new CustomerRegistered($user->customer));
+        // De melding gaat direct de deur uit, niet via een wachtrij. Een storing
+        // bij de mailserver mag de registratie daarom niet laten mislukken: de
+        // klant is op dit punt al aangemaakt.
+        try {
+            $registrationEmail = Setting::get(Setting::MAIL_REGISTRATION_NOTIFICATION);
+
+            if ($registrationEmail) {
+                Notification::route('mail', $registrationEmail)
+                    ->notify(new CustomerRegistered($user->customer));
+            } else {
+                $admins = User::where('role', 'admin')->get();
+                Notification::send($admins, new CustomerRegistered($user->customer));
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send new registration notification', [
+                'customer_id' => $user->customer->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         Auth::login($user);
