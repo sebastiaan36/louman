@@ -32,13 +32,29 @@ test('beide wachtwoordvelden hebben het oogje', function (string $page) use ($re
         ->and($source)->toContain('id="password_confirmation"');
 })->with(['CustomerRegister.vue', 'AcceptInvitation.vue']);
 
-test('geen enkel inlogscherm bouwt de knop nog zelf na', function () use ($resources) {
+test('geen enkel scherm bouwt de knop nog zelf na', function () use ($resources) {
     $offenders = [];
 
-    foreach (glob("{$resources}/js/pages/auth/*.vue") as $file) {
-        $source = file_get_contents($file);
+    foreach (glob("{$resources}/js/pages/**/*.vue") as $file) {
+        if (str_contains(file_get_contents($file), 'showPassword')) {
+            $offenders[] = basename($file);
+        }
+    }
 
-        if (str_contains($source, 'showPassword')) {
+    expect($offenders)->toBe([]);
+});
+
+test('elk wachtwoordveld in de front-end gebruikt het gedeelde component', function () use ($resources) {
+    $offenders = [];
+
+    $files = array_merge(
+        glob("{$resources}/js/pages/**/*.vue"),
+        glob("{$resources}/js/components/*.vue"),
+    );
+
+    foreach ($files as $file) {
+        // Een kaal type="password" betekent dat het veld het oogje mist.
+        if (str_contains(file_get_contents($file), 'type="password"')) {
             $offenders[] = basename($file);
         }
     }

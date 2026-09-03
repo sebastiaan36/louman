@@ -3,6 +3,7 @@ import { Form, Head, router } from '@inertiajs/vue3';
 import { Plus, ShieldCheck, Trash2 } from 'lucide-vue-next';
 import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -169,9 +170,8 @@ const confirmDelete = () => {
 
                     <div class="grid gap-2">
                         <Label for="password">Wachtwoord *</Label>
-                        <Input
+                        <PasswordInput
                             id="password"
-                            type="password"
                             required
                             autocomplete="new-password"
                             name="password"
@@ -185,9 +185,8 @@ const confirmDelete = () => {
 
                     <div class="grid gap-2">
                         <Label for="password_confirmation">Bevestig wachtwoord *</Label>
-                        <Input
+                        <PasswordInput
                             id="password_confirmation"
-                            type="password"
                             required
                             autocomplete="new-password"
                             name="password_confirmation"
