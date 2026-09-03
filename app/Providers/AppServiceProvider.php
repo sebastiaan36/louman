@@ -127,8 +127,11 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
+        // Minimaal 8 tekens: kort genoeg om te onthouden, en de overige eisen
+        // vangen het verschil op. Vooral uncompromised() weegt zwaar, want dat
+        // weigert wachtwoorden die al in een datalek zijn opgedoken.
         Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
+            ? Password::min(8)
                 ->mixedCase()
                 ->letters()
                 ->numbers()

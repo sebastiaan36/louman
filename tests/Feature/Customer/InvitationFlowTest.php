@@ -82,7 +82,7 @@ test('accept faalt bij wachtwoord-bevestiging mismatch', function () {
 
 test('accept toont nederlandse melding bij te kort wachtwoord onder strikte regels', function () {
     Password::defaults(
-        fn () => Password::min(12)->mixedCase()->numbers()->symbols()
+        fn () => Password::min(8)->mixedCase()->numbers()->symbols()
     );
 
     [, $rawToken] = createInvitation();
@@ -91,13 +91,13 @@ test('accept toont nederlandse melding bij te kort wachtwoord onder strikte rege
         'password' => 'Kort1!',
         'password_confirmation' => 'Kort1!',
     ])->assertSessionHasErrors([
-        'password' => 'Het wachtwoord moet minimaal 12 tekens bevatten.',
+        'password' => 'Het wachtwoord moet minimaal 8 tekens bevatten.',
     ]);
 });
 
 test('accept toont nederlandse melding bij ontbrekend symbool onder strikte regels', function () {
     Password::defaults(
-        fn () => Password::min(12)->mixedCase()->numbers()->symbols()
+        fn () => Password::min(8)->mixedCase()->numbers()->symbols()
     );
 
     [, $rawToken] = createInvitation();

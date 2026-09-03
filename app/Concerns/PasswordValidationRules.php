@@ -39,7 +39,7 @@ trait PasswordValidationRules
         return [
             'password.required' => 'Vul een wachtwoord in.',
             'password.confirmed' => 'De wachtwoordbevestiging komt niet overeen.',
-            'password.min' => 'Het wachtwoord moet minimaal 12 tekens bevatten.',
+            'password.min' => 'Het wachtwoord moet minimaal 8 tekens bevatten.',
             'password.mixed' => 'Gebruik zowel hoofdletters als kleine letters.',
             'password.letters' => 'Gebruik minimaal één letter.',
             'password.numbers' => 'Gebruik minimaal één cijfer.',

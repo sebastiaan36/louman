@@ -45,7 +45,7 @@ defineProps<{
                     autofocus
                 />
                 <p class="text-xs text-muted-foreground">
-                    Minimaal 12 tekens, met hoofd- en kleine letters, een cijfer en een symbool.
+                    Minimaal 8 tekens, met hoofd- en kleine letters, een cijfer en een symbool.
                 </p>
                 <InputError :message="errors.password" />
             </div>
