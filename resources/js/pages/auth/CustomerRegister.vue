@@ -2,6 +2,7 @@
 import { Form, Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -227,9 +228,8 @@ const confirmWithoutMap = () => {
 
                     <div class="grid gap-2">
                         <Label for="password">Wachtwoord</Label>
-                        <Input
+                        <PasswordInput
                             id="password"
-                            type="password"
                             required
                             autocomplete="new-password"
                             name="password"
@@ -240,9 +240,8 @@ const confirmWithoutMap = () => {
 
                     <div class="grid gap-2">
                         <Label for="password_confirmation">Bevestig wachtwoord</Label>
-                        <Input
+                        <PasswordInput
                             id="password_confirmation"
-                            type="password"
                             required
                             autocomplete="new-password"
                             name="password_confirmation"
