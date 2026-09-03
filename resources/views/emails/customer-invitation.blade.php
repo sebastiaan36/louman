@@ -88,8 +88,8 @@
             <img src="{{ asset('storage/img/Logo.png') }}" alt="Slagerij Louman" style="max-height:80px; max-width:240px;">
         </div>
         <div class="header">
-            <h1>Welkom bij Slagerij Louman</h1>
-            <p>Maak uw account aan voor het B2B klantportaal</p>
+            <h1>Nieuw bij Slagerij Louman</h1>
+            <p>Uw bestellingen voortaan eenvoudig online doorgeven</p>
         </div>
 
         <div class="content">

@@ -18,6 +18,15 @@ function invitationMailHtml(): string
     return (new CustomerInvitation($invitation, 'ruwe-token'))->render();
 }
 
+test('de uitnodigingsmail opent met de nieuwe kop', function () {
+    $html = invitationMailHtml();
+
+    expect($html)
+        ->toContain('Nieuw bij Slagerij Louman')
+        ->toContain('Uw bestellingen voortaan eenvoudig online doorgeven')
+        ->not->toContain('Welkom bij Slagerij Louman');
+});
+
 test('de uitnodigingsmail bevat de aankondiging van de nieuwe website en het portaal', function () {
     $html = invitationMailHtml();
 
