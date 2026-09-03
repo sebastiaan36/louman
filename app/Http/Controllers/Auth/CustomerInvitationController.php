@@ -6,6 +6,8 @@ use App\Concerns\PasswordValidationRules;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerInvitation;
 use App\Models\User;
+use App\Notifications\CustomerAcceptedInvitation;
+use App\Support\AdminNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,6 +61,8 @@ class CustomerInvitationController extends Controller
 
             return $user;
         });
+
+        AdminNotifier::send(new CustomerAcceptedInvitation($invitation->customer->fresh()));
 
         Auth::login($user);
 
