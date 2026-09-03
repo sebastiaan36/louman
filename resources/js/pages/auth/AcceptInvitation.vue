@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,9 +36,8 @@ defineProps<{
 
             <div class="grid gap-2">
                 <Label for="password">Wachtwoord</Label>
-                <Input
+                <PasswordInput
                     id="password"
-                    type="password"
                     required
                     autocomplete="new-password"
                     name="password"
@@ -52,9 +52,8 @@ defineProps<{
 
             <div class="grid gap-2">
                 <Label for="password_confirmation">Bevestig wachtwoord</Label>
-                <Input
+                <PasswordInput
                     id="password_confirmation"
-                    type="password"
                     required
                     autocomplete="new-password"
                     name="password_confirmation"

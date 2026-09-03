@@ -16,21 +16,21 @@ test('het gedeelde wachtwoordveld heeft een knop om het wachtwoord te tonen', fu
         ->toContain('inheritAttrs: false');
 });
 
-test('inloggen en registreren gebruiken hetzelfde wachtwoordveld', function (string $page) use ($resources) {
+test('de schermen waar een klant een wachtwoord kiest gebruiken hetzelfde veld', function (string $page) use ($resources) {
     $source = file_get_contents("{$resources}/js/pages/auth/{$page}");
 
     expect($source)
         ->toContain("import PasswordInput from '@/components/PasswordInput.vue';")
         ->toContain('<PasswordInput');
-})->with(['Login.vue', 'CustomerRegister.vue']);
+})->with(['Login.vue', 'CustomerRegister.vue', 'AcceptInvitation.vue']);
 
-test('beide wachtwoordvelden op het registratieformulier hebben het oogje', function () use ($resources) {
-    $source = file_get_contents("{$resources}/js/pages/auth/CustomerRegister.vue");
+test('beide wachtwoordvelden hebben het oogje', function (string $page) use ($resources) {
+    $source = file_get_contents("{$resources}/js/pages/auth/{$page}");
 
     expect(substr_count($source, '<PasswordInput'))->toBe(2)
         ->and($source)->toContain('id="password"')
         ->and($source)->toContain('id="password_confirmation"');
-});
+})->with(['CustomerRegister.vue', 'AcceptInvitation.vue']);
 
 test('geen enkel inlogscherm bouwt de knop nog zelf na', function () use ($resources) {
     $offenders = [];
