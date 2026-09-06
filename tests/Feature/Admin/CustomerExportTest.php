@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Customer;
+use Illuminate\Http\UploadedFile;
 
 function customerCsv($response): string
 {
@@ -49,7 +50,7 @@ test('de import negeert de klantnummer-kolom', function () {
     ]);
 
     $csv = "id;customer_number;company_name\n{$customer->id};999;Nieuwe Naam\n";
-    $file = \Illuminate\Http\UploadedFile::fake()->createWithContent('klanten.csv', $csv);
+    $file = UploadedFile::fake()->createWithContent('klanten.csv', $csv);
 
     $this->actingAs(adminUser())
         ->post('/admin/customers/import', ['csv_file' => $file])
