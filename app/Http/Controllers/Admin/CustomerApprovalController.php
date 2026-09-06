@@ -582,7 +582,7 @@ class CustomerApprovalController extends Controller
             fwrite($handle, "\xEF\xBB\xBF");
 
             fputcsv($handle, [
-                'id', 'company_name', 'contact_person', 'email', 'phone_number', 'mobile_number',
+                'id', 'customer_number', 'company_name', 'contact_person', 'email', 'phone_number', 'mobile_number',
                 'street_name', 'house_number', 'postal_code', 'city',
                 'kvk_number', 'bank_account', 'vat_number', 'packing_slip_email',
                 'customer_category', 'discount_percentage', 'delivery_day',
@@ -592,6 +592,7 @@ class CustomerApprovalController extends Controller
             foreach ($customers as $customer) {
                 fputcsv($handle, [
                     $customer->id,
+                    $customer->customer_number,
                     $customer->company_name,
                     $customer->contact_person,
                     $customer->user?->email,
