@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\AddCcToOutgoingMail;
+use App\Listeners\SetReplyToOnOutgoingMail;
 use App\Models\CartItem;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
@@ -45,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         Event::listen(MessageSending::class, AddCcToOutgoingMail::class);
+        Event::listen(MessageSending::class, SetReplyToOnOutgoingMail::class);
         Event::listen(Login::class, fn (Login $event) => $this->limitRememberCookieLifetime($event));
     }
 

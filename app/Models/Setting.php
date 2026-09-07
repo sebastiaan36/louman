@@ -17,6 +17,8 @@ class Setting extends Model
 
     public const MAIL_CC = 'mail_cc';
 
+    public const MAIL_REPLY_TO = 'mail_reply_to';
+
     /**
      * Cache key holding all settings as a key => value map.
      */

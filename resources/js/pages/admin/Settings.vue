@@ -14,6 +14,7 @@ interface Settings {
     mail_registration_notification: string | null;
     mail_cancellation_notification: string | null;
     mail_cc: string | null;
+    mail_reply_to: string | null;
 }
 
 const props = defineProps<{
@@ -30,6 +31,7 @@ const form = useForm({
     mail_registration_notification: props.settings.mail_registration_notification ?? '',
     mail_cancellation_notification: props.settings.mail_cancellation_notification ?? '',
     mail_cc: props.settings.mail_cc ?? '',
+    mail_reply_to: props.settings.mail_reply_to ?? '',
 });
 
 const submit = () => {
@@ -121,6 +123,21 @@ const submit = () => {
                             Dit adres ontvangt een kopie (CC) van alle uitgaande mails.
                         </p>
                         <InputError :message="form.errors.mail_cc" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="mail_reply_to">Antwoord-aan adres</Label>
+                        <Input
+                            id="mail_reply_to"
+                            v-model="form.mail_reply_to"
+                            type="email"
+                            placeholder="Leeg = geen antwoord-aan"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Antwoordt een klant op een mail van het portaal, dan komt het antwoord op
+                            dit adres binnen in plaats van bij de afzender.
+                        </p>
+                        <InputError :message="form.errors.mail_reply_to" />
                     </div>
                 </div>
 
