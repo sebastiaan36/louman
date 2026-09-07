@@ -26,3 +26,24 @@ test('de omschrijving houdt de marge aan de rechterkant', function () {
     // eerder op de aantalkolom stond.
     expect($css)->toContain('table.product .name {');
 });
+
+test('het klantnummer staat dikgedrukt in het overzicht', function () {
+    $kaart = file_get_contents(dirname(__DIR__, 3).'/resources/views/pdf/partials/customer-card.blade.php');
+
+    expect($kaart)->toContain("'Klantnr. <strong>'.e(\$customer['number']).'</strong>'");
+});
+
+test('het aantal is dikgedrukt en op volle zwartte', function () {
+    $css = file_get_contents(dirname(__DIR__, 3).'/resources/views/pdf/partials/overview-css.blade.php');
+
+    expect($css)->toMatch('/table\.product \.qty \{[^}]*font-weight: bold;[^}]*color: #000;/s');
+});
+
+test('de lijnen in het overzicht zijn dikker dan een pixel', function () {
+    $css = file_get_contents(dirname(__DIR__, 3).'/resources/views/pdf/partials/overview-css.blade.php');
+
+    expect($css)
+        ->toContain('border: 2px solid')
+        // Geen enkele lijn staat nog op 1px.
+        ->not->toMatch('/border(-top|-bottom)?: 1px solid/');
+});

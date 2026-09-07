@@ -182,6 +182,31 @@ const syncPriceFromPricePerKg = (event: Event) => {
     }
 };
 
+// Wijzigt het gewicht, dan klopt de stuksprijs niet meer. De kiloprijs is de
+// afgesproken prijs en blijft staan; de stuksprijs wordt opnieuw berekend.
+// Staat er alleen een stuksprijs, dan volgt de kiloprijs daaruit.
+watch(() => form.value.weight, () => {
+    const kg = weightInKg();
+
+    if (! kg || kg <= 0) {
+        return;
+    }
+
+    const perKg = parseFloat((form.value.price_per_kg || '').toString().replace(',', '.'));
+
+    if (! Number.isNaN(perKg) && perKg > 0) {
+        form.value.price = toMoney(perKg * kg);
+
+        return;
+    }
+
+    const price = parseFloat((form.value.price || '').toString().replace(',', '.'));
+
+    if (! Number.isNaN(price) && price > 0) {
+        form.value.price_per_kg = toMoney(price / kg);
+    }
+});
+
 const toggleVisibleCustomer = (id: number, checked: boolean | 'indeterminate') => {
     if (checked === true) {
         if (!form.value.visible_customer_ids.includes(id)) {

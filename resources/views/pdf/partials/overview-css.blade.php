@@ -42,7 +42,7 @@ body {
    is the vertical gap used both when measuring and when laying out columns. */
 table.card {
     width: 100%;
-    border: 1.5px solid #bbb;
+    border: 2px solid #999;
     background-color: #ffffff;
     /* separate (not collapse): mPDF drops the outer border of a table that
        collapses its borders when it contains a nested table (the products). */
@@ -66,7 +66,7 @@ table.card-header {
     margin-bottom: 4px;
     /* Border on the TABLE, not the cells: on some PHP/mPDF builds cell (td)
        borders are not drawn while table borders are (like the outer card box). */
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1.5px solid #bbb;
 }
 
 table.card-header > tbody > tr > td {
@@ -122,7 +122,7 @@ table.product {
 }
 
 table.product.product-divider {
-    border-top: 1px solid #e5e5e5;
+    border-top: 1.5px solid #d5d5d5;
 }
 
 table.product td {
@@ -147,6 +147,8 @@ table.product .weight {
 table.product .qty {
     text-align: right;
     font-weight: bold;
+    color: #000;
+    font-size: 8pt;
     width: 33px;
     padding-left: 4px;
     padding-right: 6px;
@@ -165,7 +167,7 @@ table.notes {
     border-spacing: 0;
     margin-top: 3px;
     /* Border on the table, not the cell (see card-header). */
-    border-top: 1px solid #ddd;
+    border-top: 1.5px solid #bbb;
 }
 
 table.notes td {

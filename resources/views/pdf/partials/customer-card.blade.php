@@ -10,7 +10,7 @@
                         @php
                             $contactParts = [];
                             if (! empty($customer['number'])) {
-                                $contactParts[] = 'Klantnr. '.e($customer['number']);
+                                $contactParts[] = 'Klantnr. <strong>'.e($customer['number']).'</strong>';
                             }
                             if (! empty($customer['phone_number'])) {
                                 $contactParts[] = 'Tel. '.e($customer['phone_number']);
