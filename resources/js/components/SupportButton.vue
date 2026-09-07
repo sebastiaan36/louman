@@ -76,7 +76,7 @@ const submit = () => {
             <div
                 v-if="open"
                 role="dialog"
-                aria-label="Stel een vraag"
+                aria-label="Stel uw vraag"
                 class="relative w-[min(22rem,calc(100vw-3rem))] rounded-xl border bg-background p-4 shadow-xl"
             >
                 <!-- Het puntje van de ballon, uitgelijnd op het midden van de knop. -->
@@ -87,7 +87,7 @@ const submit = () => {
 
                 <div class="space-y-3">
                     <div>
-                        <h2 class="font-semibold">Stel een vraag</h2>
+                        <h2 class="font-semibold">Stel uw vraag</h2>
                         <p class="text-xs text-muted-foreground">
                             We nemen zo snel mogelijk contact met u op.
                         </p>
@@ -131,15 +131,14 @@ const submit = () => {
 
         <Button
             type="button"
-            size="icon-lg"
-            class="rounded-full shadow-lg"
+            size="lg"
+            class="rounded-full px-5 shadow-lg"
             :aria-expanded="open"
-            :aria-label="open ? 'Sluit het vraagformulier' : 'Stel een vraag'"
-            :title="open ? 'Sluiten' : 'Stel een vraag'"
             @click="toggle"
         >
-            <X v-if="open" class="h-6 w-6" />
-            <HelpCircle v-else class="h-6 w-6" />
+            <X v-if="open" class="h-5 w-5" />
+            <HelpCircle v-else class="h-5 w-5" />
+            {{ open ? 'Sluiten' : 'Stel uw vraag' }}
         </Button>
     </div>
 </template>

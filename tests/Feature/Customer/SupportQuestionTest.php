@@ -153,3 +153,9 @@ test('de ballon past op een smal scherm', function () {
     // Breedte loopt mee met het scherm, zodat hij op mobiel niet buiten beeld valt.
     expect($component)->toContain('w-[min(22rem,calc(100vw-3rem))]');
 });
+
+test('de knop draagt de tekst Stel uw vraag', function () {
+    $component = file_get_contents(dirname(__DIR__, 3).'/resources/js/components/SupportButton.vue');
+
+    expect($component)->toContain("open ? 'Sluiten' : 'Stel uw vraag'");
+});
