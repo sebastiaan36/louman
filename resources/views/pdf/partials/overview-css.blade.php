@@ -142,11 +142,18 @@ table.product .weight {
     color: #999;
 }
 
+/* Het aantal staat tussen artikelnummer en omschrijving; rechts uitgelijnd
+   zodat de cijfers onder elkaar blijven staan. */
 table.product .qty {
     text-align: right;
     font-weight: bold;
     width: 33px;
     padding-left: 4px;
+    padding-right: 6px;
+}
+
+/* De omschrijving is de laatste kolom en houdt de marge aan de rechterkant. */
+table.product .name {
     padding-right: 7px;
 }
 

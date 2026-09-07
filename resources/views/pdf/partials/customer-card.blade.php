@@ -33,8 +33,8 @@
                     <table class="product @unless($loop->first) product-divider @endunless">
                         <tr>
                             <td class="art">{{ $product['article_number'] }}</td>
-                            <td class="name">{{ $product['title'] }}@if(! empty($product['weight'])) <span class="weight">— {{ $product['weight'] }}</span>@endif</td>
                             <td class="qty">{{ $product['quantity'] }}</td>
+                            <td class="name">{{ $product['title'] }}@if(! empty($product['weight'])) <span class="weight">— {{ $product['weight'] }}</span>@endif</td>
                         </tr>
                     </table>
                 @endforeach

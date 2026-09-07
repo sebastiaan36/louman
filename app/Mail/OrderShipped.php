@@ -21,7 +21,7 @@ class OrderShipped extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bestelling #'.$this->order->id.' is verzonden - Slagerij Louman',
+            subject: 'Bedankt voor uw bestelling #'.$this->order->id.' - Slagerij Louman',
         );
     }
 

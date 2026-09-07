@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bestelling #{{ $order->id }} is verzonden</title>
+    <title>Bedankt voor uw bestelling #{{ $order->id }}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -184,8 +184,8 @@
             </div>
         @endif
         <div class="header">
-            <h1>Uw bestelling is verzonden!</h1>
-            <p>Bestelling #{{ $order->id }} is onderweg naar u.</p>
+            <h1>Bedankt voor uw bestelling</h1>
+            <p>Bestelling #{{ $order->id }}</p>
         </div>
 
         <div class="content">
@@ -193,7 +193,7 @@
                 Beste {{ $order->customer->contact_person }},
             </p>
             <p>
-                Goed nieuws! Uw bestelling bij <strong>Worstmakerij T.F.M. Louman</strong> is verzonden.
+                Bedankt voor uw bestelling. Wij leveren uw bestelling op de met u afgesproken leverdag.
                 Hieronder vindt u een overzicht van uw bestelling.
             </p>
 
