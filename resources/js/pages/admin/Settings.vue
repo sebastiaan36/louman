@@ -12,6 +12,7 @@ import { type BreadcrumbItem } from '@/types';
 interface Settings {
     mail_order_notification: string | null;
     mail_registration_notification: string | null;
+    mail_registration_cc: string | null;
     mail_cancellation_notification: string | null;
     mail_cc: string | null;
     mail_reply_to: string | null;
@@ -29,6 +30,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const form = useForm({
     mail_order_notification: props.settings.mail_order_notification ?? '',
     mail_registration_notification: props.settings.mail_registration_notification ?? '',
+    mail_registration_cc: props.settings.mail_registration_cc ?? '',
     mail_cancellation_notification: props.settings.mail_cancellation_notification ?? '',
     mail_cc: props.settings.mail_cc ?? '',
     mail_reply_to: props.settings.mail_reply_to ?? '',
@@ -91,6 +93,21 @@ const submit = () => {
                             Adres dat een melding krijgt bij een nieuwe klantregistratie. Laat leeg om alle beheerders te mailen.
                         </p>
                         <InputError :message="form.errors.mail_registration_notification" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="mail_registration_cc">Nieuwe registratie — CC</Label>
+                        <Input
+                            id="mail_registration_cc"
+                            v-model="form.mail_registration_cc"
+                            type="email"
+                            placeholder="Leeg = geen CC"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Adres dat een kopie krijgt bij een nieuwe registratie en zodra een genodigde
+                            klant zijn account aanmaakt. Alleen bij die twee momenten, niet bij alle mails.
+                        </p>
+                        <InputError :message="form.errors.mail_registration_cc" />
                     </div>
 
                     <div class="grid gap-2">

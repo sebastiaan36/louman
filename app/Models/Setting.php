@@ -13,6 +13,8 @@ class Setting extends Model
 
     public const MAIL_REGISTRATION_NOTIFICATION = 'mail_registration_notification';
 
+    public const MAIL_REGISTRATION_CC = 'mail_registration_cc';
+
     public const MAIL_CANCELLATION_NOTIFICATION = 'mail_cancellation_notification';
 
     public const MAIL_CC = 'mail_cc';

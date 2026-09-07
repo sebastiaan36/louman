@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Customer;
+use App\Notifications\Concerns\CopiesRegistrationCc;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -14,6 +15,8 @@ use Illuminate\Notifications\Notification;
  */
 class CustomerAcceptedInvitation extends Notification
 {
+    use CopiesRegistrationCc;
+
     public function __construct(
         public Customer $customer
     ) {}
@@ -33,7 +36,7 @@ class CustomerAcceptedInvitation extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        $message = (new MailMessage)
             ->subject('Klant heeft account aangemaakt')
             ->greeting('Account aangemaakt')
             ->line("{$this->customer->company_name} heeft via de uitnodigingslink een wachtwoord ingesteld en kan nu inloggen in het klantportaal.")
@@ -41,6 +44,8 @@ class CustomerAcceptedInvitation extends Notification
             ->line('**E-mailadres:** '.($this->customer->user?->email ?? 'onbekend'))
             ->action('Bekijk de klant', route('admin.customers.show', $this->customer))
             ->line('Er is verder niets te doen; deze klant was al goedgekeurd.');
+
+        return $this->withRegistrationCc($message);
     }
 
     /**

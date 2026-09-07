@@ -25,6 +25,7 @@ class UpdateSettingsRequest extends FormRequest
         return [
             'mail_order_notification' => ['nullable', 'email', 'max:255'],
             'mail_registration_notification' => ['nullable', 'email', 'max:255'],
+            'mail_registration_cc' => ['nullable', 'email', 'max:255'],
             'mail_cancellation_notification' => ['nullable', 'email', 'max:255'],
             'mail_cc' => ['nullable', 'email', 'max:255'],
             'mail_reply_to' => ['nullable', 'email', 'max:255'],
@@ -41,6 +42,7 @@ class UpdateSettingsRequest extends FormRequest
         return [
             'mail_order_notification.email' => 'Voer een geldig e-mailadres in voor de bestelnotificatie.',
             'mail_registration_notification.email' => 'Voer een geldig e-mailadres in voor de registratienotificatie.',
+            'mail_registration_cc.email' => 'Voer een geldig CC e-mailadres in voor de registratienotificatie.',
             'mail_cancellation_notification.email' => 'Voer een geldig e-mailadres in voor de annuleringsnotificatie.',
             'mail_cc.email' => 'Voer een geldig CC e-mailadres in.',
             'mail_reply_to.email' => 'Voer een geldig antwoord-aan e-mailadres in.',

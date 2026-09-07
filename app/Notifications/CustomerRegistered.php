@@ -3,12 +3,14 @@
 namespace App\Notifications;
 
 use App\Models\Customer;
+use App\Notifications\Concerns\CopiesRegistrationCc;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class CustomerRegistered extends Notification
 {
+    use CopiesRegistrationCc;
     use Queueable;
 
     /**
@@ -35,7 +37,7 @@ class CustomerRegistered extends Notification
     {
         $showOnMap = $this->customer->show_on_map ? 'Ja' : 'Nee';
 
-        return (new MailMessage)
+        $message = (new MailMessage)
             ->subject('Nieuwe Klantregistratie')
             ->greeting('Nieuwe klant geregistreerd')
             ->line('Er heeft zich een nieuwe klant geregistreerd bij het B2B portaal.')
@@ -46,6 +48,8 @@ class CustomerRegistered extends Notification
             ->line("**Toon op kaart (louman-jordaan.nl):** {$showOnMap}")
             ->action('Bekijk en keur goed', route('admin.customers.pending'))
             ->line('Klik op de knop hierboven om de klant goed te keuren in het admin paneel.');
+
+        return $this->withRegistrationCc($message);
     }
 
     /**
