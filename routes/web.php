@@ -124,6 +124,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.customers.invite.resend');
     Route::patch('/customers/{customer}/email', [CustomerApprovalController::class, 'updateEmail'])
         ->name('admin.customers.email.update');
+    Route::post('/customers/{customer}/password-reset', [CustomerApprovalController::class, 'sendPasswordReset'])
+        ->name('admin.customers.password-reset');
     Route::post('/customers/{customer}/deactivate', [CustomerApprovalController::class, 'deactivate'])
         ->name('admin.customers.deactivate');
     Route::post('/customers/{customer}/activate', [CustomerApprovalController::class, 'activate'])

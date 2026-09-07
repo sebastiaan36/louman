@@ -102,6 +102,53 @@ class Customer extends Model
     }
 
     /**
+     * The fields a customer has to fill in before they can use the portal,
+     * with the label shown to an administrator.
+     *
+     * A customer created from the admin screens only has a company name; the
+     * rest is filled in by the customer on the "profiel aanvullen" form after
+     * accepting their invitation.
+     *
+     * @var array<string, string>
+     */
+    public const PROFILE_FIELDS = [
+        'contact_person' => 'Contactpersoon',
+        'phone_number' => 'Telefoonnummer',
+        'street_name' => 'Straatnaam',
+        'house_number' => 'Huisnummer',
+        'postal_code' => 'Postcode',
+        'city' => 'Plaats',
+        'kvk_number' => 'KvK-nummer',
+        'bank_account' => 'Rekeningnummer',
+        'vat_number' => 'BTW-nummer',
+    ];
+
+    /**
+     * The labels of the profile fields this customer has not filled in yet.
+     *
+     * @return list<string>
+     */
+    public function missingProfileFields(): array
+    {
+        return array_values(array_filter(
+            array_map(
+                fn (string $label, string $field): ?string => blank($this->{$field}) ? $label : null,
+                self::PROFILE_FIELDS,
+                array_keys(self::PROFILE_FIELDS),
+            ),
+        ));
+    }
+
+    /**
+     * Determine if the customer can use the portal, or is still stuck on the
+     * profile form.
+     */
+    public function hasCompleteProfile(): bool
+    {
+        return $this->missingProfileFields() === [];
+    }
+
+    /**
      * Get the account invitations sent to this customer, newest first.
      */
     public function invitations(): HasMany

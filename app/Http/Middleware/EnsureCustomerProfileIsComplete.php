@@ -8,18 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureCustomerProfileIsComplete
 {
-    private const REQUIRED_FIELDS = [
-        'contact_person',
-        'phone_number',
-        'street_name',
-        'house_number',
-        'postal_code',
-        'city',
-        'kvk_number',
-        'bank_account',
-        'vat_number',
-    ];
-
     /**
      * Handle an incoming request.
      *
@@ -33,10 +21,8 @@ class EnsureCustomerProfileIsComplete
             return $next($request);
         }
 
-        foreach (self::REQUIRED_FIELDS as $field) {
-            if (empty($customer->{$field})) {
-                return to_route('customer.complete-profile.edit');
-            }
+        if (! $customer->hasCompleteProfile()) {
+            return to_route('customer.complete-profile.edit');
         }
 
         return $next($request);

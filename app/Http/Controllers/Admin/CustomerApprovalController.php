@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -214,6 +215,36 @@ class CustomerApprovalController extends Controller
     }
 
     /**
+     * Send the customer a password reset link.
+     *
+     * For a customer who has an account but cannot get in — the invitation is
+     * of no use then, there is nothing left to accept.
+     */
+    public function sendPasswordReset(Customer $customer): RedirectResponse
+    {
+        $user = $customer->user;
+
+        if (! $user) {
+            return back()->with('error', 'Deze klant heeft nog geen account. Stuur eerst een uitnodiging.');
+        }
+
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            Log::error('Failed to send password reset from admin', [
+                'customer_id' => $customer->id,
+                'status' => $status,
+            ]);
+
+            return back()->with('error', 'Het versturen van de herstelmail is niet gelukt. Probeer het later opnieuw.');
+        }
+
+        AuditLog::record('customer.password_reset_sent', "Herstelmail verstuurd naar {$user->email} voor {$customer->company_name}", $customer);
+
+        return back()->with('success', "Herstelmail verstuurd naar {$user->email}.");
+    }
+
+    /**
      * The outstanding invitation as shown on the customer page, or null when
      * the customer has an account or was never invited.
      *
@@ -302,6 +333,7 @@ class CustomerApprovalController extends Controller
             'email' => $customer->user?->email,
             'has_account' => $customer->user !== null,
             'pending_invitation' => $this->pendingInvitationData($customer),
+            'missing_profile_fields' => $customer->user ? $customer->missingProfileFields() : [],
             'phone_number' => $customer->phone_number,
             'mobile_number' => $customer->mobile_number,
             'packaging_notes' => $customer->packaging_notes,

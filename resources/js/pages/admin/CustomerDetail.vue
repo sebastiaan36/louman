@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
-import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit, Plus, Trash2, Ban, CheckCircle2 } from 'lucide-vue-next';
+import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit, Plus, Trash2, Ban, CheckCircle2, KeyRound, AlertTriangle } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +48,7 @@ interface Customer {
     contact_person: string;
     email: string;
     has_account: boolean;
+    missing_profile_fields: string[];
     pending_invitation: {
         email: string;
         sent_at: string;
@@ -337,6 +338,22 @@ const updateEmail = () => {
     });
 };
 
+const sendingPasswordReset = ref(false);
+
+const sendPasswordReset = () => {
+    sendingPasswordReset.value = true;
+    router.post(
+        `/admin/customers/${props.customer.id}/password-reset`,
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                sendingPasswordReset.value = false;
+            },
+        },
+    );
+};
+
 const resendingInvitation = ref(false);
 
 const resendInvitation = () => {
@@ -598,6 +615,30 @@ const deleteAddress = (addressId: number) => {
                 </div>
             </div>
 
+            <!-- Account bestaat, maar de klant is blijven steken op het aanvulformulier.
+                 Zonder deze melding zie je alleen lege velden en niet waarom. -->
+            <div
+                v-if="customer.email && customer.missing_profile_fields.length > 0"
+                class="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950"
+            >
+                <div class="flex items-start gap-3">
+                    <AlertTriangle class="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-500" />
+                    <div class="space-y-1">
+                        <p class="text-sm font-medium text-amber-900 dark:text-amber-200">
+                            Profiel nog niet afgerond
+                        </p>
+                        <p class="text-sm text-amber-800 dark:text-amber-300">
+                            Deze klant heeft een account aangemaakt maar het aanvulformulier niet
+                            afgemaakt, en kan daardoor nog niet bestellen. Bij het inloggen krijgt de
+                            klant dat formulier vanzelf te zien.
+                        </p>
+                        <p class="text-sm text-amber-800 dark:text-amber-300">
+                            Nog in te vullen: {{ customer.missing_profile_fields.join(', ') }}.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Customer Details Cards -->
             <div class="grid gap-6 md:grid-cols-2">
                 <!-- Contact Information -->
@@ -632,10 +673,21 @@ const deleteAddress = (addressId: number) => {
                                 <p class="text-sm font-medium">Email</p>
                                 <template v-if="customer.email">
                                     <p class="text-sm text-muted-foreground">{{ customer.email }}</p>
-                                    <Button size="sm" variant="outline" class="mt-2" @click="openEmailDialog">
-                                        <Mail class="h-4 w-4 mr-2" />
-                                        E-mailadres wijzigen
-                                    </Button>
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        <Button size="sm" variant="outline" @click="openEmailDialog">
+                                            <Mail class="h-4 w-4 mr-2" />
+                                            E-mailadres wijzigen
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            :disabled="sendingPasswordReset"
+                                            @click="sendPasswordReset"
+                                        >
+                                            <KeyRound class="h-4 w-4 mr-2" />
+                                            {{ sendingPasswordReset ? 'Versturen...' : 'Herstelmail sturen' }}
+                                        </Button>
+                                    </div>
                                 </template>
                                 <template v-else>
                                     <p class="text-sm text-muted-foreground">Nog geen account</p>
