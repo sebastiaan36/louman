@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import { useForm, usePage } from '@inertiajs/vue3';
-import { HelpCircle, Phone } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { onClickOutside, onKeyStroke } from '@vueuse/core';
+import { HelpCircle, Phone, X } from 'lucide-vue-next';
+import { computed, nextTick, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -29,12 +22,36 @@ const page = usePage();
 const support = computed(() => (page.props.support as Support | null) ?? null);
 
 const open = ref(false);
+const balloon = ref<HTMLElement | null>(null);
+const questionField = ref<InstanceType<typeof Textarea> | null>(null);
 const form = useForm({ question: '' });
 
 /**
  * Een tel:-link mag geen spaties of streepjes bevatten.
  */
 const phoneLink = computed(() => support.value?.phone?.replace(/[^\d+]/g, '') ?? '');
+
+const toggle = async () => {
+    open.value = !open.value;
+
+    if (! open.value) {
+        return;
+    }
+
+    form.clearErrors();
+    await nextTick();
+    (questionField.value?.$el as HTMLTextAreaElement | undefined)?.focus();
+};
+
+// Klikken naast de ballon of Escape sluit hem, zoals bij elk ander
+// zwevend paneel in het portaal.
+onClickOutside(balloon, () => {
+    open.value = false;
+});
+
+onKeyStroke('Escape', () => {
+    open.value = false;
+});
 
 const submit = () => {
     form.post('/customer/support', {
@@ -45,72 +62,84 @@ const submit = () => {
         },
     });
 };
-
-const openDialog = () => {
-    form.clearErrors();
-    open.value = true;
-};
 </script>
 
 <template>
-    <template v-if="support">
-        <Button
-            type="button"
-            size="icon-lg"
-            class="fixed bottom-6 right-6 z-50 rounded-full shadow-lg"
-            aria-label="Stel een vraag"
-            title="Stel een vraag"
-            @click="openDialog"
+    <div v-if="support" ref="balloon" class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        <!-- De ballon zelf: hangt boven de knop, met een puntje dat ernaar wijst. -->
+        <Transition
+            enter-active-class="transition duration-150 ease-out"
+            enter-from-class="translate-y-2 opacity-0"
+            leave-active-class="transition duration-100 ease-in"
+            leave-to-class="translate-y-2 opacity-0"
         >
-            <HelpCircle class="h-6 w-6" />
-        </Button>
+            <div
+                v-if="open"
+                role="dialog"
+                aria-label="Stel een vraag"
+                class="relative w-[min(22rem,calc(100vw-3rem))] rounded-xl border bg-background p-4 shadow-xl"
+            >
+                <!-- Het puntje van de ballon, uitgelijnd op het midden van de knop. -->
+                <div
+                    class="absolute -bottom-1.5 right-4 h-3 w-3 rotate-45 border-b border-r bg-background"
+                    aria-hidden="true"
+                ></div>
 
-        <Dialog :open="open" @update:open="open = $event">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Stel een vraag</DialogTitle>
-                    <DialogDescription>
-                        We nemen zo snel mogelijk contact met u op.
-                    </DialogDescription>
-                </DialogHeader>
+                <div class="space-y-3">
+                    <div>
+                        <h2 class="font-semibold">Stel een vraag</h2>
+                        <p class="text-xs text-muted-foreground">
+                            We nemen zo snel mogelijk contact met u op.
+                        </p>
+                    </div>
 
-                <a
-                    v-if="support.phone"
-                    :href="`tel:${phoneLink}`"
-                    class="flex items-center gap-3 rounded-lg border p-3 hover:bg-accent"
-                >
-                    <Phone class="h-5 w-5 shrink-0 text-muted-foreground" />
-                    <span>
-                        <span class="block text-xs text-muted-foreground">Liever direct bellen?</span>
-                        <span class="font-medium">{{ support.phone }}</span>
-                    </span>
-                </a>
+                    <a
+                        v-if="support.phone"
+                        :href="`tel:${phoneLink}`"
+                        class="flex items-center gap-3 rounded-lg border p-2.5 hover:bg-accent"
+                    >
+                        <Phone class="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span>
+                            <span class="block text-xs text-muted-foreground">Liever direct bellen?</span>
+                            <span class="text-sm font-medium">{{ support.phone }}</span>
+                        </span>
+                    </a>
 
-                <div class="grid gap-3 py-1">
-                    <div class="rounded-lg bg-muted/50 p-3 text-sm">
+                    <div class="rounded-lg bg-muted/50 p-2.5 text-sm">
                         <p class="font-medium">{{ support.company_name }}</p>
-                        <p class="text-muted-foreground">{{ support.email }}</p>
+                        <p class="text-xs text-muted-foreground">{{ support.email }}</p>
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="support_question">Uw vraag</Label>
+                        <Label for="support_question" class="text-sm">Uw vraag</Label>
                         <Textarea
                             id="support_question"
+                            ref="questionField"
                             v-model="form.question"
-                            rows="5"
+                            rows="4"
                             placeholder="Waarmee kunnen we u helpen?"
                         />
                         <InputError :message="form.errors.question" />
                     </div>
-                </div>
 
-                <DialogFooter>
-                    <Button variant="outline" @click="open = false">Annuleren</Button>
-                    <Button :disabled="form.processing" @click="submit">
+                    <Button class="w-full" :disabled="form.processing" @click="submit">
                         {{ form.processing ? 'Versturen...' : 'Versturen' }}
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    </template>
+                </div>
+            </div>
+        </Transition>
+
+        <Button
+            type="button"
+            size="icon-lg"
+            class="rounded-full shadow-lg"
+            :aria-expanded="open"
+            :aria-label="open ? 'Sluit het vraagformulier' : 'Stel een vraag'"
+            :title="open ? 'Sluiten' : 'Stel een vraag'"
+            @click="toggle"
+        >
+            <X v-if="open" class="h-6 w-6" />
+            <HelpCircle v-else class="h-6 w-6" />
+        </Button>
+    </div>
 </template>

@@ -131,3 +131,25 @@ test('een beheerder krijgt geen hulpgegevens, dus geen knop', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('support', null));
 });
+
+test('het formulier hangt als ballon aan de knop, niet als los dialoogvenster', function () {
+    $component = file_get_contents(dirname(__DIR__, 3).'/resources/js/components/SupportButton.vue');
+
+    expect($component)
+        // Knop en ballon zitten in dezelfde vaste hoek rechtsonder.
+        ->toContain('fixed bottom-6 right-6')
+        // Het puntje dat naar de knop wijst.
+        ->toContain('rotate-45')
+        // Sluiten door ernaast te klikken of met Escape.
+        ->toContain('onClickOutside')
+        ->toContain("onKeyStroke('Escape'")
+        // Geen los gecentreerd dialoogvenster meer.
+        ->not->toContain('DialogContent');
+});
+
+test('de ballon past op een smal scherm', function () {
+    $component = file_get_contents(dirname(__DIR__, 3).'/resources/js/components/SupportButton.vue');
+
+    // Breedte loopt mee met het scherm, zodat hij op mobiel niet buiten beeld valt.
+    expect($component)->toContain('w-[min(22rem,calc(100vw-3rem))]');
+});
