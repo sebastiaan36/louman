@@ -83,7 +83,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <CardContent>
                         <div class="text-2xl font-bold">{{ stats.pendingCustomers }}</div>
                         <p class="text-xs text-muted-foreground">
-                            <a :href="admin.customers.pending()" class="text-primary hover:underline">
+                            <a :href="admin.customers.pending().url" class="text-primary hover:underline">
                                 Bekijk wachtende klanten
                             </a>
                         </p>
