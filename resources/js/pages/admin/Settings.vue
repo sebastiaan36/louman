@@ -16,6 +16,7 @@ interface Settings {
     mail_cancellation_notification: string | null;
     mail_support_notification: string | null;
     support_phone: string | null;
+    support_email: string | null;
     mail_cc: string | null;
     mail_reply_to: string | null;
 }
@@ -36,6 +37,7 @@ const form = useForm({
     mail_cancellation_notification: props.settings.mail_cancellation_notification ?? '',
     mail_support_notification: props.settings.mail_support_notification ?? '',
     support_phone: props.settings.support_phone ?? '',
+    support_email: props.settings.support_email ?? '',
     mail_cc: props.settings.mail_cc ?? '',
     mail_reply_to: props.settings.mail_reply_to ?? '',
 });
@@ -159,6 +161,21 @@ const submit = () => {
                             er direct op bellen. Laat leeg om alleen het formulier te tonen.
                         </p>
                         <InputError :message="form.errors.support_phone" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="support_email">E-mailadres</Label>
+                        <Input
+                            id="support_email"
+                            v-model="form.support_email"
+                            type="email"
+                            placeholder="Leeg = geen e-mailadres tonen"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Adres dat de klant in de hulpknop ziet staan en direct kan aanklikken. Dit
+                            is wat de klant ziet; waar het formulier zelf naartoe gaat, stel je hierboven in.
+                        </p>
+                        <InputError :message="form.errors.support_email" />
                     </div>
                 </div>
 

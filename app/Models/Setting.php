@@ -21,6 +21,8 @@ class Setting extends Model
 
     public const SUPPORT_PHONE = 'support_phone';
 
+    public const SUPPORT_EMAIL = 'support_email';
+
     public const MAIL_CC = 'mail_cc';
 
     public const MAIL_REPLY_TO = 'mail_reply_to';

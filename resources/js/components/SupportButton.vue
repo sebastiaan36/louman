@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useForm, usePage } from '@inertiajs/vue3';
 import { onClickOutside, onKeyStroke } from '@vueuse/core';
-import { HelpCircle, Phone, X } from 'lucide-vue-next';
+import { HelpCircle, Mail, Phone, X } from 'lucide-vue-next';
 import { computed, nextTick, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ interface Support {
     company_name: string | null;
     email: string | null;
     phone: string | null;
+    support_email: string | null;
 }
 
 const page = usePage();
@@ -93,17 +94,31 @@ const submit = () => {
                         </p>
                     </div>
 
-                    <a
-                        v-if="support.phone"
-                        :href="`tel:${phoneLink}`"
-                        class="flex items-center gap-3 rounded-lg border p-2.5 hover:bg-accent"
-                    >
-                        <Phone class="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <span>
-                            <span class="block text-xs text-muted-foreground">Liever direct bellen?</span>
-                            <span class="text-sm font-medium">{{ support.phone }}</span>
-                        </span>
-                    </a>
+                    <div v-if="support.phone || support.support_email" class="grid gap-2">
+                        <a
+                            v-if="support.phone"
+                            :href="`tel:${phoneLink}`"
+                            class="flex items-center gap-3 rounded-lg border p-2.5 hover:bg-accent"
+                        >
+                            <Phone class="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span>
+                                <span class="block text-xs text-muted-foreground">Liever direct bellen?</span>
+                                <span class="text-sm font-medium">{{ support.phone }}</span>
+                            </span>
+                        </a>
+
+                        <a
+                            v-if="support.support_email"
+                            :href="`mailto:${support.support_email}`"
+                            class="flex items-center gap-3 rounded-lg border p-2.5 hover:bg-accent"
+                        >
+                            <Mail class="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span>
+                                <span class="block text-xs text-muted-foreground">Of stuur een e-mail</span>
+                                <span class="text-sm font-medium">{{ support.support_email }}</span>
+                            </span>
+                        </a>
+                    </div>
 
                     <div class="rounded-lg bg-muted/50 p-2.5 text-sm">
                         <p class="font-medium">{{ support.company_name }}</p>
@@ -134,7 +149,7 @@ const submit = () => {
         <Button
             type="button"
             size="lg"
-            class="rounded-full px-5 shadow-lg"
+            class="rounded-full bg-support px-5 text-support-foreground shadow-lg hover:bg-support/90"
             :aria-expanded="open"
             @click="toggle"
         >

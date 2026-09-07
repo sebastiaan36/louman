@@ -29,6 +29,9 @@
     --color-primary: var(--primary);
     --color-primary-foreground: var(--primary-foreground);
 
+    --color-support: var(--support);
+    --color-support-foreground: var(--support-foreground);
+
     --color-secondary: var(--secondary);
     --color-secondary-foreground: var(--secondary-foreground);
 
@@ -98,6 +101,11 @@
     --popover-foreground: hsl(0 0% 3.9%);
     --primary: hsl(0 0% 9%);
     --primary-foreground: hsl(0 0% 98%);
+    /* Huiskleur van Louman, gebruikt voor de hulpknop in het klantportaal.
+       Het portaal is verder zwart-wit, dus deze knop springt eruit. Wil je een
+       andere kleur, dan is dit de enige plek waar hij staat. */
+    --support: hsl(142 72% 29%);
+    --support-foreground: hsl(0 0% 100%);
     --secondary: hsl(0 0% 92.1%);
     --secondary-foreground: hsl(0 0% 9%);
     --muted: hsl(0 0% 96.1%);
@@ -135,6 +143,8 @@
     --popover-foreground: hsl(0 0% 98%);
     --primary: hsl(0 0% 98%);
     --primary-foreground: hsl(0 0% 9%);
+    --support: hsl(142 64% 42%);
+    --support-foreground: hsl(0 0% 100%);
     --secondary: hsl(0 0% 14.9%);
     --secondary-foreground: hsl(0 0% 98%);
     --muted: hsl(0 0% 16.08%);

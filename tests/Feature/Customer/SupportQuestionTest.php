@@ -111,6 +111,7 @@ test('de vraag wordt vastgelegd in het auditlogboek', function () {
 
 test('de hulpgegevens worden gedeeld met een ingelogde klant', function () {
     Setting::set(Setting::SUPPORT_PHONE, '020-1234567');
+    Setting::set(Setting::SUPPORT_EMAIL, 'info@louman-jordaan.nl');
 
     $customer = approvedCustomer();
     $customer->update(['company_name' => 'Bakkerij De Hoek']);
@@ -122,6 +123,7 @@ test('de hulpgegevens worden gedeeld met een ingelogde klant', function () {
             ->where('support.company_name', 'Bakkerij De Hoek')
             ->where('support.email', $customer->user->email)
             ->where('support.phone', '020-1234567')
+            ->where('support.support_email', 'info@louman-jordaan.nl')
         );
 });
 
@@ -160,4 +162,47 @@ test('de knop draagt de tekst Stel uw vraag', function () {
     $component = file_get_contents(dirname(__DIR__, 3).'/resources/js/components/SupportButton.vue');
 
     expect($component)->toContain("open ? 'Sluiten' : 'Stel uw vraag'");
+});
+
+test('zonder ingesteld nummer valt de hulpknop terug op het vaste nummer', function () {
+    Setting::set(Setting::SUPPORT_PHONE, null);
+
+    $customer = approvedCustomer();
+
+    $this->actingAs($customer->user)
+        ->get('/customer/products')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('support.phone', '020-4470930'));
+});
+
+test('het telefoonnummer en e-mailadres zijn aanklikbaar', function () {
+    $component = file_get_contents(dirname(__DIR__, 3).'/resources/js/components/SupportButton.vue');
+
+    expect($component)
+        ->toContain('`tel:${phoneLink}`')
+        ->toContain('`mailto:${support.support_email}`')
+        // Het tel:-adres bevat geen streepjes of spaties.
+        ->toContain("replace(/[^\\d+]/g, '')");
+});
+
+test('de hulpknop gebruikt de eigen accentkleur en niet het standaard zwart', function () {
+    $component = file_get_contents(dirname(__DIR__, 3).'/resources/js/components/SupportButton.vue');
+    $css = file_get_contents(dirname(__DIR__, 3).'/resources/css/app.css');
+
+    expect($component)->toContain('bg-support')
+        ->and($css)->toContain('--support:')
+        ->and($css)->toContain('--color-support:');
+});
+
+test('het e-mailadres van de hulpknop is in te stellen in de backend', function () {
+    $this->actingAs(adminUser())
+        ->patch('/admin/settings', [
+            'mail_order_notification' => 'info@louman-jordaan.nl',
+            'support_phone' => '020-4470930',
+            'support_email' => 'info@louman-jordaan.nl',
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect(Setting::get(Setting::SUPPORT_EMAIL))->toBe('info@louman-jordaan.nl');
 });

@@ -60,7 +60,8 @@ class HandleInertiaRequests extends Middleware
             'support' => $customer ? [
                 'company_name' => $customer->company_name,
                 'email' => $request->user()?->email,
-                'phone' => Setting::get(Setting::SUPPORT_PHONE),
+                'phone' => Setting::get(Setting::SUPPORT_PHONE, '020-4470930'),
+                'support_email' => Setting::get(Setting::SUPPORT_EMAIL),
             ] : null,
         ];
     }
