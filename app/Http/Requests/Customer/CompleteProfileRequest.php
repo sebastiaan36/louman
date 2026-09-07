@@ -18,6 +18,14 @@ class CompleteProfileRequest extends FormRequest
     }
 
     /**
+     * Tidy up spacing and casing before the rules run.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->normaliseCustomerInput();
+    }
+
+    /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
@@ -60,12 +68,7 @@ class CompleteProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'phone_number.regex' => 'Vul een geldig Nederlands telefoonnummer in.',
-            'postal_code.regex' => 'Vul een geldige Nederlandse postcode in (bijv. 1234 AB).',
-            'kvk_number.regex' => 'Het KvK nummer moet 8 cijfers bevatten.',
             'kvk_number.unique' => 'Dit KvK nummer is al geregistreerd.',
-            'bank_account.regex' => 'Vul een geldig Nederlands IBAN in (bijv. NL91ABNA0417164300).',
-            'vat_number.regex' => 'Vul een geldig Nederlands BTW nummer in (bijv. NL123456789B01).',
         ];
     }
 }

@@ -21,6 +21,14 @@ class CustomerRegisterRequest extends FormRequest
     }
 
     /**
+     * Tidy up spacing and casing before the rules run.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->normaliseCustomerInput();
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -78,12 +86,7 @@ class CustomerRegisterRequest extends FormRequest
         return [
             'email.email' => 'Vul een geldig e-mailadres in.',
             'email.unique' => 'Dit e-mailadres is al in gebruik.',
-            'phone_number.regex' => 'Vul een geldig Nederlands telefoonnummer in (bijv. 06-12345678 of 010-1234567).',
-            'postal_code.regex' => 'Vul een geldige Nederlandse postcode in (bijv. 1234 AB).',
-            'kvk_number.regex' => 'Het KvK nummer moet 8 cijfers bevatten.',
             'kvk_number.unique' => 'Dit KvK nummer is al geregistreerd.',
-            'bank_account.regex' => 'Vul een geldig Nederlands IBAN rekeningnummer in (bijv. NL91ABNA0417164300).',
-            'vat_number.regex' => 'Vul een geldig Nederlands BTW nummer in (bijv. NL123456789B01).',
             'terms_accepted.accepted' => 'Je moet akkoord gaan met de Algemene Voorwaarden om te registreren.',
             ...$this->passwordMessages(),
         ];

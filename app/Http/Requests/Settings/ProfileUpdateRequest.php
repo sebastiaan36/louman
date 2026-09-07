@@ -80,12 +80,7 @@ class ProfileUpdateRequest extends FormRequest
         return [
             'email.email' => 'Vul een geldig e-mailadres in.',
             'email.unique' => 'Dit e-mailadres is al in gebruik.',
-            'kvk_number.regex' => 'Het KvK nummer moet 8 cijfers bevatten.',
             'kvk_number.unique' => 'Dit KvK nummer is al geregistreerd.',
-            'vat_number.regex' => 'Vul een geldig Nederlands BTW nummer in (bijv. NL123456789B01).',
-            'phone_number.regex' => 'Vul een geldig Nederlands telefoonnummer in (bijv. 06-12345678 of 010-1234567).',
-            'postal_code.regex' => 'Vul een geldige Nederlandse postcode in (bijv. 1234 AB).',
-            'bank_account.regex' => 'Vul een geldig Nederlands IBAN rekeningnummer in (bijv. NL91ABNA0417164300).',
         ];
     }
 }

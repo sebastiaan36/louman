@@ -3,6 +3,11 @@
 namespace App\Concerns;
 
 use App\Models\Customer;
+use App\Rules\DutchIban;
+use App\Rules\DutchPhoneNumber;
+use App\Rules\DutchPostalCode;
+use App\Rules\DutchVatNumber;
+use App\Rules\KvkNumber;
 use Illuminate\Validation\Rule;
 
 trait CustomerValidationRules
@@ -37,11 +42,7 @@ trait CustomerValidationRules
      */
     protected function phoneNumberRules(): array
     {
-        return [
-            'required',
-            'string',
-            'regex:/^(\+31|0)[\s\-]?[1-9][\s\-]?[0-9][\s\-]?[0-9][\s\-]?[0-9][\s\-]?[0-9][\s\-]?[0-9][\s\-]?[0-9][\s\-]?[0-9][\s\-]?[0-9]$/',
-        ];
+        return ['required', 'string', new DutchPhoneNumber];
     }
 
     /**
@@ -71,7 +72,7 @@ trait CustomerValidationRules
      */
     protected function postalCodeRules(): array
     {
-        return ['required', 'string', 'regex:/^[1-9][0-9]{3}\s?[a-zA-Z]{2}$/'];
+        return ['required', 'string', new DutchPostalCode];
     }
 
     /**
@@ -94,7 +95,7 @@ trait CustomerValidationRules
         return [
             'required',
             'string',
-            'regex:/^[0-9]{8}$/',
+            new KvkNumber,
             Rule::unique(Customer::class, 'kvk_number'),
         ];
     }
@@ -108,11 +109,7 @@ trait CustomerValidationRules
      */
     protected function bankAccountRules(): array
     {
-        return [
-            'required',
-            'string',
-            'regex:/^NL[0-9]{2}[A-Z]{4}[0-9]{10}$/',
-        ];
+        return ['required', 'string', new DutchIban];
     }
 
     /**
@@ -122,11 +119,7 @@ trait CustomerValidationRules
      */
     protected function vatNumberRules(): array
     {
-        return [
-            'required',
-            'string',
-            'regex:/^NL[0-9]{9}B[0-9]{2}$/',
-        ];
+        return ['required', 'string', new DutchVatNumber];
     }
 
     /**
@@ -139,7 +132,7 @@ trait CustomerValidationRules
         $rules = [
             'required',
             'string',
-            'regex:/^[0-9]{8}$/',
+            new KvkNumber,
         ];
 
         if ($ignoreCustomerId) {
@@ -149,5 +142,48 @@ trait CustomerValidationRules
         }
 
         return $rules;
+    }
+
+    /**
+     * Tidy up what the customer typed before validating it, so a value that is
+     * unmistakably right but written differently is accepted and stored in one
+     * consistent form: NL91 ABNA 0417 1643 00 and nl91abna0417164300 both
+     * become NL91ABNA0417164300.
+     *
+     * Only formatting is touched. A missing NL prefix is a mistake, not a
+     * notation, and stays a validation error.
+     */
+    protected function normaliseCustomerInput(): void
+    {
+        $strip = fn (?string $value): ?string => is_string($value)
+            ? str_replace([' ', '.', '-'], '', trim($value))
+            : $value;
+
+        $normalised = array_filter([
+            'kvk_number' => $strip($this->input('kvk_number')),
+            'vat_number' => strtoupper((string) $strip($this->input('vat_number'))) ?: null,
+            'bank_account' => strtoupper((string) $strip($this->input('bank_account'))) ?: null,
+            'postal_code' => $this->normalisedPostalCode(),
+        ], fn ($value) => $value !== null);
+
+        $this->merge(array_intersect_key($normalised, $this->all()));
+    }
+
+    /**
+     * A postal code as 1234 AB, whatever spacing or casing was typed.
+     */
+    private function normalisedPostalCode(): ?string
+    {
+        $value = $this->input('postal_code');
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $compact = strtoupper(str_replace([' ', '-'], '', trim($value)));
+
+        return preg_match('/^([1-9][0-9]{3})([A-Z]{2})$/', $compact, $match)
+            ? $match[1].' '.$match[2]
+            : $value;
     }
 }
