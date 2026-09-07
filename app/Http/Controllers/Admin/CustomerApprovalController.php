@@ -12,13 +12,17 @@ use App\Models\DeliveryAddress;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\CustomerApproved;
+use App\Notifications\CustomerEmailChanged;
+use App\Notifications\EmailAddressChanged;
 use App\Services\WebhookDispatcher;
+use App\Support\AdminNotifier;
 use App\Support\DeliveryDay;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -146,6 +150,67 @@ class CustomerApprovalController extends Controller
         AuditLog::record('customer.invited', "Uitnodiging verstuurd naar {$validated['email']} voor {$customer->company_name}", $customer);
 
         return back()->with('success', "Uitnodiging verstuurd naar {$validated['email']}.");
+    }
+
+    /**
+     * Change the e-mail address a customer logs in with.
+     *
+     * Only for a customer who has an account; without one there is nothing to
+     * change and the invitation flow applies instead.
+     */
+    public function updateEmail(Request $request, Customer $customer): RedirectResponse
+    {
+        $user = $customer->user;
+
+        if (! $user) {
+            return back()->with('error', 'Deze klant heeft nog geen account. Stuur eerst een uitnodiging.');
+        }
+
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($user->id)],
+        ], [
+            'email.required' => 'E-mailadres is verplicht.',
+            'email.email' => 'Vul een geldig e-mailadres in.',
+            'email.unique' => 'Dit e-mailadres is al in gebruik.',
+        ]);
+
+        $previousEmail = $user->email;
+
+        if ($previousEmail === $validated['email']) {
+            return back()->with('error', 'Dit is al het huidige e-mailadres.');
+        }
+
+        $user->forceFill(['email' => $validated['email']])->save();
+
+        $this->announceEmailChange($customer, $previousEmail, $validated['email']);
+
+        AuditLog::record('customer.email_changed', "E-mailadres van {$customer->company_name} gewijzigd", $customer, [
+            'previous_email' => $previousEmail,
+            'new_email' => $validated['email'],
+        ]);
+
+        return back()->with('success', "E-mailadres gewijzigd naar {$validated['email']}.");
+    }
+
+    /**
+     * Let the customer and the administrators know the address changed.
+     *
+     * The customer hears about it at both addresses. Mail goes out during the
+     * request, so a failure may not undo a change that is already saved.
+     */
+    private function announceEmailChange(Customer $customer, string $previousEmail, string $newEmail): void
+    {
+        try {
+            Notification::route('mail', [$newEmail, $previousEmail])
+                ->notify(new EmailAddressChanged($previousEmail, $newEmail));
+        } catch (\Exception $e) {
+            Log::error('Failed to notify customer of e-mail change', [
+                'customer_id' => $customer->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        AdminNotifier::send(new CustomerEmailChanged($customer, $previousEmail, $newEmail));
     }
 
     /**

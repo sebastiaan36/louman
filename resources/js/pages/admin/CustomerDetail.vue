@@ -318,6 +318,25 @@ const openInviteDialog = () => {
     inviteDialogOpen.value = true;
 };
 
+// E-mailadres van het inlogaccount wijzigen
+const emailDialogOpen = ref(false);
+const emailForm = useForm({ email: '' });
+
+const openEmailDialog = () => {
+    emailForm.email = props.customer.email ?? '';
+    emailForm.clearErrors();
+    emailDialogOpen.value = true;
+};
+
+const updateEmail = () => {
+    emailForm.patch(`/admin/customers/${props.customer.id}/email`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            emailDialogOpen.value = false;
+        },
+    });
+};
+
 const resendingInvitation = ref(false);
 
 const resendInvitation = () => {
@@ -611,7 +630,13 @@ const deleteAddress = (addressId: number) => {
                             <Mail class="h-4 w-4 text-muted-foreground mt-0.5" />
                             <div class="flex-1">
                                 <p class="text-sm font-medium">Email</p>
-                                <p v-if="customer.email" class="text-sm text-muted-foreground">{{ customer.email }}</p>
+                                <template v-if="customer.email">
+                                    <p class="text-sm text-muted-foreground">{{ customer.email }}</p>
+                                    <Button size="sm" variant="outline" class="mt-2" @click="openEmailDialog">
+                                        <Mail class="h-4 w-4 mr-2" />
+                                        E-mailadres wijzigen
+                                    </Button>
+                                </template>
                                 <template v-else>
                                     <p class="text-sm text-muted-foreground">Nog geen account</p>
 
@@ -1526,6 +1551,35 @@ const deleteAddress = (addressId: number) => {
         </Dialog>
 
         <!-- Send Invitation Dialog -->
+        <Dialog :open="emailDialogOpen" @update:open="emailDialogOpen = $event">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>E-mailadres wijzigen</DialogTitle>
+                    <DialogDescription>
+                        Dit is het adres waarmee de klant inlogt. De klant krijgt hier bericht van op
+                        het oude en het nieuwe adres, en de beheerders ontvangen een kopie.
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="grid gap-2 py-2">
+                    <Label for="customer_email">E-mailadres</Label>
+                    <Input
+                        id="customer_email"
+                        v-model="emailForm.email"
+                        type="email"
+                        placeholder="naam@bedrijf.nl"
+                        @keyup.enter="updateEmail"
+                    />
+                    <InputError :message="emailForm.errors.email" />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" @click="emailDialogOpen = false">Annuleren</Button>
+                    <Button :disabled="emailForm.processing" @click="updateEmail">
+                        {{ emailForm.processing ? 'Opslaan...' : 'Wijzigen' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
         <Dialog :open="inviteDialogOpen" @update:open="inviteDialogOpen = $event">
             <DialogContent>
                 <DialogHeader>
