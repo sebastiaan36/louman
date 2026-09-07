@@ -20,6 +20,7 @@ class SupportQuestionRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'email' => ['required', 'email', 'max:255'],
             'question' => ['required', 'string', 'min:5', 'max:2000'],
         ];
     }
@@ -32,6 +33,8 @@ class SupportQuestionRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'email.required' => 'Vul het e-mailadres in waarop u antwoord wilt.',
+            'email.email' => 'Vul een geldig e-mailadres in.',
             'question.required' => 'Vul uw vraag in.',
             'question.min' => 'Uw vraag is wel erg kort. Schrijf iets meer, dan kunnen we u beter helpen.',
             'question.max' => 'Uw vraag mag maximaal 2000 tekens bevatten.',

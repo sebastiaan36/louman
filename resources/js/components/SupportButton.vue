@@ -5,6 +5,7 @@ import { HelpCircle, Mail, Phone, X } from 'lucide-vue-next';
 import { computed, nextTick, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -25,7 +26,12 @@ const support = computed(() => (page.props.support as Support | null) ?? null);
 const open = ref(false);
 const balloon = ref<HTMLElement | null>(null);
 const questionField = ref<InstanceType<typeof Textarea> | null>(null);
-const form = useForm({ question: '' });
+const form = useForm({
+    question: '',
+    // Voorgevuld met het adres van het account, maar aanpasbaar: de klant wil
+    // het antwoord soms bij een collega of op een ander adres hebben.
+    email: (page.props.support as Support | null)?.email ?? '',
+});
 
 /**
  * Een tel:-link mag geen spaties of streepjes bevatten.
@@ -122,7 +128,18 @@ const submit = () => {
 
                     <div class="rounded-lg bg-muted/50 p-2.5 text-sm">
                         <p class="font-medium">{{ support.company_name }}</p>
-                        <p class="text-xs text-muted-foreground">{{ support.email }}</p>
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="support_email_reply" class="text-sm">Uw e-mailadres</Label>
+                        <Input
+                            id="support_email_reply"
+                            v-model="form.email"
+                            type="email"
+                            placeholder="naam@bedrijf.nl"
+                        />
+                        <p class="text-xs text-muted-foreground">Hier sturen we het antwoord naartoe.</p>
+                        <InputError :message="form.errors.email" />
                     </div>
 
                     <div class="grid gap-2">

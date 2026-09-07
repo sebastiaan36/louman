@@ -13,7 +13,10 @@ test('een klant kan een vraag versturen', function () {
     $customer = approvedCustomer();
 
     $this->actingAs($customer->user)
-        ->post('/customer/support', ['question' => 'Wanneer wordt mijn bestelling geleverd?'])
+        ->post('/customer/support', [
+            'email' => $customer->user->email,
+            'question' => 'Wanneer wordt mijn bestelling geleverd?',
+        ])
         ->assertRedirect()
         ->assertSessionHas('success');
 
@@ -33,7 +36,10 @@ test('zonder ingesteld adres gaat de vraag naar alle beheerders', function () {
     $customer = approvedCustomer();
 
     $this->actingAs($customer->user)
-        ->post('/customer/support', ['question' => 'Een vraag over de levering.']);
+        ->post('/customer/support', [
+            'email' => $customer->user->email,
+            'question' => 'Een vraag over de levering.',
+        ]);
 
     Notification::assertSentTo($admin, CustomerQuestion::class);
 });
@@ -69,7 +75,7 @@ test('een lege vraag wordt geweigerd', function () {
     $customer = approvedCustomer();
 
     $this->actingAs($customer->user)
-        ->post('/customer/support', ['question' => ''])
+        ->post('/customer/support', ['email' => $customer->user->email, 'question' => ''])
         ->assertSessionHasErrors(['question' => 'Vul uw vraag in.']);
 
     Notification::assertNothingSent();
@@ -79,7 +85,7 @@ test('een te korte vraag wordt geweigerd', function () {
     $customer = approvedCustomer();
 
     $this->actingAs($customer->user)
-        ->post('/customer/support', ['question' => 'hoi'])
+        ->post('/customer/support', ['email' => $customer->user->email, 'question' => 'hoi'])
         ->assertSessionHasErrors('question');
 });
 
@@ -87,14 +93,14 @@ test('een beheerder wordt naar het dashboard gestuurd en verstuurt geen vraag', 
     Notification::fake();
 
     $this->actingAs(adminUser())
-        ->post('/customer/support', ['question' => 'Een vraag van een beheerder.'])
+        ->post('/customer/support', ['email' => 'beheerder@louman.nl', 'question' => 'Een vraag van een beheerder.'])
         ->assertRedirect(route('dashboard'));
 
     Notification::assertNothingSent();
 });
 
 test('een bezoeker zonder account kan geen vraag versturen', function () {
-    $this->post('/customer/support', ['question' => 'Een vraag zonder account.'])
+    $this->post('/customer/support', ['email' => 'iemand@example.nl', 'question' => 'Een vraag zonder account.'])
         ->assertRedirect(route('login'));
 });
 
@@ -104,7 +110,10 @@ test('de vraag wordt vastgelegd in het auditlogboek', function () {
     $customer = approvedCustomer();
 
     $this->actingAs($customer->user)
-        ->post('/customer/support', ['question' => 'Een vraag over de levering.']);
+        ->post('/customer/support', [
+            'email' => $customer->user->email,
+            'question' => 'Een vraag over de levering.',
+        ]);
 
     expect(AuditLog::where('action', 'customer.question')->exists())->toBeTrue();
 });
@@ -205,4 +214,69 @@ test('het e-mailadres van de hulpknop is in te stellen in de backend', function 
         ->assertSessionHasNoErrors();
 
     expect(Setting::get(Setting::SUPPORT_EMAIL))->toBe('info@louman-jordaan.nl');
+});
+
+test('de klant kan een ander antwoordadres opgeven', function () {
+    $customer = approvedCustomer();
+    $customer->user->forceFill(['email' => 'account@bedrijf.nl'])->save();
+
+    $this->actingAs($customer->user->fresh())
+        ->post('/customer/support', [
+            'email' => 'collega@bedrijf.nl',
+            'question' => 'Kan het antwoord naar mijn collega?',
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    $mail = (new CustomerQuestion($customer->fresh(), 'Mijn vraag', 'collega@bedrijf.nl'))
+        ->toMail(new User);
+
+    expect($mail->replyTo[0][0])->toBe('collega@bedrijf.nl');
+});
+
+test('een afwijkend antwoordadres wordt in de mail gemeld', function () {
+    $customer = approvedCustomer();
+    $customer->user->forceFill(['email' => 'account@bedrijf.nl'])->save();
+
+    $body = (string) (new CustomerQuestion($customer->fresh(), 'Mijn vraag', 'collega@bedrijf.nl'))
+        ->toMail(new User)
+        ->render();
+
+    expect($body)
+        ->toContain('collega@bedrijf.nl')
+        ->toContain('het accountadres is account@bedrijf.nl');
+});
+
+test('bij hetzelfde adres komt er geen extra regel in de mail', function () {
+    $customer = approvedCustomer();
+    $customer->user->forceFill(['email' => 'account@bedrijf.nl'])->save();
+
+    $body = (string) (new CustomerQuestion($customer->fresh(), 'Mijn vraag', 'account@bedrijf.nl'))
+        ->toMail(new User)
+        ->render();
+
+    expect($body)->not->toContain('het accountadres is');
+});
+
+test('een ongeldig antwoordadres wordt geweigerd', function () {
+    Notification::fake();
+
+    $customer = approvedCustomer();
+
+    $this->actingAs($customer->user)
+        ->post('/customer/support', [
+            'email' => 'geen-adres',
+            'question' => 'Een vraag over de levering.',
+        ])
+        ->assertSessionHasErrors(['email' => 'Vul een geldig e-mailadres in.']);
+
+    Notification::assertNothingSent();
+});
+
+test('het e-mailveld staat voorgevuld maar is aanpasbaar', function () {
+    $component = file_get_contents(dirname(__DIR__, 3).'/resources/js/components/SupportButton.vue');
+
+    expect($component)
+        ->toContain("email: (page.props.support as Support | null)?.email ?? ''")
+        ->toContain('v-model="form.email"');
 });

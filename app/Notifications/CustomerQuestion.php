@@ -16,7 +16,8 @@ class CustomerQuestion extends Notification
 {
     public function __construct(
         public Customer $customer,
-        public string $question
+        public string $question,
+        public ?string $replyTo = null
     ) {}
 
     /**
@@ -34,14 +35,19 @@ class CustomerQuestion extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $email = $this->customer->user?->email;
+        $accountEmail = $this->customer->user?->email;
+        $email = $this->replyTo ?: $accountEmail;
 
         $message = (new MailMessage)
             ->subject('Vraag van '.$this->customer->company_name)
             ->greeting('Vraag via het klantportaal')
             ->line("**Klant:** {$this->customer->company_name}")
             ->line('**Klantnummer:** '.($this->customer->customer_number ?: 'onbekend'))
-            ->line('**E-mailadres:** '.($email ?: 'onbekend'))
+            ->line('**Antwoorden naar:** '.($email ?: 'onbekend'))
+            ->when(
+                $accountEmail && $email !== $accountEmail,
+                fn (MailMessage $mail) => $mail->line("**Let op:** het accountadres is {$accountEmail}."),
+            )
             ->line('**Telefoon:** '.($this->customer->phone_number ?: 'niet opgegeven'))
             ->line('---')
             ->line($this->question)

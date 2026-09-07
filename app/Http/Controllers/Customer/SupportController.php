@@ -19,9 +19,10 @@ class SupportController extends Controller
     {
         $customer = $request->user()->customer;
         $question = $request->validated('question');
+        $replyTo = $request->validated('email');
 
         AdminNotifier::send(
-            new CustomerQuestion($customer, $question),
+            new CustomerQuestion($customer, $question, $replyTo),
             Setting::MAIL_SUPPORT_NOTIFICATION,
         );
 
