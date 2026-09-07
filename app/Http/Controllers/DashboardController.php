@@ -101,8 +101,12 @@ class DashboardController extends Controller
      */
     private function getAdminStats(): array
     {
-        // Pending orders count
-        $pendingOrdersCount = Order::where('status', 'pending')->count();
+        // Counted per status, so each dashboard tile matches exactly what the
+        // orders page shows when it is filtered on that status.
+        $ordersByStatus = Order::query()
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
         // Revenue this month
         $currentMonth = Carbon::now()->startOfMonth();
@@ -142,7 +146,9 @@ class DashboardController extends Controller
 
         return [
             'stats' => [
-                'pendingOrders' => $pendingOrdersCount,
+                'pendingOrders' => (int) ($ordersByStatus['pending'] ?? 0),
+                'confirmedOrders' => (int) ($ordersByStatus['confirmed'] ?? 0),
+                'completedOrders' => (int) ($ordersByStatus['completed'] ?? 0),
                 'currentMonthRevenue' => number_format((float) $currentMonthRevenue, 2, '.', ''),
                 'revenueChangePercentage' => $revenueChangePercentage,
                 'revenueIncreased' => $revenueChangePercentage >= 0,

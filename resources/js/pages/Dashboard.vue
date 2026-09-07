@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ShoppingCart, Users, Clock, Zap, FileText, UsersRound, Package } from 'lucide-vue-next';
+import { ShoppingCart, Users, Clock, Zap, FileText, UsersRound, Package, CheckCircle2, PackageCheck } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -10,6 +10,8 @@ import { type BreadcrumbItem } from '@/types';
 
 interface AdminStats {
     pendingOrders: number;
+    confirmedOrders: number;
+    completedOrders: number;
     pendingCustomers: number;
     ordersThisMonth: number;
     totalCustomers: number;
@@ -65,8 +67,44 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <CardContent>
                         <div class="text-2xl font-bold">{{ stats.pendingOrders }}</div>
                         <p class="text-xs text-muted-foreground">
-                            <a :href="admin.orders.index().url" class="text-primary hover:underline">
-                                Bekijk bestellingen
+                            <a :href="admin.orders.index.url({ query: { status: 'pending' } })" class="text-primary hover:underline">
+                                Bekijk openstaande bestellingen
+                            </a>
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <!-- Confirmed Orders Card -->
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium">
+                            Bevestigde Bestellingen
+                        </CardTitle>
+                        <CheckCircle2 class="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold">{{ stats.confirmedOrders }}</div>
+                        <p class="text-xs text-muted-foreground">
+                            <a :href="admin.orders.index.url({ query: { status: 'confirmed' } })" class="text-primary hover:underline">
+                                Bekijk bevestigde bestellingen
+                            </a>
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <!-- Completed Orders Card -->
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium">
+                            Voltooide Bestellingen
+                        </CardTitle>
+                        <PackageCheck class="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold">{{ stats.completedOrders }}</div>
+                        <p class="text-xs text-muted-foreground">
+                            <a :href="admin.orders.index.url({ query: { status: 'completed' } })" class="text-primary hover:underline">
+                                Bekijk voltooide bestellingen
                             </a>
                         </p>
                     </CardContent>
