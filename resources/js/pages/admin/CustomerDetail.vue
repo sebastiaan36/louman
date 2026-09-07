@@ -48,6 +48,12 @@ interface Customer {
     contact_person: string;
     email: string;
     has_account: boolean;
+    pending_invitation: {
+        email: string;
+        sent_at: string;
+        expires_at: string;
+        is_expired: boolean;
+    } | null;
     phone_number: string;
     mobile_number: string | null;
     packing_slip_email: string | null;
@@ -310,6 +316,22 @@ const openInviteDialog = () => {
     inviteForm.reset();
     inviteForm.clearErrors();
     inviteDialogOpen.value = true;
+};
+
+const resendingInvitation = ref(false);
+
+const resendInvitation = () => {
+    resendingInvitation.value = true;
+    router.post(
+        `/admin/customers/${props.customer.id}/invite/resend`,
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                resendingInvitation.value = false;
+            },
+        },
+    );
 };
 
 const sendInvitation = () => {
@@ -592,7 +614,38 @@ const deleteAddress = (addressId: number) => {
                                 <p v-if="customer.email" class="text-sm text-muted-foreground">{{ customer.email }}</p>
                                 <template v-else>
                                     <p class="text-sm text-muted-foreground">Nog geen account</p>
-                                    <Button size="sm" variant="outline" class="mt-2" @click="openInviteDialog">
+
+                                    <!-- Er staat een uitnodiging open: opnieuw versturen kan naar
+                                         hetzelfde adres, zonder het opnieuw in te tikken. -->
+                                    <template v-if="customer.pending_invitation">
+                                        <p class="mt-1 text-sm text-muted-foreground">
+                                            Uitgenodigd op {{ customer.pending_invitation.sent_at }} via
+                                            {{ customer.pending_invitation.email }}
+                                        </p>
+                                        <p
+                                            class="text-sm"
+                                            :class="customer.pending_invitation.is_expired ? 'text-destructive' : 'text-muted-foreground'"
+                                        >
+                                            {{ customer.pending_invitation.is_expired ? 'Link verlopen op' : 'Link geldig tot' }}
+                                            {{ customer.pending_invitation.expires_at }}
+                                        </p>
+                                        <div class="mt-2 flex flex-wrap gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                :disabled="resendingInvitation"
+                                                @click="resendInvitation"
+                                            >
+                                                <Mail class="h-4 w-4 mr-2" />
+                                                {{ resendingInvitation ? 'Versturen...' : 'Opnieuw versturen' }}
+                                            </Button>
+                                            <Button size="sm" variant="ghost" @click="openInviteDialog">
+                                                Ander e-mailadres
+                                            </Button>
+                                        </div>
+                                    </template>
+
+                                    <Button v-else size="sm" variant="outline" class="mt-2" @click="openInviteDialog">
                                         <Mail class="h-4 w-4 mr-2" />
                                         Uitnodiging versturen
                                     </Button>

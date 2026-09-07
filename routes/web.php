@@ -119,6 +119,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.customers.approve');
     Route::post('/customers/{customer}/invite', [CustomerApprovalController::class, 'invite'])
         ->name('admin.customers.invite');
+    Route::post('/customers/{customer}/invite/resend', [CustomerApprovalController::class, 'resendInvitation'])
+        ->name('admin.customers.invite.resend');
     Route::post('/customers/{customer}/deactivate', [CustomerApprovalController::class, 'deactivate'])
         ->name('admin.customers.deactivate');
     Route::post('/customers/{customer}/activate', [CustomerApprovalController::class, 'activate'])

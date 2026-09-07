@@ -149,6 +149,64 @@ class CustomerApprovalController extends Controller
     }
 
     /**
+     * The outstanding invitation as shown on the customer page, or null when
+     * the customer has an account or was never invited.
+     *
+     * @return array{email: string, sent_at: string, expires_at: string, is_expired: bool}|null
+     */
+    private function pendingInvitationData(Customer $customer): ?array
+    {
+        if ($customer->user) {
+            return null;
+        }
+
+        $invitation = $customer->pendingInvitation();
+
+        if (! $invitation) {
+            return null;
+        }
+
+        return [
+            'email' => $invitation->email,
+            'sent_at' => $invitation->created_at->format('d-m-Y H:i'),
+            'expires_at' => $invitation->expires_at->format('d-m-Y'),
+            'is_expired' => $invitation->isExpired(),
+        ];
+    }
+
+    /**
+     * Send the invitation again, to the address the earlier one went to.
+     *
+     * Only for a customer who has not created an account yet; once they have,
+     * there is nothing left to accept.
+     */
+    public function resendInvitation(Customer $customer): RedirectResponse
+    {
+        if ($customer->user) {
+            return back()->with('error', 'Deze klant heeft al een account.');
+        }
+
+        $invitation = $customer->pendingInvitation();
+
+        if (! $invitation) {
+            return back()->with('error', 'Er is nog geen uitnodiging verstuurd naar deze klant.');
+        }
+
+        $email = $invitation->email;
+
+        // Replace the outstanding invitation so only the newest link works.
+        $customer->invitations()->delete();
+
+        $this->sendCustomerInvitation($customer, $email);
+
+        AuditLog::record('customer.invited', "Uitnodiging opnieuw verstuurd naar {$email} voor {$customer->company_name}", $customer, [
+            'resent' => true,
+        ]);
+
+        return back()->with('success', "Uitnodiging opnieuw verstuurd naar {$email}.");
+    }
+
+    /**
      * Create an invitation for the customer and email the account link.
      */
     private function sendCustomerInvitation(Customer $customer, string $email): void
@@ -178,6 +236,7 @@ class CustomerApprovalController extends Controller
             'contact_person' => $customer->contact_person,
             'email' => $customer->user?->email,
             'has_account' => $customer->user !== null,
+            'pending_invitation' => $this->pendingInvitationData($customer),
             'phone_number' => $customer->phone_number,
             'mobile_number' => $customer->mobile_number,
             'packaging_notes' => $customer->packaging_notes,

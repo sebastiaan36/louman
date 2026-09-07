@@ -102,6 +102,25 @@ class Customer extends Model
     }
 
     /**
+     * Get the account invitations sent to this customer, newest first.
+     */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(CustomerInvitation::class)->latest();
+    }
+
+    /**
+     * The invitation this customer can still accept, if any. There is at most
+     * one: sending a new invitation removes the earlier ones.
+     */
+    public function pendingInvitation(): ?CustomerInvitation
+    {
+        return $this->invitations()
+            ->whereNull('accepted_at')
+            ->first();
+    }
+
+    /**
      * Get the delivery addresses for the customer.
      */
     public function deliveryAddresses(): HasMany
