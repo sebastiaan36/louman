@@ -14,6 +14,8 @@ interface Settings {
     mail_registration_notification: string | null;
     mail_registration_cc: string | null;
     mail_cancellation_notification: string | null;
+    mail_support_notification: string | null;
+    support_phone: string | null;
     mail_cc: string | null;
     mail_reply_to: string | null;
 }
@@ -32,6 +34,8 @@ const form = useForm({
     mail_registration_notification: props.settings.mail_registration_notification ?? '',
     mail_registration_cc: props.settings.mail_registration_cc ?? '',
     mail_cancellation_notification: props.settings.mail_cancellation_notification ?? '',
+    mail_support_notification: props.settings.mail_support_notification ?? '',
+    support_phone: props.settings.support_phone ?? '',
     mail_cc: props.settings.mail_cc ?? '',
     mail_reply_to: props.settings.mail_reply_to ?? '',
 });
@@ -122,6 +126,39 @@ const submit = () => {
                             Adres dat een melding krijgt zodra een bestelling wordt geannuleerd. Laat leeg om geen melding te versturen.
                         </p>
                         <InputError :message="form.errors.mail_cancellation_notification" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="mail_support_notification">Vraag via het klantportaal</Label>
+                        <Input
+                            id="mail_support_notification"
+                            v-model="form.mail_support_notification"
+                            type="email"
+                            placeholder="Leeg = alle beheerders"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Adres dat de vragen ontvangt die klanten via de hulpknop stellen. Laat leeg om alle beheerders te mailen.
+                        </p>
+                        <InputError :message="form.errors.mail_support_notification" />
+                    </div>
+                </div>
+
+                <div class="rounded-lg border p-6 space-y-5">
+                    <h2 class="text-lg font-semibold">Hulpknop</h2>
+
+                    <div class="grid gap-2">
+                        <Label for="support_phone">Telefoonnummer</Label>
+                        <Input
+                            id="support_phone"
+                            v-model="form.support_phone"
+                            type="text"
+                            placeholder="Leeg = geen telefoonnummer tonen"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Nummer boven het contactformulier in het klantportaal. Op mobiel kan de klant
+                            er direct op bellen. Laat leeg om alleen het formulier te tonen.
+                        </p>
+                        <InputError :message="form.errors.support_phone" />
                     </div>
                 </div>
 

@@ -17,6 +17,10 @@ class Setting extends Model
 
     public const MAIL_CANCELLATION_NOTIFICATION = 'mail_cancellation_notification';
 
+    public const MAIL_SUPPORT_NOTIFICATION = 'mail_support_notification';
+
+    public const SUPPORT_PHONE = 'support_phone';
+
     public const MAIL_CC = 'mail_cc';
 
     public const MAIL_REPLY_TO = 'mail_reply_to';

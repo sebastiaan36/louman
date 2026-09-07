@@ -12,16 +12,19 @@ use Illuminate\Support\Facades\Notification as Notifier;
  * Sends a notification to whoever watches the inbox at Louman: the address
  * configured under instellingen, or every administrator when none is set.
  *
+ * Which setting holds that address depends on the notification; pass the key
+ * to use one other than the registration address.
+ *
  * Mail goes out during the request, so a failing mail server may never break
  * what the visitor was doing — the registration or the account is already
  * saved by the time this runs. Failures are logged instead.
  */
 class AdminNotifier
 {
-    public static function send(Notification $notification): void
+    public static function send(Notification $notification, ?string $settingKey = null): void
     {
         try {
-            $address = Setting::get(Setting::MAIL_REGISTRATION_NOTIFICATION);
+            $address = Setting::get($settingKey ?? Setting::MAIL_REGISTRATION_NOTIFICATION);
 
             if ($address) {
                 Notifier::route('mail', $address)->notify($notification);

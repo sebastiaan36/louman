@@ -23,7 +23,7 @@ class EnsureCustomerIsApproved
         }
 
         if ($user->isAdmin()) {
-            return to_route('admin.dashboard');
+            return to_route('dashboard');
         }
 
         if ($user->isCustomer() && $user->customer && ! $user->customer->isActive()) {

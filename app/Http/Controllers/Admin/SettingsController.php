@@ -21,6 +21,8 @@ class SettingsController extends Controller
         Setting::MAIL_REGISTRATION_NOTIFICATION => null,
         Setting::MAIL_REGISTRATION_CC => null,
         Setting::MAIL_CANCELLATION_NOTIFICATION => null,
+        Setting::MAIL_SUPPORT_NOTIFICATION => null,
+        Setting::SUPPORT_PHONE => null,
         Setting::MAIL_CC => null,
         Setting::MAIL_REPLY_TO => null,
     ];

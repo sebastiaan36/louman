@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\CartItem;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -54,6 +55,13 @@ class HandleInertiaRequests extends Middleware
             'cartCount' => $customer?->cartItems()->count() ?? 0,
             'cartItems' => $customer ? $this->getCartItems($customer) : [],
             'cartTotal' => $customer ? $this->getCartTotal($customer) : '0.00',
+            // Voedt de hulpknop in het klantportaal; null voor beheerders,
+            // zodat de knop daar niet verschijnt.
+            'support' => $customer ? [
+                'company_name' => $customer->company_name,
+                'email' => $request->user()?->email,
+                'phone' => Setting::get(Setting::SUPPORT_PHONE),
+            ] : null,
         ];
     }
 

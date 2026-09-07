@@ -16,6 +16,7 @@ use App\Http\Controllers\Customer\DeliveryAddressController;
 use App\Http\Controllers\Customer\FavoriteController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
+use App\Http\Controllers\Customer\SupportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PackingSlipController;
 use App\Mail\OrderConfirmation;
@@ -207,6 +208,8 @@ Route::middleware(['auth', 'approved', 'customer.profile-complete'])->prefix('cu
         ->name('customer.delivery-addresses.destroy');
 
     // Products
+    Route::post('/support', [SupportController::class, 'store'])
+        ->name('customer.support.store');
     Route::get('/products', [CustomerProductController::class, 'index'])
         ->name('customer.products');
     Route::get('/products/{product}', [CustomerProductController::class, 'show'])

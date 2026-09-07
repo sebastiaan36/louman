@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
 import { computed, watchEffect } from 'vue';
+import SupportButton from '@/components/SupportButton.vue';
 import AppLayout from '@/layouts/app/AppSidebarLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -28,5 +29,6 @@ watchEffect(() => {
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <slot />
+        <SupportButton />
     </AppLayout>
 </template>
