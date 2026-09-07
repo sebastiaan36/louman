@@ -151,7 +151,9 @@ test('de ballon past op een smal scherm', function () {
     $component = file_get_contents(dirname(__DIR__, 3).'/resources/js/components/SupportButton.vue');
 
     // Breedte loopt mee met het scherm, zodat hij op mobiel niet buiten beeld valt.
-    expect($component)->toContain('w-[min(22rem,calc(100vw-3rem))]');
+    expect($component)->toContain('w-[min(22rem,calc(100vw-3rem))]')
+        // Het tekstvak begint hoger dan de standaard min-h-16 van de Textarea.
+        ->and($component)->toContain('min-h-32');
 });
 
 test('de knop draagt de tekst Stel uw vraag', function () {

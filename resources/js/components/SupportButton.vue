@@ -112,11 +112,13 @@ const submit = () => {
 
                     <div class="grid gap-2">
                         <Label for="support_question" class="text-sm">Uw vraag</Label>
+                        <!-- De Textarea groeit mee met de inhoud; min-h zet waar hij
+                             begint, want rows wordt door field-sizing overruled. -->
                         <Textarea
                             id="support_question"
                             ref="questionField"
                             v-model="form.question"
-                            rows="4"
+                            class="min-h-32"
                             placeholder="Waarmee kunnen we u helpen?"
                         />
                         <InputError :message="form.errors.question" />
