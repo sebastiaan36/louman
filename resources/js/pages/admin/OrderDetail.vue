@@ -63,6 +63,7 @@ interface DeliveryAddress {
 
 interface Customer {
     company_name: string;
+    customer_number: string | null;
     contact_person: string;
     phone_number: string;
     email: string | null;
@@ -286,6 +287,10 @@ const backToOrders = () => {
                             <div>
                                 <span class="font-medium">Bedrijf:</span>
                                 <span class="ml-2">{{ order.customer.company_name }}</span>
+                            </div>
+                            <div v-if="order.customer.customer_number">
+                                <span class="font-medium">Klantnummer:</span>
+                                <span class="ml-2">{{ order.customer.customer_number }}</span>
                             </div>
                             <div>
                                 <span class="font-medium">Contactpersoon:</span>

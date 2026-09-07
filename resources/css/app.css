@@ -72,6 +72,18 @@
   If we ever want to remove these styles, we need to add an explicit border
   color utility to any element that depends on these defaults.
 */
+/* Getalvelden zonder de kleine op-en-neerpijltjes van de browser, voor plekken
+   waar een aantal alleen ingetikt hoort te worden. */
+.no-spinner {
+    appearance: textfield;
+}
+
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+}
+
 @layer base {
     *,
     ::after,

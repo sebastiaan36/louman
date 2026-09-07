@@ -25,6 +25,7 @@ interface DeliveryAddress {
 interface Customer {
     id: number;
     company_name: string;
+    customer_number: string | null;
     contact_person: string | null;
     customer_category: string | null;
     discount_percentage: string | null;
@@ -78,7 +79,8 @@ const filteredCustomers = computed(() => {
     if (!q) return props.customers.slice(0, 10);
     return props.customers.filter(c =>
         (c.company_name?.toLowerCase().includes(q) ?? false) ||
-        (c.contact_person?.toLowerCase().includes(q) ?? false)
+        (c.contact_person?.toLowerCase().includes(q) ?? false) ||
+        (c.customer_number?.toLowerCase().includes(q) ?? false)
     ).slice(0, 10);
 });
 
@@ -340,7 +342,12 @@ const submit = (createAnother = false) => {
                                 class="w-full text-left px-4 py-2 text-sm hover:bg-muted flex flex-col"
                                 @mousedown.prevent="selectCustomer(customer)"
                             >
-                                <span class="font-medium">{{ customer.company_name }}</span>
+                                <span class="font-medium">
+                                    {{ customer.company_name }}
+                                    <span v-if="customer.customer_number" class="font-normal text-muted-foreground">
+                                        — {{ customer.customer_number }}
+                                    </span>
+                                </span>
                                 <span class="text-muted-foreground text-xs">{{ customer.contact_person }}</span>
                             </button>
                         </div>
@@ -454,22 +461,13 @@ const submit = (createAnother = false) => {
                             {{ formatPrice(item.unit_price) }}
                         </div>
                         <div class="flex items-center gap-1">
-                            <button
-                                type="button"
-                                class="h-6 w-6 rounded border text-sm flex items-center justify-center hover:bg-muted"
-                                @click="item.quantity = Math.max(1, item.quantity - 1)"
-                            >−</button>
                             <input
-                                type="number"
                                 v-model.number="item.quantity"
+                                type="number"
+                                inputmode="numeric"
                                 min="1"
-                                class="w-12 text-center text-sm border rounded px-1 py-0.5"
+                                class="no-spinner w-14 text-center text-sm border rounded px-1 py-0.5"
                             />
-                            <button
-                                type="button"
-                                class="h-6 w-6 rounded border text-sm flex items-center justify-center hover:bg-muted"
-                                @click="item.quantity += 1"
-                            >+</button>
                         </div>
                         <div class="text-sm font-medium w-20 text-right">
                             {{ formatPrice(item.unit_price * item.quantity) }}
@@ -489,7 +487,11 @@ const submit = (createAnother = false) => {
                     </div>
 
                     <!-- Total -->
-                    <div class="flex justify-end pt-2 border-t">
+                    <div class="flex items-center justify-between pt-2 border-t">
+                        <span class="text-sm text-muted-foreground">
+                            {{ orderItems.length }}
+                            {{ orderItems.length === 1 ? 'artikelnummer' : 'artikelnummers' }}
+                        </span>
                         <span class="text-sm font-bold">Totaal: {{ formatPrice(orderTotal) }}</span>
                     </div>
                 </div>

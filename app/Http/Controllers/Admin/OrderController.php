@@ -97,6 +97,7 @@ class OrderController extends Controller
             ->map(fn (Customer $customer) => [
                 'id' => $customer->id,
                 'company_name' => $customer->company_name,
+                'customer_number' => $customer->customer_number,
                 'contact_person' => $customer->contact_person,
                 'customer_category' => $customer->customer_category,
                 'discount_percentage' => $customer->discount_percentage,
@@ -408,6 +409,7 @@ class OrderController extends Controller
                 'notes' => $order->notes,
                 'customer' => [
                     'company_name' => $order->customer->company_name,
+                    'customer_number' => $order->customer->customer_number,
                     'contact_person' => $order->customer->contact_person,
                     'phone_number' => $order->customer->phone_number,
                     'email' => $order->customer->user->email ?? null,
