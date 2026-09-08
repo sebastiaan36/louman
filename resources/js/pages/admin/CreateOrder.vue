@@ -248,6 +248,13 @@ const orderTotal = computed(() => {
     return orderItems.value.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
 });
 
+// De favorieten van de klant staan voorgeladen op 0; wat op 0 blijft staan
+// wordt overgeslagen en gaat ook niet mee bij het versturen. De teller volgt
+// diezelfde grens, zodat het getal klopt met wat er besteld wordt.
+const orderedItemCount = computed(
+    () => orderItems.value.filter(item => item.quantity >= 1).length,
+);
+
 
 // Notes
 const notes = ref('');
@@ -489,8 +496,8 @@ const submit = (createAnother = false) => {
                     <!-- Total -->
                     <div class="flex items-center justify-between pt-2 border-t">
                         <span class="text-sm text-muted-foreground">
-                            {{ orderItems.length }}
-                            {{ orderItems.length === 1 ? 'artikelnummer' : 'artikelnummers' }}
+                            {{ orderedItemCount }}
+                            {{ orderedItemCount === 1 ? 'artikelnummer' : 'artikelnummers' }}
                         </span>
                         <span class="text-sm font-bold">Totaal: {{ formatPrice(orderTotal) }}</span>
                     </div>

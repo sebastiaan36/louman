@@ -52,11 +52,22 @@ test('een klant zonder nummer levert null op in plaats van een fout', function (
 test('het bestelscherm telt artikelnummers, niet aantallen', function () {
     $scherm = file_get_contents(dirname(__DIR__, 3).'/resources/js/pages/admin/CreateOrder.vue');
 
-    // orderItems.length is het aantal regels; een optelling van item.quantity
-    // zou het aantal stuks geven en dat is juist niet de bedoeling.
+    // Een optelling van item.quantity zou het aantal stuks geven, en dat is
+    // juist niet de bedoeling.
     expect($scherm)
-        ->toContain('{{ orderItems.length }}')
-        ->toContain("orderItems.length === 1 ? 'artikelnummer' : 'artikelnummers'");
+        ->toContain('{{ orderedItemCount }}')
+        ->toContain("orderedItemCount === 1 ? 'artikelnummer' : 'artikelnummers'");
+});
+
+test('overgeslagen regels tellen niet mee', function () {
+    $scherm = file_get_contents(dirname(__DIR__, 3).'/resources/js/pages/admin/CreateOrder.vue');
+
+    // De favorieten staan voorgeladen op 0 en worden overgeslagen door ze zo te
+    // laten; de teller hanteert dezelfde grens als het versturen.
+    expect($scherm)
+        ->toContain('orderItems.value.filter(item => item.quantity >= 1).length')
+        ->toContain('quantity: 0,')
+        ->toContain('orderItems.value.filter(i => i.quantity >= 1)');
 });
 
 test('het aantalveld heeft geen pijltjes meer', function () {
