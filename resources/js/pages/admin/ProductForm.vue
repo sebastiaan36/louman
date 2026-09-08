@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { X } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -163,24 +163,52 @@ const weightInKg = (): number | null => {
 
 const toMoney = (value: number): string => (Math.round(value * 100) / 100).toFixed(2);
 
-// Entering a unit price fills in the price per kg (and vice versa), based on
-// the product weight. The value is read from the event so we only ever update
-// the other field — no two-way watcher loop.
-const syncPricePerKgFromPrice = (event: Event) => {
-    const kg = weightInKg();
-    const price = parseFloat((event.target as HTMLInputElement).value.replace(',', '.'));
-    if (kg && kg > 0 && !Number.isNaN(price)) {
-        form.value.price_per_kg = toMoney(price / kg);
+const toNumber = (value: unknown): number =>
+    parseFloat((value ?? '').toString().replace(',', '.'));
+
+// Prijs, prijs per kg en gewicht horen bij elkaar: verandert er een, dan volgt
+// de rest. Een vlag voorkomt dat de herberekening zichzelf weer aftrapt.
+let syncingPrices = false;
+
+const syncPrices = (update: () => void) => {
+    if (syncingPrices) {
+        return;
     }
+
+    syncingPrices = true;
+    update();
+    nextTick(() => {
+        syncingPrices = false;
+    });
 };
 
-const syncPriceFromPricePerKg = (event: Event) => {
+// Stuksprijs gewijzigd: de kiloprijs volgt.
+watch(() => form.value.price, (value) => {
     const kg = weightInKg();
-    const perKg = parseFloat((event.target as HTMLInputElement).value.replace(',', '.'));
-    if (kg && kg > 0 && !Number.isNaN(perKg)) {
-        form.value.price = toMoney(perKg * kg);
+    const price = toNumber(value);
+
+    if (! kg || kg <= 0 || Number.isNaN(price)) {
+        return;
     }
-};
+
+    syncPrices(() => {
+        form.value.price_per_kg = toMoney(price / kg);
+    });
+});
+
+// Kiloprijs gewijzigd: de stuksprijs volgt.
+watch(() => form.value.price_per_kg, (value) => {
+    const kg = weightInKg();
+    const perKg = toNumber(value);
+
+    if (! kg || kg <= 0 || Number.isNaN(perKg)) {
+        return;
+    }
+
+    syncPrices(() => {
+        form.value.price = toMoney(perKg * kg);
+    });
+});
 
 // Wijzigt het gewicht, dan klopt de stuksprijs niet meer. De kiloprijs is de
 // afgesproken prijs en blijft staan; de stuksprijs wordt opnieuw berekend.
@@ -192,18 +220,22 @@ watch(() => form.value.weight, () => {
         return;
     }
 
-    const perKg = parseFloat((form.value.price_per_kg || '').toString().replace(',', '.'));
+    const perKg = toNumber(form.value.price_per_kg);
 
     if (! Number.isNaN(perKg) && perKg > 0) {
-        form.value.price = toMoney(perKg * kg);
+        syncPrices(() => {
+            form.value.price = toMoney(perKg * kg);
+        });
 
         return;
     }
 
-    const price = parseFloat((form.value.price || '').toString().replace(',', '.'));
+    const price = toNumber(form.value.price);
 
     if (! Number.isNaN(price) && price > 0) {
-        form.value.price_per_kg = toMoney(price / kg);
+        syncPrices(() => {
+            form.value.price_per_kg = toMoney(price / kg);
+        });
     }
 });
 
@@ -497,7 +529,6 @@ const cancel = () => {
                                 min="0"
                                 required
                                 placeholder="0.00"
-                                @input="syncPricePerKgFromPrice"
                             />
                             <InputError :message="errors?.price" />
                         </div>
@@ -511,7 +542,6 @@ const cancel = () => {
                                 step="0.01"
                                 min="0"
                                 placeholder="optioneel"
-                                @input="syncPriceFromPricePerKg"
                             />
                             <InputError :message="errors?.price_per_kg" />
                         </div>

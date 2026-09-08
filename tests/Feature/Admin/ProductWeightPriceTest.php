@@ -7,10 +7,29 @@
  */
 $formulier = dirname(__DIR__, 3).'/resources/js/pages/admin/ProductForm.vue';
 
-test('het gewicht laat de prijs opnieuw berekenen', function () use ($formulier) {
+test('gewicht, stuksprijs en kiloprijs houden elkaar bij', function (string $veld) use ($formulier) {
     $source = file_get_contents($formulier);
 
-    expect($source)->toContain('watch(() => form.value.weight,');
+    expect($source)->toContain("watch(() => form.value.{$veld},");
+})->with(['weight', 'price', 'price_per_kg']);
+
+test('de herberekening trapt zichzelf niet opnieuw af', function () use ($formulier) {
+    $source = file_get_contents($formulier);
+
+    // Zonder deze vlag zou het bijwerken van het ene veld het andere aftrappen
+    // en andersom, met afrondingsverschillen die blijven doorlopen.
+    expect($source)
+        ->toContain('let syncingPrices = false;')
+        ->toContain('if (syncingPrices) {');
+});
+
+test('de berekening hangt niet meer aan het typen in een veld', function () use ($formulier) {
+    $source = file_get_contents($formulier);
+
+    // Met @input gebeurde er niets als een waarde ergens anders vandaan kwam.
+    expect($source)
+        ->not->toContain('@input="syncPricePerKgFromPrice"')
+        ->not->toContain('@input="syncPriceFromPricePerKg"');
 });
 
 test('de kiloprijs blijft leidend en de stuksprijs volgt', function () use ($formulier) {
