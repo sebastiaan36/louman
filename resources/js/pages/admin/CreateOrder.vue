@@ -116,7 +116,8 @@ const selectCustomer = (customer: Customer) => {
     selectedDeliveryAddressId.value = defaultAddr?.id ?? null;
 
     // Custom prices are fetched on demand; pre-fill the customer's Quick Order
-    // products (quantity 0) once the prices have arrived.
+    // products (quantity 0) once the prices have arrived. The list follows the
+    // alphabetical order of the product list, not the order of favouriting.
     orderItems.value = [];
     customPrices.value = {};
     fetch(`/admin/orders/customer/${customer.id}/prices`, {
@@ -127,10 +128,11 @@ const selectCustomer = (customer: Customer) => {
             // Ignore a stale response if another customer was selected meanwhile.
             if (selectedCustomer.value?.id !== customer.id) return;
             customPrices.value = data.custom_prices ?? {};
-            orderItems.value = customer.favorite_product_ids
-                .map(id => props.products.find(p => p.id === id))
-                .filter((p): p is Product => p !== undefined)
+            const favorites = new Set(customer.favorite_product_ids);
+            orderItems.value = props.products
+                .filter(p => favorites.has(p.id))
                 .filter(isVisibleToSelectedCustomer)
+                .sort((a, b) => a.title.localeCompare(b.title, 'nl', { sensitivity: 'base' }))
                 .map(product => ({
                     product_id: product.id,
                     product_title: product.title,

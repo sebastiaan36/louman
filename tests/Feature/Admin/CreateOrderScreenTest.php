@@ -94,3 +94,27 @@ test('het overzicht bleef het aantal regels tellen', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('orders.data.0.item_count', 3));
 });
+
+test('de Quick Order-producten staan op alfabet, niet in volgorde van favoriet maken', function () {
+    $scherm = file_get_contents(dirname(__DIR__, 3).'/resources/js/pages/admin/CreateOrder.vue');
+
+    expect($scherm)
+        ->toContain("localeCompare(b.title, 'nl', { sensitivity: 'base' })")
+        ->not->toContain('customer.favorite_product_ids
+                .map(id => props.products.find(p => p.id === id))');
+});
+
+test('de productlijst van het bestelscherm is op titel gesorteerd', function () {
+    Product::factory()->create(['title' => 'Zeeuws spek', 'is_active' => true]);
+    Product::factory()->create(['title' => 'Achterham', 'is_active' => true]);
+    Product::factory()->create(['title' => 'Kiprollade', 'is_active' => true]);
+
+    $this->actingAs(adminUser())
+        ->get('/admin/orders/create')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('products.0.title', 'Achterham')
+            ->where('products.1.title', 'Kiprollade')
+            ->where('products.2.title', 'Zeeuws spek')
+        );
+});
