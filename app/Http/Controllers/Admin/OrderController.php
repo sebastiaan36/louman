@@ -88,8 +88,14 @@ class OrderController extends Controller
     /**
      * Show the form for creating a new order.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        // Vanaf de rijroute komt een klant mee in de url; die staat dan al
+        // geselecteerd. Een onbekende of niet-goedgekeurde klant wordt genegeerd.
+        $preselectedCustomerId = Customer::approved()
+            ->whereKey($request->integer('customer'))
+            ->value('id');
+
         $customers = Customer::with(['deliveryAddresses', 'user', 'favoriteProducts:id'])
             ->whereNotNull('approved_at')
             ->orderBy('company_name')
@@ -130,6 +136,7 @@ class OrderController extends Controller
         return Inertia::render('admin/CreateOrder', [
             'customers' => $customers,
             'products' => $products,
+            'preselectedCustomerId' => $preselectedCustomerId,
         ]);
     }
 

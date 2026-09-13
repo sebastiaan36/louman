@@ -78,7 +78,7 @@ class DeliveryRouteController extends Controller
     {
         return Customer::approved()
             ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
-            ->select(['id', 'company_name', 'street_name', 'house_number', 'city', 'route_order', 'delivery_day']);
+            ->select(['id', 'company_name', 'phone_number', 'street_name', 'house_number', 'city', 'route_order', 'delivery_day']);
     }
 
     public function updateOrder(Request $request): RedirectResponse

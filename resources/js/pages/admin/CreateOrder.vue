@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { ShoppingCart, Plus, Trash2, Search, Zap } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,6 +55,7 @@ interface OrderItem {
 const props = defineProps<{
     customers: Customer[];
     products: Product[];
+    preselectedCustomerId: number | null;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -82,6 +83,16 @@ const filteredCustomers = computed(() => {
         (c.contact_person?.toLowerCase().includes(q) ?? false) ||
         (c.customer_number?.toLowerCase().includes(q) ?? false)
     ).slice(0, 10);
+});
+
+// Vanaf de rijroute komt een klant mee; die staat dan al geselecteerd zodat
+// meteen de producten ingevuld kunnen worden.
+onMounted(() => {
+    const preselected = props.customers.find(c => c.id === props.preselectedCustomerId);
+
+    if (preselected) {
+        selectCustomer(preselected);
+    }
 });
 
 const hideCustomerDropdown = () => {

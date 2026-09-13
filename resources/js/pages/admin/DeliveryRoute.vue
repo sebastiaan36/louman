@@ -1,17 +1,19 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { Download, GripVertical } from 'lucide-vue-next';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Download, GripVertical, Phone, ShoppingCart } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
+import admin from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
 
 interface Customer {
     id: number;
     company_name: string;
+    phone_number: string | null;
     street_name: string | null;
     house_number: string | null;
     city: string | null;
@@ -204,6 +206,25 @@ const saveOrder = () => {
                         <span v-if="customer.street_name" class="text-sm text-muted-foreground">
                             — {{ customer.street_name }} {{ customer.house_number }}, {{ customer.city }}
                         </span>
+                        <a
+                            v-if="customer.phone_number"
+                            :href="`tel:${customer.phone_number.replace(/[^\d+]/g, '')}`"
+                            class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                            draggable="false"
+                        >
+                            <Phone class="h-3.5 w-3.5" />
+                            {{ customer.phone_number }}
+                        </a>
+                        <Link
+                            :href="admin.orders.create.url({ query: { customer: customer.id } })"
+                            class="ml-auto shrink-0"
+                            draggable="false"
+                        >
+                            <Button size="sm" variant="outline">
+                                <ShoppingCart class="h-4 w-4 mr-2" />
+                                Bestelling maken
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </template>
@@ -240,6 +261,25 @@ const saveOrder = () => {
                     <span v-if="customer.street_name" class="text-sm text-muted-foreground">
                         — {{ customer.street_name }} {{ customer.house_number }}, {{ customer.city }}
                     </span>
+                    <a
+                        v-if="customer.phone_number"
+                        :href="`tel:${customer.phone_number.replace(/[^\d+]/g, '')}`"
+                        class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                        draggable="false"
+                    >
+                        <Phone class="h-3.5 w-3.5" />
+                        {{ customer.phone_number }}
+                    </a>
+                    <Link
+                        :href="admin.orders.create.url({ query: { customer: customer.id } })"
+                        class="ml-auto shrink-0"
+                        draggable="false"
+                    >
+                        <Button size="sm" variant="outline">
+                            <ShoppingCart class="h-4 w-4 mr-2" />
+                            Bestelling maken
+                        </Button>
+                    </Link>
                 </div>
             </div>
         </div>
