@@ -233,7 +233,7 @@
                     {{ $order->customer->contact_person }}<br>
                     {{ $order->customer->street_name }} {{ $order->customer->house_number }}<br>
                     {{ $order->customer->postal_code }} {{ $order->customer->city }}<br>
-                    Tel: {{ $order->customer->phone_number }}
+                    Tel: {{ $order->customer->primaryPhoneNumber() }}
                     @php $customerEmail = $order->customer->user?->email ?? $order->customer->packing_slip_email; @endphp
                     @if($customerEmail)<br>E-mail: {{ $customerEmail }}@endif
                 </div>

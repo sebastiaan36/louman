@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Customer;
+use App\Models\Order;
 
 test('het vaste nummer is standaard het hoofdnummer', function () {
     $customer = Customer::factory()->approved()->create([
@@ -97,4 +98,21 @@ test('het klantdetail heeft achter beide nummers een keuzerondje voor het hoofdn
     expect(substr_count($detail, 'v-model="form.primary_phone"'))->toBe(2)
         ->and(substr_count($detail, 'Hoofdnummer'))->toBe(2)
         ->and($detail)->toContain('(hoofdnummer)');
+});
+
+test('het besteldetail en de pakbon tonen het hoofdnummer', function () {
+    $customer = Customer::factory()->approved()->create([
+        'phone_number' => '020-4470930',
+        'mobile_number' => '06-12345678',
+        'primary_phone' => 'mobile',
+    ]);
+    $order = Order::factory()->create(['customer_id' => $customer->id]);
+
+    $this->actingAs(adminUser())
+        ->get("/admin/orders/{$order->id}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('order.customer.phone_number', '06-12345678'));
+
+    expect(file_get_contents(dirname(__DIR__, 3).'/resources/views/pdf/packing-slip.blade.php'))
+        ->toContain('Tel: {{ $order->customer->primaryPhoneNumber() }}');
 });
