@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -32,7 +33,8 @@ interface Customer {
     customer_number: string | null;
     company_name: string;
     contact_person: string;
-    email: string;
+    email: string | null;
+    has_account: boolean;
     phone_number: string;
     city: string;
     approved_at: string;
@@ -41,6 +43,7 @@ interface Customer {
 
 interface Filters {
     search: string | null;
+    account: 'all' | 'with' | 'without';
 }
 
 const props = defineProps<{
@@ -49,10 +52,12 @@ const props = defineProps<{
 }>();
 
 const searchQuery = ref(props.filters.search || '');
+const selectedAccount = ref<string>(props.filters.account || 'all');
 
 const updateFilters = () => {
     const params = new URLSearchParams();
     if (searchQuery.value) params.set('search', searchQuery.value);
+    if (selectedAccount.value !== 'all') params.set('account', selectedAccount.value);
 
     router.get(`/admin/customers?${params.toString()}`, {}, {
         preserveState: true,
@@ -60,10 +65,13 @@ const updateFilters = () => {
     });
 };
 
-watch(searchQuery, () => updateFilters());
+watch([searchQuery, selectedAccount], () => updateFilters());
+
+const hasFilters = computed(() => searchQuery.value !== '' || selectedAccount.value !== 'all');
 
 const clearSearch = () => {
     searchQuery.value = '';
+    selectedAccount.value = 'all';
 };
 
 const page = usePage();
@@ -150,34 +158,51 @@ const submitImport = () => {
                 </ul>
             </div>
 
-            <!-- Search -->
+            <!-- Search and filters -->
             <div class="rounded-lg border p-4">
-                <div class="grid gap-2 md:w-1/2">
-                    <Label for="search">Zoeken</Label>
-                    <div class="relative">
-                        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                            id="search"
-                            v-model="searchQuery"
-                            placeholder="Zoek op klantnummer of bedrijfsnaam..."
-                            class="pl-9"
-                        />
+                <div class="grid gap-4 md:grid-cols-3">
+                    <div class="grid gap-2">
+                        <Label for="search">Zoeken</Label>
+                        <div class="relative">
+                            <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                id="search"
+                                v-model="searchQuery"
+                                placeholder="Zoek op klantnummer of bedrijfsnaam..."
+                                class="pl-9"
+                            />
+                        </div>
                     </div>
-                    <Button
-                        v-if="searchQuery"
-                        variant="outline"
-                        size="sm"
-                        class="w-fit"
-                        @click="clearSearch"
-                    >
-                        Wis zoekopdracht
-                    </Button>
+
+                    <div class="grid gap-2">
+                        <Label for="account">Account</Label>
+                        <Select v-model="selectedAccount">
+                            <SelectTrigger id="account">
+                                <SelectValue placeholder="Alle klanten" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Alle klanten</SelectItem>
+                                <SelectItem value="without">Nog geen account</SelectItem>
+                                <SelectItem value="with">Met account</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div class="flex items-end">
+                        <Button
+                            variant="outline"
+                            :disabled="!hasFilters"
+                            @click="clearSearch"
+                        >
+                            Filters wissen
+                        </Button>
+                    </div>
                 </div>
             </div>
 
             <div v-if="customers.length === 0" class="rounded-lg border border-dashed p-12 text-center">
                 <p class="text-muted-foreground">
-                    {{ searchQuery ? 'Geen klanten gevonden met deze zoekopdracht' : 'Geen klanten gevonden' }}
+                    {{ hasFilters ? 'Geen klanten gevonden met deze filters' : 'Geen klanten gevonden' }}
                 </p>
             </div>
 
@@ -206,7 +231,10 @@ const submitImport = () => {
                             <TableCell class="font-mono text-sm text-muted-foreground">{{ customer.customer_number ?? '—' }}</TableCell>
                             <TableCell class="font-medium">{{ customer.company_name }}</TableCell>
                             <TableCell class="hidden md:table-cell">{{ customer.contact_person }}</TableCell>
-                            <TableCell class="hidden lg:table-cell">{{ customer.email }}</TableCell>
+                            <TableCell class="hidden lg:table-cell">
+                                <template v-if="customer.has_account">{{ customer.email }}</template>
+                                <Badge v-else variant="outline" class="text-muted-foreground">Nog geen account</Badge>
+                            </TableCell>
                             <TableCell class="hidden lg:table-cell">{{ customer.phone_number }}</TableCell>
                             <TableCell class="hidden md:table-cell">{{ customer.city }}</TableCell>
                             <TableCell>

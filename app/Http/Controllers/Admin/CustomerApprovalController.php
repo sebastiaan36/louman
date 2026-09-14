@@ -66,9 +66,14 @@ class CustomerApprovalController extends Controller
     public function allCustomers(Request $request): Response
     {
         $search = $request->input('search');
+        $account = in_array($request->input('account'), ['with', 'without'], true)
+            ? $request->input('account')
+            : 'all';
 
         $customers = Customer::with('user')
             ->whereNotNull('approved_at')
+            ->when($account === 'without', fn ($query) => $query->whereDoesntHave('user'))
+            ->when($account === 'with', fn ($query) => $query->whereHas('user'))
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('company_name', 'like', '%'.$search.'%')
@@ -83,6 +88,7 @@ class CustomerApprovalController extends Controller
                 'company_name' => $customer->company_name,
                 'contact_person' => $customer->contact_person,
                 'email' => $customer->user?->email,
+                'has_account' => $customer->user !== null,
                 'phone_number' => $customer->phone_number,
                 'city' => $customer->city,
                 'approved_at' => $customer->approved_at->format('d-m-Y'),
@@ -93,6 +99,7 @@ class CustomerApprovalController extends Controller
             'customers' => $customers,
             'filters' => [
                 'search' => $search,
+                'account' => $account,
             ],
         ]);
     }
