@@ -3,12 +3,13 @@
 use App\Models\Customer;
 use App\Models\Order;
 
-test('een beheerder krijgt de tellers voor het menu mee', function () {
+test('een beheerder krijgt de tellers voor het menu mee: bestellingen die nog niet voltooid zijn', function () {
     Customer::factory()->count(2)->create(['approved_at' => null]);
     $approved = Customer::factory()->approved()->create();
-    Order::factory()->count(3)->create(['customer_id' => $approved->id, 'status' => 'pending']);
+    Order::factory()->count(2)->create(['customer_id' => $approved->id, 'status' => 'pending']);
     Order::factory()->create(['customer_id' => $approved->id, 'status' => 'confirmed']);
     Order::factory()->create(['customer_id' => $approved->id, 'status' => 'completed']);
+    Order::factory()->create(['customer_id' => $approved->id, 'status' => 'cancelled']);
 
     $this->actingAs(adminUser())
         ->get('/dashboard')

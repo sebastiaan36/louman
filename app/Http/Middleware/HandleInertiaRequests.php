@@ -6,6 +6,7 @@ use App\Models\CartItem;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Setting;
+use App\Support\OrderStatus;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -57,7 +58,7 @@ class HandleInertiaRequests extends Middleware
             // klanten, zodat er niets geteld wordt dat zij niet mogen zien.
             'adminCounts' => $request->user()?->isAdmin() ? [
                 'pendingCustomers' => Customer::whereNull('approved_at')->count(),
-                'pendingOrders' => Order::where('status', 'pending')->count(),
+                'pendingOrders' => Order::whereIn('status', OrderStatus::OPEN)->count(),
             ] : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'cartCount' => $customer?->cartItems()->count() ?? 0,
