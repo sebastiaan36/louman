@@ -39,9 +39,12 @@
                     </table>
                 @endforeach
             @endif
-            @if(!empty($customer['packaging_notes']))
+            @php
+                $packaging = array_filter([$customer['packaging_type'] ?? null, $customer['packaging_notes'] ?? null]);
+            @endphp
+            @if(!empty($packaging))
                 <table class="notes">
-                    <tr><td><strong>Verpakking:</strong> {{ $customer['packaging_notes'] }}</td></tr>
+                    <tr><td><strong>Verpakking:</strong> {{ implode(' — ', $packaging) }}</td></tr>
                 </table>
             @endif
             @if(!empty($customer['notes']))

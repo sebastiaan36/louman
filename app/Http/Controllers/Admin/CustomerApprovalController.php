@@ -17,6 +17,7 @@ use App\Notifications\EmailAddressChanged;
 use App\Services\WebhookDispatcher;
 use App\Support\AdminNotifier;
 use App\Support\DeliveryDay;
+use App\Support\PackagingType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -350,6 +351,8 @@ class CustomerApprovalController extends Controller
             'customer_category_label' => $customer->getCategoryLabel(),
             'discount_percentage' => $customer->discount_percentage,
             'delivery_day' => $customer->delivery_day,
+            'packaging_type' => $customer->packaging_type,
+            'packaging_type_label' => PackagingType::label($customer->packaging_type),
             'show_on_map' => $customer->show_on_map,
             'approved_at' => $customer->approved_at?->format('d-m-Y H:i'),
             'created_at' => $customer->created_at->format('d-m-Y H:i'),
@@ -435,6 +438,7 @@ class CustomerApprovalController extends Controller
             'discount_percentage.in' => 'Ongeldig kortingspercentage.',
             'delivery_day.required' => 'Selecteer een leverdag.',
             'delivery_day.in' => 'Ongeldige leverdag.',
+            'packaging_type.in' => 'Ongeldige verpakking.',
         ]);
 
         $customer->forceFill([
@@ -478,6 +482,7 @@ class CustomerApprovalController extends Controller
             'customer_category' => ['required', 'in:groothandel,broodjeszaak,horeca'],
             'discount_percentage' => ['nullable', 'in:1,2,3,4,5'],
             'delivery_day' => ['required', DeliveryDay::rule()],
+            'packaging_type' => ['nullable', PackagingType::rule()],
             'show_on_map' => ['boolean'],
         ], [
             'customer_category.required' => 'Selecteer een klantcategorie.',
@@ -491,6 +496,7 @@ class CustomerApprovalController extends Controller
             'customer_category' => $validated['customer_category'],
             'discount_percentage' => $validated['discount_percentage'] ?? null,
             'delivery_day' => $validated['delivery_day'],
+            'packaging_type' => $validated['packaging_type'] ?? null,
             'show_on_map' => $validated['show_on_map'],
         ]);
 
@@ -498,6 +504,7 @@ class CustomerApprovalController extends Controller
             'customer_category' => $validated['customer_category'],
             'discount_percentage' => $validated['discount_percentage'] ?? null,
             'delivery_day' => $validated['delivery_day'],
+            'packaging_type' => $validated['packaging_type'] ?? null,
             'show_on_map' => $validated['show_on_map'],
         ]);
 

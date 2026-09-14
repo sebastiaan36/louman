@@ -36,6 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { DELIVERY_DAYS } from '@/lib/deliveryDays';
 import { orderStatusClasses, orderStatusLabel } from '@/lib/orderStatus';
+import { PACKAGING_TYPES } from '@/lib/packagingTypes';
 import { formatPrice } from '@/lib/price';
 import { dashboard } from '@/routes';
 import admin from '@/routes/admin';
@@ -71,6 +72,8 @@ interface Customer {
     customer_category_label: string | null;
     discount_percentage: string | null;
     delivery_day: string | null;
+    packaging_type: string | null;
+    packaging_type_label: string | null;
     show_on_map: boolean;
     approved_at: string;
     created_at: string;
@@ -415,15 +418,18 @@ const editDialogOpen = ref(false);
 const editCategory = ref<string>('');
 const editDiscount = ref<string>('');
 const editDeliveryDay = ref<string>('');
+const editPackagingType = ref<string>('');
 const editShowOnMap = ref<boolean>(true);
 const processing = ref(false);
 
 const deliveryDays = DELIVERY_DAYS;
+const packagingTypes = PACKAGING_TYPES;
 
 const openEditDialog = () => {
     editCategory.value = props.customer.customer_category || '';
     editDiscount.value = props.customer.discount_percentage || '';
     editDeliveryDay.value = props.customer.delivery_day || '';
+    editPackagingType.value = props.customer.packaging_type || '';
     editShowOnMap.value = props.customer.show_on_map ?? true;
     editDialogOpen.value = true;
 };
@@ -440,6 +446,7 @@ const updateCategoryAndDiscount = () => {
             customer_category: editCategory.value,
             discount_percentage: editDiscount.value,
             delivery_day: editDeliveryDay.value,
+            packaging_type: editPackagingType.value || null,
             show_on_map: editShowOnMap.value,
         },
         {
@@ -816,6 +823,13 @@ const deleteAddress = (addressId: number) => {
                             <div>
                                 <p class="text-sm font-medium">Vaste bestelnotitie</p>
                                 <p class="text-sm text-muted-foreground whitespace-pre-line">{{ customer.order_notes }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <Package class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">Verpakking</p>
+                                <p class="text-sm text-muted-foreground">{{ customer.packaging_type_label ?? 'Niet ingesteld' }}</p>
                             </div>
                         </div>
                         <div v-if="customer.delivery_day" class="flex items-start gap-3">
@@ -1245,6 +1259,36 @@ const deleteAddress = (addressId: number) => {
                                 {{ day.label }}
                             </option>
                         </select>
+                    </div>
+
+                    <div class="mt-6">
+                        <Label class="mb-3 block">Verpakking</Label>
+                        <div class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    id="edit_packaging_none"
+                                    value=""
+                                    v-model="editPackagingType"
+                                    class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <Label for="edit_packaging_none" class="cursor-pointer font-normal">
+                                    Niet ingesteld
+                                </Label>
+                            </div>
+                            <div v-for="type in packagingTypes" :key="type.value" class="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    :id="`edit_packaging_${type.value}`"
+                                    :value="type.value"
+                                    v-model="editPackagingType"
+                                    class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <Label :for="`edit_packaging_${type.value}`" class="cursor-pointer font-normal">
+                                    {{ type.label }}
+                                </Label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-6 flex items-center space-x-2">

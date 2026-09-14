@@ -67,6 +67,8 @@ interface Customer {
     contact_person: string;
     phone_number: string;
     email: string | null;
+    packaging_type: string | null;
+    packaging_notes: string | null;
 }
 
 interface Order {
@@ -303,6 +305,10 @@ const backToOrders = () => {
                             <div v-if="order.customer.email">
                                 <span class="font-medium">Email:</span>
                                 <span class="ml-2">{{ order.customer.email }}</span>
+                            </div>
+                            <div v-if="order.customer.packaging_type || order.customer.packaging_notes">
+                                <span class="font-medium">Verpakking:</span>
+                                <span class="ml-2">{{ [order.customer.packaging_type, order.customer.packaging_notes].filter(Boolean).join(' — ') }}</span>
                             </div>
                         </div>
                     </div>

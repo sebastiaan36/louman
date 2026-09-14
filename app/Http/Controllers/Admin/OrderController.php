@@ -13,6 +13,7 @@ use App\Services\MpdfRenderer;
 use App\Services\WebhookDispatcher;
 use App\Support\DeliveryDay;
 use App\Support\OrderStatus;
+use App\Support\PackagingType;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -307,6 +308,7 @@ class OrderController extends Controller
                 'is_pickup' => $customer->delivery_day === 'ophalen',
                 'products' => array_values($products),
                 'notes' => $customerNotes[$customer->id] ?? [],
+                'packaging_type' => PackagingType::label($customer->packaging_type),
                 'packaging_notes' => $customer->packaging_notes,
             ];
         }
@@ -447,6 +449,8 @@ class OrderController extends Controller
                     'contact_person' => $order->customer->contact_person,
                     'phone_number' => $order->customer->phone_number,
                     'email' => $order->customer->user->email ?? null,
+                    'packaging_type' => PackagingType::label($order->customer->packaging_type),
+                    'packaging_notes' => $order->customer->packaging_notes,
                 ],
                 'delivery_address' => $deliveryAddress,
                 'items' => $order->items->map(function ($item) {
