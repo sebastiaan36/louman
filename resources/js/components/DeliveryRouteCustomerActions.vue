@@ -81,7 +81,8 @@ const toggleFlag = (flag: Exclude<RouteFlag, null>) => {
             :href="admin.orders.create.url({ query: { customer: customerId } })"
             draggable="false"
         >
-            <Button size="sm">
+            <!-- Wit zodra de klant al besteld heeft, zodat de groene knop Heeft besteld de aandacht krijgt. -->
+            <Button size="sm" :variant="openOrdersCount > 0 ? 'outline' : 'default'">
                 <ShoppingCart class="h-4 w-4 mr-2" />
                 Bestelling maken
             </Button>
