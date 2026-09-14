@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ShoppingCart, Download, CheckSquare, FileArchive, Search, Plus, ClipboardList, LayoutGrid } from 'lucide-vue-next';
+import { ShoppingCart, Download, CheckSquare, FileArchive, Search, Plus, ClipboardList, LayoutGrid, Beef } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
 import Pagination from '@/components/Pagination.vue';
 import { Badge } from '@/components/ui/badge';
@@ -219,6 +219,12 @@ const downloadBulkPackingSlips = () => {
                         <Button variant="outline">
                             <ClipboardList class="h-4 w-4 mr-2" />
                             Productielijst
+                        </Button>
+                    </a>
+                    <a href="/admin/orders/production-list/slagerij" target="_blank">
+                        <Button variant="outline">
+                            <Beef class="h-4 w-4 mr-2" />
+                            Productielijst slagerij
                         </Button>
                     </a>
                     <a href="/admin/orders/customer-overview" target="_blank">

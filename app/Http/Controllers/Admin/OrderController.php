@@ -333,18 +333,41 @@ class OrderController extends Controller
     }
 
     /**
-     * Generate production list PDF for all confirmed orders.
+     * Generate the production list PDF for all confirmed orders, without the
+     * private-label products that are made in the butchery.
      */
     public function productionList(): \Illuminate\Http\Response
+    {
+        return $this->renderProductionList(false, 'PRODUCTIELIJST', 'productielijst');
+    }
+
+    /**
+     * Generate the separate production list for the private-label products
+     * marked "Uit de slagerij".
+     */
+    public function butcheryProductionList(): \Illuminate\Http\Response
+    {
+        return $this->renderProductionList(true, 'PRODUCTIELIJST SLAGERIJ', 'productielijst-slagerij');
+    }
+
+    /**
+     * Aggregate the confirmed order lines per product and render them as a PDF.
+     * Only products whose "from_butchery" flag matches the requested list are
+     * included, so each product appears on exactly one of the two lists.
+     */
+    protected function renderProductionList(bool $fromButchery, string $title, string $filename): \Illuminate\Http\Response
     {
         $orders = Order::with(['items.product'])
             ->where('status', 'confirmed')
             ->get();
 
-        // Aggregate quantities per product
         $products = [];
         foreach ($orders as $order) {
             foreach ($order->items as $item) {
+                if ($item->product === null || (bool) $item->product->from_butchery !== $fromButchery) {
+                    continue;
+                }
+
                 $productId = $item->product_id;
                 if (! isset($products[$productId])) {
                     $products[$productId] = [
@@ -362,12 +385,13 @@ class OrderController extends Controller
         usort($products, fn ($a, $b) => strnatcmp($a['article_number'], $b['article_number']));
 
         $pdf = Pdf::loadView('pdf.production-list', [
+            'title' => $title,
             'products' => $products,
             'orderCount' => $orders->count(),
             'generatedAt' => now()->format('d-m-Y H:i'),
         ]);
 
-        return $pdf->stream('productielijst-'.now()->format('Y-m-d').'.pdf');
+        return $pdf->stream($filename.'-'.now()->format('Y-m-d').'.pdf');
     }
 
     /**

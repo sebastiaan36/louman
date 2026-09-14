@@ -172,6 +172,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.orders.create');
     Route::get('/orders/production-list', [AdminOrderController::class, 'productionList'])
         ->name('admin.orders.production-list');
+    Route::get('/orders/production-list/slagerij', [AdminOrderController::class, 'butcheryProductionList'])
+        ->name('admin.orders.production-list.butchery');
     Route::get('/orders/customer-overview', [AdminOrderController::class, 'customerOverview'])
         ->name('admin.orders.customer-overview');
     Route::post('/orders', [AdminOrderController::class, 'store'])
