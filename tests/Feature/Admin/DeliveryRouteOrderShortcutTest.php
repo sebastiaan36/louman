@@ -80,8 +80,9 @@ test('de knop op de rijroute opent het bestelscherm met de klant in de url', fun
     expect($acties)
         ->toContain('admin.orders.create.url({ query: { customer: customerId } })')
         ->toContain('Bestelling maken')
-        // Primaire kleur zolang de klant nog niet besteld heeft, daarna wit.
-        ->toContain("<Button size=\"sm\" :variant=\"openOrdersCount > 0 ? 'outline' : 'default'\">");
+        // Primaire kleur zolang er nog een bestelling verwacht wordt; wit na een
+        // bestelling of als de klant deze week niet hoeft te bestellen.
+        ->toContain("<Button size=\"sm\" :variant=\"openOrdersCount > 0 || routeFlag === 'skip_week' ? 'outline' : 'default'\">");
     expect(substr_count($pagina, '<DeliveryRouteCustomerActions'))->toBe(2)
         ->and(substr_count($pagina, '`tel:${customer.phone_number'))->toBe(2);
 });

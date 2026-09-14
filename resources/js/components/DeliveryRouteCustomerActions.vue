@@ -81,8 +81,9 @@ const toggleFlag = (flag: Exclude<RouteFlag, null>) => {
             :href="admin.orders.create.url({ query: { customer: customerId } })"
             draggable="false"
         >
-            <!-- Wit zodra de klant al besteld heeft, zodat de groene knop Heeft besteld de aandacht krijgt. -->
-            <Button size="sm" :variant="openOrdersCount > 0 ? 'outline' : 'default'">
+            <!-- Wit zodra de klant al besteld heeft of deze week niet hoeft te bestellen;
+                 groen alleen als er nog een bestelling verwacht wordt. -->
+            <Button size="sm" :variant="openOrdersCount > 0 || routeFlag === 'skip_week' ? 'outline' : 'default'">
                 <ShoppingCart class="h-4 w-4 mr-2" />
                 Bestelling maken
             </Button>
