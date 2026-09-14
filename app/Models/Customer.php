@@ -183,12 +183,25 @@ class Customer extends Model
     public const ROUTE_FLAGS = [self::ROUTE_FLAG_CALLBACK, self::ROUTE_FLAG_SKIP_WEEK];
 
     /**
-     * The key of the current ISO week, e.g. "2026-W38". A route flag is only
+     * The hour on Sunday evening (business time) at which the route markers
+     * reset for the new week.
+     */
+    public const ROUTE_WEEK_RESET_HOUR = 21;
+
+    /**
+     * The key of the current route week, e.g. "2026-W38". A route flag is only
      * active while its week matches this key.
+     *
+     * A route week does not start on Monday at midnight but on Sunday at
+     * 21:00 (Amsterdam time), so the markers are clean before the Monday
+     * route is prepared. Shifting the clock forward by the remaining hours of
+     * Sunday makes Sunday 21:00 fall in the next ISO week.
      */
     public static function currentRouteWeek(): string
     {
-        return now()->format('o-\WW');
+        return now(config('app.business_timezone'))
+            ->addHours(24 - self::ROUTE_WEEK_RESET_HOUR)
+            ->format('o-\WW');
     }
 
     /**

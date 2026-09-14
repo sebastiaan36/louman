@@ -51,7 +51,7 @@ const toggleFlag = (flag: Exclude<RouteFlag, null>) => {
             :variant="routeFlag === 'callback' ? 'default' : 'outline'"
             :disabled="saving"
             :aria-pressed="routeFlag === 'callback'"
-            title="Klant wil teruggebeld worden"
+            title="Klant wil teruggebeld worden (reset zondag 21:00)"
             draggable="false"
             @click="toggleFlag('callback')"
         >
@@ -64,7 +64,7 @@ const toggleFlag = (flag: Exclude<RouteFlag, null>) => {
             :variant="routeFlag === 'skip_week' ? 'default' : 'outline'"
             :disabled="saving"
             :aria-pressed="routeFlag === 'skip_week'"
-            title="Klant hoeft deze week niet te bestellen"
+            title="Klant hoeft deze week niet te bestellen (reset zondag 21:00)"
             draggable="false"
             @click="toggleFlag('skip_week')"
         >

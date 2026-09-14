@@ -60,13 +60,29 @@ test('een onbekende markering wordt geweigerd', function () {
         ->assertSessionHasErrors('flag');
 });
 
-test('een markering vervalt vanzelf in de volgende week', function () {
+test('een markering vervalt op zondagavond om 21:00 Nederlandse tijd', function () {
+    // Woensdag 16 september 2026, midden in de week.
     Carbon::setTestNow('2026-09-16 10:00:00');
     $customer = Customer::factory()->approved()->create(['delivery_day' => 'woensdag']);
     $customer->setRouteFlag('skip_week');
     expect($customer->fresh()->activeRouteFlag())->toBe('skip_week');
 
+    // Zondag 20 september 20:59 Amsterdam (18:59 UTC, zomertijd): nog actief.
+    Carbon::setTestNow('2026-09-20 18:59:00');
+    expect($customer->fresh()->activeRouteFlag())->toBe('skip_week');
+
+    // Zondag 20 september 21:00 Amsterdam (19:00 UTC): vervallen.
+    Carbon::setTestNow('2026-09-20 19:00:00');
+    expect($customer->fresh()->activeRouteFlag())->toBeNull();
+
+    // Een markering die zondagavond na 21:00 wordt gezet, hoort bij de nieuwe week.
+    Carbon::setTestNow('2026-09-20 20:00:00');
+    $customer->setRouteFlag('callback');
+    Carbon::setTestNow('2026-09-23 08:00:00');
+    expect($customer->fresh()->activeRouteFlag())->toBe('callback');
+
     Carbon::setTestNow('2026-09-21 06:00:00');
+    $customer->setRouteFlag(null);
     expect($customer->fresh()->activeRouteFlag())->toBeNull();
 
     $this->actingAs(adminUser())
