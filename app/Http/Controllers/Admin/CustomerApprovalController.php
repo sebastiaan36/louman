@@ -337,6 +337,7 @@ class CustomerApprovalController extends Controller
             'missing_profile_fields' => $customer->user ? $customer->missingProfileFields() : [],
             'phone_number' => $customer->phone_number,
             'mobile_number' => $customer->mobile_number,
+            'primary_phone' => $customer->primary_phone,
             'packaging_notes' => $customer->packaging_notes,
             'order_notes' => $customer->order_notes,
             'kvk_number' => $customer->kvk_number,
@@ -522,6 +523,7 @@ class CustomerApprovalController extends Controller
             'contact_person' => ['nullable', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'mobile_number' => ['nullable', 'string', 'max:20'],
+            'primary_phone' => ['nullable', Rule::in(Customer::PRIMARY_PHONE_OPTIONS)],
             'kvk_number' => ['nullable', 'string', 'max:8'],
             'vat_number' => ['nullable', 'string', 'max:14'],
             'bank_account' => ['nullable', 'string', 'max:34'],
@@ -536,7 +538,10 @@ class CustomerApprovalController extends Controller
             'customer_number.digits_between' => 'Klantnummer mag uit 1 tot 4 cijfers bestaan.',
             'customer_number.unique' => 'Dit klantnummer is al in gebruik.',
             'packing_slip_email.email' => 'Pakbon email moet een geldig email adres zijn.',
+            'primary_phone.in' => 'Kies het vaste of het mobiele nummer als hoofdnummer.',
         ]);
+
+        $validated['primary_phone'] = $validated['primary_phone'] ?? 'phone';
 
         $customer->update($validated);
 

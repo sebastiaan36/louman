@@ -84,7 +84,7 @@ class DeliveryRouteController extends Controller
     private function routeQuery(): Builder
     {
         return Customer::approved()
-            ->select(['id', 'company_name', 'phone_number', 'street_name', 'house_number', 'city', 'route_order', 'delivery_day', 'route_flag', 'route_flag_week'])
+            ->select(['id', 'company_name', 'phone_number', 'mobile_number', 'primary_phone', 'street_name', 'house_number', 'city', 'route_order', 'delivery_day', 'route_flag', 'route_flag_week'])
             ->withCount(['orders as open_orders_count' => fn (Builder $query) => $query->whereIn('status', OrderStatus::OPEN)])
             ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC');
     }
@@ -100,7 +100,7 @@ class DeliveryRouteController extends Controller
         return [
             'id' => $customer->id,
             'company_name' => $customer->company_name,
-            'phone_number' => $customer->phone_number,
+            'phone_number' => $customer->primaryPhoneNumber(),
             'street_name' => $customer->street_name,
             'house_number' => $customer->house_number,
             'city' => $customer->city,
@@ -166,7 +166,7 @@ class DeliveryRouteController extends Controller
         $customers = $query
             ->orderByRaw($dayCase)
             ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
-            ->get(['company_name', 'phone_number', 'delivery_day', 'route_order']);
+            ->get(['company_name', 'phone_number', 'mobile_number', 'primary_phone', 'delivery_day', 'route_order']);
 
         $scope = $isAllDays ? 'alle dagen' : $day;
         AuditLog::record('delivery_route.export', "Rijroute-export ({$scope}) van {$customers->count()} klanten");
@@ -184,7 +184,7 @@ class DeliveryRouteController extends Controller
             foreach ($customers as $customer) {
                 fputcsv($handle, [
                     $this->csvValue($customer->company_name),
-                    $this->csvValue($customer->phone_number),
+                    $this->csvValue($customer->primaryPhoneNumber()),
                     $customer->delivery_day,
                     $customer->route_order ?? '',
                 ], ';');

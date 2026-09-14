@@ -304,7 +304,7 @@ class OrderController extends Controller
                 'id' => $customer->id,
                 'number' => $customer->customer_number,
                 'company_name' => $customer->company_name,
-                'phone_number' => $customer->phone_number,
+                'phone_number' => $customer->primaryPhoneNumber(),
                 'is_pickup' => $customer->delivery_day === 'ophalen',
                 'products' => array_values($products),
                 'notes' => $customerNotes[$customer->id] ?? [],

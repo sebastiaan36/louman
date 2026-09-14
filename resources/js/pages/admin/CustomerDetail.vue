@@ -58,6 +58,7 @@ interface Customer {
     } | null;
     phone_number: string;
     mobile_number: string | null;
+    primary_phone: 'phone' | 'mobile';
     packing_slip_email: string | null;
     packaging_notes: string | null;
     order_notes: string | null;
@@ -467,6 +468,7 @@ const form = useForm({
     contact_person: props.customer.contact_person,
     phone_number: props.customer.phone_number,
     mobile_number: props.customer.mobile_number || '',
+    primary_phone: props.customer.primary_phone || 'phone',
     kvk_number: props.customer.kvk_number,
     vat_number: props.customer.vat_number,
     bank_account: props.customer.bank_account,
@@ -485,6 +487,7 @@ const openEditCustomerDialog = () => {
     form.contact_person = props.customer.contact_person;
     form.phone_number = props.customer.phone_number;
     form.mobile_number = props.customer.mobile_number || '';
+    form.primary_phone = props.customer.primary_phone || 'phone';
     form.kvk_number = props.customer.kvk_number;
     form.vat_number = props.customer.vat_number;
     form.bank_account = props.customer.bank_account;
@@ -742,14 +745,14 @@ const deleteAddress = (addressId: number) => {
                         <div class="flex items-start gap-3">
                             <Phone class="h-4 w-4 text-muted-foreground mt-0.5" />
                             <div>
-                                <p class="text-sm font-medium">Telefoon</p>
+                                <p class="text-sm font-medium">Telefoon <span v-if="customer.primary_phone !== 'mobile'" class="ml-1 text-xs font-normal text-muted-foreground">(hoofdnummer)</span></p>
                                 <p class="text-sm text-muted-foreground">{{ customer.phone_number }}</p>
                             </div>
                         </div>
                         <div v-if="customer.mobile_number" class="flex items-start gap-3">
                             <Phone class="h-4 w-4 text-muted-foreground mt-0.5" />
                             <div>
-                                <p class="text-sm font-medium">Mobiel</p>
+                                <p class="text-sm font-medium">Mobiel <span v-if="customer.primary_phone === 'mobile'" class="ml-1 text-xs font-normal text-muted-foreground">(hoofdnummer)</span></p>
                                 <p class="text-sm text-muted-foreground">{{ customer.mobile_number }}</p>
                             </div>
                         </div>
@@ -1372,23 +1375,49 @@ const deleteAddress = (addressId: number) => {
 
                         <div>
                             <Label for="phone_number">Telefoonnummer</Label>
-                            <Input
-                                id="phone_number"
-                                v-model="form.phone_number"
-                                type="text"
-                                class="mt-1"
-                            />
+                            <div class="mt-1 flex items-center gap-3">
+                                <Input
+                                    id="phone_number"
+                                    v-model="form.phone_number"
+                                    type="text"
+                                    class="flex-1"
+                                />
+                                <label class="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground" title="Dit nummer staat op de rijroute">
+                                    <input
+                                        type="radio"
+                                        name="primary_phone"
+                                        value="phone"
+                                        v-model="form.primary_phone"
+                                        class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                    Hoofdnummer
+                                </label>
+                            </div>
                             <InputError :message="form.errors.phone_number" class="mt-2" />
                         </div>
 
                         <div>
                             <Label for="mobile_number">Mobiel telefoonnummer</Label>
-                            <Input
-                                id="mobile_number"
-                                v-model="form.mobile_number"
-                                type="text"
-                                class="mt-1"
-                            />
+                            <div class="mt-1 flex items-center gap-3">
+                                <Input
+                                    id="mobile_number"
+                                    v-model="form.mobile_number"
+                                    type="text"
+                                    class="flex-1"
+                                />
+                                <label class="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground" title="Dit nummer staat op de rijroute">
+                                    <input
+                                        type="radio"
+                                        name="primary_phone"
+                                        value="mobile"
+                                        v-model="form.primary_phone"
+                                        class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                    Hoofdnummer
+                                </label>
+                            </div>
+                            <p class="mt-1 text-xs text-muted-foreground">Het hoofdnummer wordt getoond op de rijroute en in de rijroute-export.</p>
+                            <InputError :message="form.errors.primary_phone" class="mt-2" />
                             <InputError :message="form.errors.mobile_number" class="mt-2" />
                         </div>
 

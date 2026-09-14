@@ -28,6 +28,7 @@ class Customer extends Model
         'contact_person',
         'phone_number',
         'mobile_number',
+        'primary_phone',
         'street_name',
         'house_number',
         'postal_code',
@@ -47,6 +48,15 @@ class Customer extends Model
         'route_flag_week',
         'show_on_map',
         'terms_accepted_at',
+    ];
+
+    /**
+     * The model's default attribute values.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'primary_phone' => 'phone',
     ];
 
     /**
@@ -169,6 +179,24 @@ class Customer extends Model
         return $this->invitations()
             ->whereNull('accepted_at')
             ->first();
+    }
+
+    /**
+     * Which of the two phone numbers is the one to call: the landline
+     * ("phone") or the mobile ("mobile"). Shown on the delivery route.
+     */
+    public const PRIMARY_PHONE_OPTIONS = ['phone', 'mobile'];
+
+    /**
+     * The number to call this customer on, honouring the chosen main number
+     * and falling back to whichever number is filled in.
+     */
+    public function primaryPhoneNumber(): ?string
+    {
+        $preferred = $this->primary_phone === 'mobile' ? $this->mobile_number : $this->phone_number;
+        $other = $this->primary_phone === 'mobile' ? $this->phone_number : $this->mobile_number;
+
+        return blank($preferred) ? ($other ?: null) : $preferred;
     }
 
     /**
