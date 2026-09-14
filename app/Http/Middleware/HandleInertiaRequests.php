@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Models\CartItem;
+use App\Models\Customer;
+use App\Models\Order;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -51,6 +53,12 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
                 'import_results' => $request->session()->get('import_results'),
             ],
+            // Tellers achter de menu-items in het beheerdersmenu; null voor
+            // klanten, zodat er niets geteld wordt dat zij niet mogen zien.
+            'adminCounts' => $request->user()?->isAdmin() ? [
+                'pendingCustomers' => Customer::whereNull('approved_at')->count(),
+                'pendingOrders' => Order::where('status', 'pending')->count(),
+            ] : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'cartCount' => $customer?->cartItems()->count() ?? 0,
             'cartItems' => $customer ? $this->getCartItems($customer) : [],

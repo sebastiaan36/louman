@@ -24,6 +24,11 @@ const page = usePage();
 const user = computed(() => page.props.auth.user);
 const isAdmin = computed(() => user.value?.role === 'admin');
 
+// Counts behind the admin menu items; a zero is left out so the badge
+// only appears when there is something waiting.
+const adminCounts = computed(() => page.props.adminCounts as { pendingCustomers: number; pendingOrders: number } | null);
+const countBadge = (count: number | undefined): number | undefined => (count && count > 0 ? count : undefined);
+
 // Admin menu sections
 const adminSection1 = computed<NavItem[]>(() => [
     {
@@ -38,6 +43,7 @@ const adminSection2 = computed<NavItem[]>(() => [
         title: 'Wachtende klanten',
         href: admin.customers.pending(),
         icon: Users,
+        badge: countBadge(adminCounts.value?.pendingCustomers),
     },
     {
         title: 'Klanten',
@@ -51,6 +57,7 @@ const adminSection3 = computed<NavItem[]>(() => [
         title: 'Bestellingen',
         href: '/admin/orders',
         icon: ShoppingCart,
+        badge: countBadge(adminCounts.value?.pendingOrders),
     },
     {
         title: 'Producten',

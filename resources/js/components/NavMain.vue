@@ -34,7 +34,7 @@ const { isCurrentUrl } = useCurrentUrl();
                     <Link :href="item.href">
                         <component :is="item.icon" />
                         <span>{{ item.title }}</span>
-                        <Badge v-if="item.badge" variant="secondary" class="ml-auto">
+                        <Badge v-if="item.badge" variant="default" class="ml-auto">
                             {{ item.badge }}
                         </Badge>
                     </Link>
