@@ -76,7 +76,7 @@ const toggleFlag = (flag: Exclude<RouteFlag, null>) => {
             :href="admin.orders.create.url({ query: { customer: customerId } })"
             draggable="false"
         >
-            <Button size="sm" variant="outline">
+            <Button size="sm">
                 <ShoppingCart class="h-4 w-4 mr-2" />
                 Bestelling maken
             </Button>

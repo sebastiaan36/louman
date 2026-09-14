@@ -79,7 +79,9 @@ test('de knop op de rijroute opent het bestelscherm met de klant in de url', fun
     // (per dag en alle dagen) wordt gebruikt.
     expect($acties)
         ->toContain('admin.orders.create.url({ query: { customer: customerId } })')
-        ->toContain('Bestelling maken');
+        ->toContain('Bestelling maken')
+        // Ingekleurd als primaire knop, net als Nieuwe bestelling op de bestellingenpagina.
+        ->toContain("<Button size=\"sm\">\n                <ShoppingCart");
     expect(substr_count($pagina, '<DeliveryRouteCustomerActions'))->toBe(2)
         ->and(substr_count($pagina, '`tel:${customer.phone_number'))->toBe(2);
 });
