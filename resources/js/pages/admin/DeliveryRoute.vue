@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { Download, GripVertical, Phone, ShoppingCart } from 'lucide-vue-next';
+import { Head, router } from '@inertiajs/vue3';
+import { Download, GripVertical, Phone } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import DeliveryRouteCustomerActions, { type RouteFlag } from '@/components/DeliveryRouteCustomerActions.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import admin from '@/routes/admin';
 import { type BreadcrumbItem } from '@/types';
 
 interface Customer {
@@ -18,6 +18,8 @@ interface Customer {
     house_number: string | null;
     city: string | null;
     route_order: number | null;
+    open_orders_count: number;
+    route_flag: RouteFlag;
 }
 
 interface DayGroup {
@@ -215,16 +217,12 @@ const saveOrder = () => {
                             <Phone class="h-3.5 w-3.5" />
                             {{ customer.phone_number }}
                         </a>
-                        <Link
-                            :href="admin.orders.create.url({ query: { customer: customer.id } })"
-                            class="ml-auto shrink-0"
-                            draggable="false"
-                        >
-                            <Button size="sm" variant="outline">
-                                <ShoppingCart class="h-4 w-4 mr-2" />
-                                Bestelling maken
-                            </Button>
-                        </Link>
+                        <DeliveryRouteCustomerActions
+                            :customer-id="customer.id"
+                            :company-name="customer.company_name"
+                            :open-orders-count="customer.open_orders_count"
+                            :route-flag="customer.route_flag"
+                        />
                     </div>
                 </div>
             </template>
@@ -270,16 +268,12 @@ const saveOrder = () => {
                         <Phone class="h-3.5 w-3.5" />
                         {{ customer.phone_number }}
                     </a>
-                    <Link
-                        :href="admin.orders.create.url({ query: { customer: customer.id } })"
-                        class="ml-auto shrink-0"
-                        draggable="false"
-                    >
-                        <Button size="sm" variant="outline">
-                            <ShoppingCart class="h-4 w-4 mr-2" />
-                            Bestelling maken
-                        </Button>
-                    </Link>
+                    <DeliveryRouteCustomerActions
+                        :customer-id="customer.id"
+                        :company-name="customer.company_name"
+                        :open-orders-count="customer.open_orders_count"
+                        :route-flag="customer.route_flag"
+                    />
                 </div>
             </div>
         </div>

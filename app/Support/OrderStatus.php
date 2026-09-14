@@ -12,6 +12,13 @@ class OrderStatus
     public const STATUSES = ['pending', 'confirmed', 'completed', 'cancelled'];
 
     /**
+     * The statuses of an order that still has to be delivered.
+     *
+     * @var list<string>
+     */
+    public const OPEN = ['pending', 'confirmed'];
+
+    /**
      * Get the Dutch label for an order status.
      */
     public static function label(string $status): string

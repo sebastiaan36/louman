@@ -42,6 +42,8 @@ class Customer extends Model
         'discount_percentage',
         'delivery_day',
         'route_order',
+        'route_flag',
+        'route_flag_week',
         'show_on_map',
         'terms_accepted_at',
     ];
@@ -166,6 +168,49 @@ class Customer extends Model
         return $this->invitations()
             ->whereNull('accepted_at')
             ->first();
+    }
+
+    /**
+     * The weekly markers the driver can put on a customer on the delivery
+     * route: the customer wants to be called back, or does not need to order
+     * this week. Both reset automatically when a new week starts.
+     */
+    public const ROUTE_FLAG_CALLBACK = 'callback';
+
+    public const ROUTE_FLAG_SKIP_WEEK = 'skip_week';
+
+    public const ROUTE_FLAGS = [self::ROUTE_FLAG_CALLBACK, self::ROUTE_FLAG_SKIP_WEEK];
+
+    /**
+     * The key of the current ISO week, e.g. "2026-W38". A route flag is only
+     * active while its week matches this key.
+     */
+    public static function currentRouteWeek(): string
+    {
+        return now()->format('o-\WW');
+    }
+
+    /**
+     * The route flag that is still active this week, or null.
+     */
+    public function activeRouteFlag(): ?string
+    {
+        if ($this->route_flag === null || $this->route_flag_week !== self::currentRouteWeek()) {
+            return null;
+        }
+
+        return $this->route_flag;
+    }
+
+    /**
+     * Set (or clear, with null) the route flag for the current week.
+     */
+    public function setRouteFlag(?string $flag): void
+    {
+        $this->forceFill([
+            'route_flag' => $flag,
+            'route_flag_week' => $flag === null ? null : self::currentRouteWeek(),
+        ])->save();
     }
 
     /**

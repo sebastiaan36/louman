@@ -71,11 +71,16 @@ test('een klant die nog niet is goedgekeurd wordt niet voorgeselecteerd', functi
 });
 
 test('de knop op de rijroute opent het bestelscherm met de klant in de url', function () {
-    $pagina = file_get_contents(dirname(__DIR__, 3).'/resources/js/pages/admin/DeliveryRoute.vue');
+    $root = dirname(__DIR__, 3);
+    $pagina = file_get_contents($root.'/resources/js/pages/admin/DeliveryRoute.vue');
+    $acties = file_get_contents($root.'/resources/js/components/DeliveryRouteCustomerActions.vue');
 
-    // In beide weergaven: per dag en alle dagen.
-    expect(substr_count($pagina, 'admin.orders.create.url({ query: { customer: customer.id } })'))->toBe(2)
-        ->and(substr_count($pagina, 'Bestelling maken'))->toBe(2)
+    // De knop zit in het gedeelde actiecomponent, dat in beide weergaven
+    // (per dag en alle dagen) wordt gebruikt.
+    expect($acties)
+        ->toContain('admin.orders.create.url({ query: { customer: customerId } })')
+        ->toContain('Bestelling maken');
+    expect(substr_count($pagina, '<DeliveryRouteCustomerActions'))->toBe(2)
         ->and(substr_count($pagina, '`tel:${customer.phone_number'))->toBe(2);
 });
 

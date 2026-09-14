@@ -156,6 +156,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.delivery-route.export');
     Route::post('/delivery-route/order', [DeliveryRouteController::class, 'updateOrder'])
         ->name('admin.delivery-route.update-order');
+    Route::patch('/delivery-route/{customer}/flag', [DeliveryRouteController::class, 'updateFlag'])
+        ->name('admin.delivery-route.update-flag');
 
     Route::resource('categories', CategoryController::class)
         ->except(['show', 'create', 'edit'])

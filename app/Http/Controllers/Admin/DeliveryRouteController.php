@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Support\DeliveryDay;
+use App\Support\OrderStatus;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -42,10 +43,14 @@ class DeliveryRouteController extends Controller
 
     /**
      * The route for one day, in driving order.
+     *
+     * @return list<array<string, mixed>>
      */
-    private function routeFor(string $day): Collection
+    private function routeFor(string $day): array
     {
-        return $this->routeQuery()->where('delivery_day', $day)->get();
+        return $this->routeQuery()->where('delivery_day', $day)->get()
+            ->map(fn (Customer $customer): array => $this->presentCustomer($customer))
+            ->all();
     }
 
     /**
@@ -66,7 +71,9 @@ class DeliveryRouteController extends Controller
 
         return array_map(fn (string $day): array => [
             'day' => $day,
-            'customers' => $customers->where('delivery_day', $day)->values()->all(),
+            'customers' => $customers->where('delivery_day', $day)->values()
+                ->map(fn (Customer $customer): array => $this->presentCustomer($customer))
+                ->all(),
         ], $days);
     }
 
@@ -77,8 +84,46 @@ class DeliveryRouteController extends Controller
     private function routeQuery(): Builder
     {
         return Customer::approved()
-            ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
-            ->select(['id', 'company_name', 'phone_number', 'street_name', 'house_number', 'city', 'route_order', 'delivery_day']);
+            ->select(['id', 'company_name', 'phone_number', 'street_name', 'house_number', 'city', 'route_order', 'delivery_day', 'route_flag', 'route_flag_week'])
+            ->withCount(['orders as open_orders_count' => fn (Builder $query) => $query->whereIn('status', OrderStatus::OPEN)])
+            ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC');
+    }
+
+    /**
+     * Shape a customer for the route page: the open-order count and the flag
+     * for this week, without the raw flag columns.
+     *
+     * @return array<string, mixed>
+     */
+    private function presentCustomer(Customer $customer): array
+    {
+        return [
+            'id' => $customer->id,
+            'company_name' => $customer->company_name,
+            'phone_number' => $customer->phone_number,
+            'street_name' => $customer->street_name,
+            'house_number' => $customer->house_number,
+            'city' => $customer->city,
+            'route_order' => $customer->route_order,
+            'delivery_day' => $customer->delivery_day,
+            'open_orders_count' => (int) $customer->open_orders_count,
+            'route_flag' => $customer->activeRouteFlag(),
+        ];
+    }
+
+    /**
+     * Mark a customer for this week: wants a call back, does not need to
+     * order, or neither (null clears the marker).
+     */
+    public function updateFlag(Request $request, Customer $customer): RedirectResponse
+    {
+        $validated = $request->validate([
+            'flag' => ['nullable', 'string', Rule::in(Customer::ROUTE_FLAGS)],
+        ]);
+
+        $customer->setRouteFlag($validated['flag'] ?? null);
+
+        return back();
     }
 
     public function updateOrder(Request $request): RedirectResponse
