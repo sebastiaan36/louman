@@ -25,6 +25,21 @@ class Order extends Model
     ];
 
     /**
+     * Bootstrap the model: a new order answers the question the delivery-route
+     * markers were asking, so "terugbellen" and "niet deze week" go off.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (Order $order): void {
+            $customer = $order->customer;
+
+            if ($customer !== null && $customer->route_flag !== null) {
+                $customer->setRouteFlag(null);
+            }
+        });
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

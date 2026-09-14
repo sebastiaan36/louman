@@ -2,6 +2,7 @@
 
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Support\Carbon;
 
 test('de rijroute toont of een klant een nog niet voltooide bestelling heeft', function () {
@@ -94,8 +95,8 @@ test('een markering vervalt op zondagavond om 21:00 Nederlandse tijd', function 
 
 test('de weergave van alle dagen bevat dezelfde gegevens', function () {
     $customer = Customer::factory()->approved()->create(['delivery_day' => 'dinsdag']);
-    $customer->setRouteFlag('callback');
     Order::factory()->pending()->create(['customer_id' => $customer->id]);
+    $customer->setRouteFlag('callback');
 
     $this->actingAs(adminUser())
         ->get('/admin/delivery-route?day=all')
@@ -130,4 +131,39 @@ test('beide weergaven gebruiken het gedeelde actiecomponent', function () {
         ->toContain('bg-emerald-600')
         ->toContain("routeFlag === 'callback' ? 'border-orange-500 bg-orange-500")
         ->toContain("routeFlag === 'skip_week' ? 'border-red-600 bg-red-600");
+});
+
+test('een nieuwe bestelling zet terugbellen en niet deze week automatisch uit', function () {
+    $callback = Customer::factory()->approved()->create();
+    $skip = Customer::factory()->approved()->create();
+    $untouched = Customer::factory()->approved()->create();
+    $callback->setRouteFlag('callback');
+    $skip->setRouteFlag('skip_week');
+    $untouched->setRouteFlag('callback');
+
+    Order::factory()->pending()->create(['customer_id' => $callback->id]);
+    Order::factory()->confirmed()->create(['customer_id' => $skip->id]);
+
+    expect($callback->fresh()->activeRouteFlag())->toBeNull()
+        ->and($callback->fresh()->route_flag)->toBeNull()
+        ->and($skip->fresh()->activeRouteFlag())->toBeNull()
+        ->and($untouched->fresh()->activeRouteFlag())->toBe('callback');
+});
+
+test('een handmatige bestelling via het beheerscherm wist de markering ook', function () {
+    $customer = Customer::factory()->approved()->create();
+    $customer->setRouteFlag('skip_week');
+    $product = Product::factory()->create(['price' => '2.50']);
+
+    $this->actingAs(adminUser())
+        ->post('/admin/orders', [
+            'customer_id' => $customer->id,
+            'delivery_address_id' => null,
+            'status' => 'confirmed',
+            'items' => [['product_id' => $product->id, 'quantity' => 2]],
+            'notes' => null,
+        ])
+        ->assertRedirect();
+
+    expect($customer->fresh()->activeRouteFlag())->toBeNull();
 });
