@@ -122,6 +122,12 @@ test('het bestellingenoverzicht toont de verpakking per klant', function () {
 test('het klantdetail heeft een kopje Verpakking met de drie opties', function () {
     $detail = file_get_contents(dirname(__DIR__, 3).'/resources/js/pages/admin/CustomerDetail.vue');
 
+    // Elke kaart toont alleen velden die via de eigen knop Aanpassen te wijzigen zijn.
+    $bedrijf = substr($detail, strpos($detail, '<CardTitle>Bedrijfsgegevens</CardTitle>'), strpos($detail, '<CardTitle>Klantinstellingen</CardTitle>') - strpos($detail, '<CardTitle>Bedrijfsgegevens</CardTitle>'));
+    expect($bedrijf)->toContain('@click="openEditCustomerDialog"')->not->toContain('customer.packaging_type_label')->not->toContain('customer.delivery_day');
+    $instellingen = substr($detail, strpos($detail, '<CardTitle>Klantinstellingen</CardTitle>'), strpos($detail, '<CardTitle>Adresgegevens</CardTitle>') - strpos($detail, '<CardTitle>Klantinstellingen</CardTitle>'));
+    expect($instellingen)->toContain('@click="openEditDialog"')->not->toContain('customer.kvk_number');
+
     expect($detail)
         ->toContain('<p class="text-sm font-medium">Verpakking</p>')
         ->toContain('id="edit_packaging_type"')

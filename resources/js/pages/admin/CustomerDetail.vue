@@ -766,13 +766,72 @@ const deleteAddress = (addressId: number) => {
                     </CardContent>
                 </Card>
 
-                <!-- Business Information -->
+                <!-- Business Information: edited through "Gegevens bewerken",
+                     together with the contact and address details. -->
                 <Card>
                     <CardHeader>
                         <div class="flex items-center justify-between">
                             <div>
                                 <CardTitle>Bedrijfsgegevens</CardTitle>
-                                <CardDescription>KVK en BTW informatie</CardDescription>
+                                <CardDescription>KVK, BTW, IBAN en afspraken</CardDescription>
+                            </div>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                @click="openEditCustomerDialog"
+                            >
+                                <Edit class="h-4 w-4 mr-2" />
+                                Aanpassen
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                        <div class="flex items-start gap-3">
+                            <FileText class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">KVK Nummer</p>
+                                <p class="text-sm text-muted-foreground">{{ customer.kvk_number || '—' }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <FileText class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">BTW Nummer</p>
+                                <p class="text-sm text-muted-foreground">{{ customer.vat_number || '—' }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <CreditCard class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">IBAN</p>
+                                <p class="text-sm text-muted-foreground">{{ customer.bank_account || '—' }}</p>
+                            </div>
+                        </div>
+                        <div v-if="customer.packaging_notes" class="flex items-start gap-3">
+                            <Package class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">Verpakkingsafspraken</p>
+                                <p class="text-sm text-muted-foreground whitespace-pre-line">{{ customer.packaging_notes }}</p>
+                            </div>
+                        </div>
+                        <div v-if="customer.order_notes" class="flex items-start gap-3">
+                            <FileText class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">Vaste bestelnotitie</p>
+                                <p class="text-sm text-muted-foreground whitespace-pre-line">{{ customer.order_notes }}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <!-- Customer settings: category, discount, packaging, delivery day
+                     and map. Edited through their own dialog. -->
+                <Card>
+                    <CardHeader>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Klantinstellingen</CardTitle>
+                                <CardDescription>Categorie, korting, verpakking en leverdag</CardDescription>
                             </div>
                             <Button
                                 v-if="customer.approved_at"
@@ -787,45 +846,17 @@ const deleteAddress = (addressId: number) => {
                     </CardHeader>
                     <CardContent class="space-y-4">
                         <div class="flex items-start gap-3">
-                            <FileText class="h-4 w-4 text-muted-foreground mt-0.5" />
-                            <div>
-                                <p class="text-sm font-medium">KVK Nummer</p>
-                                <p class="text-sm text-muted-foreground">{{ customer.kvk_number }}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <FileText class="h-4 w-4 text-muted-foreground mt-0.5" />
-                            <div>
-                                <p class="text-sm font-medium">BTW Nummer</p>
-                                <p class="text-sm text-muted-foreground">{{ customer.vat_number }}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <CreditCard class="h-4 w-4 text-muted-foreground mt-0.5" />
-                            <div>
-                                <p class="text-sm font-medium">IBAN</p>
-                                <p class="text-sm text-muted-foreground">{{ customer.bank_account }}</p>
-                            </div>
-                        </div>
-                        <div v-if="customer.customer_category_label" class="flex items-start gap-3">
                             <Building2 class="h-4 w-4 text-muted-foreground mt-0.5" />
                             <div>
                                 <p class="text-sm font-medium">Klantcategorie</p>
-                                <p class="text-sm text-muted-foreground">{{ customer.customer_category_label }}</p>
+                                <p class="text-sm text-muted-foreground">{{ customer.customer_category_label ?? 'Niet ingesteld' }}</p>
                             </div>
                         </div>
-                        <div v-if="customer.discount_percentage" class="flex items-start gap-3">
+                        <div class="flex items-start gap-3">
                             <FileText class="h-4 w-4 text-muted-foreground mt-0.5" />
                             <div>
                                 <p class="text-sm font-medium">Kortingspercentage</p>
-                                <p class="text-sm text-muted-foreground">{{ customer.discount_percentage }}%</p>
-                            </div>
-                        </div>
-                        <div v-if="customer.order_notes" class="flex items-start gap-3">
-                            <FileText class="h-4 w-4 text-muted-foreground mt-0.5" />
-                            <div>
-                                <p class="text-sm font-medium">Vaste bestelnotitie</p>
-                                <p class="text-sm text-muted-foreground whitespace-pre-line">{{ customer.order_notes }}</p>
+                                <p class="text-sm text-muted-foreground">{{ customer.discount_percentage ? `${customer.discount_percentage}%` : 'Geen korting' }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -835,11 +866,11 @@ const deleteAddress = (addressId: number) => {
                                 <p class="text-sm text-muted-foreground">{{ customer.packaging_type_label ?? 'Niet ingesteld' }}</p>
                             </div>
                         </div>
-                        <div v-if="customer.delivery_day" class="flex items-start gap-3">
+                        <div class="flex items-start gap-3">
                             <MapPin class="h-4 w-4 text-muted-foreground mt-0.5" />
                             <div>
                                 <p class="text-sm font-medium">Leverdag</p>
-                                <p class="text-sm text-muted-foreground capitalize">{{ customer.delivery_day }}</p>
+                                <p class="text-sm text-muted-foreground capitalize">{{ customer.delivery_day ?? 'Niet ingesteld' }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -1122,9 +1153,9 @@ const deleteAddress = (addressId: number) => {
         <Dialog v-model:open="editDialogOpen">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Klantcategorie & Korting Aanpassen</DialogTitle>
+                    <DialogTitle>Klantinstellingen aanpassen</DialogTitle>
                     <DialogDescription>
-                        Wijzig de klantcategorie en kortingspercentage.
+                        Wijzig de klantcategorie, korting, verpakking, leverdag en kaartweergave.
                     </DialogDescription>
                 </DialogHeader>
 
