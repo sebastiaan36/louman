@@ -125,5 +125,9 @@ test('beide weergaven gebruiken het gedeelde actiecomponent', function () {
         ->toContain('Terugbellen')
         ->toContain('Niet deze week')
         ->toContain('Bestelling maken')
-        ->toContain('Open bestelling');
+        ->toContain('Heeft besteld')
+        // Kleuren: besteld groen, terugbellen oranje, niet deze week rood.
+        ->toContain('bg-emerald-600')
+        ->toContain("routeFlag === 'callback' ? 'border-orange-500 bg-orange-500")
+        ->toContain("routeFlag === 'skip_week' ? 'border-red-600 bg-red-600");
 });
