@@ -337,6 +337,7 @@ class CustomerApprovalController extends Controller
             'phone_number' => $customer->phone_number,
             'mobile_number' => $customer->mobile_number,
             'packaging_notes' => $customer->packaging_notes,
+            'order_notes' => $customer->order_notes,
             'kvk_number' => $customer->kvk_number,
             'vat_number' => $customer->vat_number,
             'bank_account' => $customer->bank_account,
@@ -523,6 +524,7 @@ class CustomerApprovalController extends Controller
             'city' => ['nullable', 'string', 'max:255'],
             'packing_slip_email' => ['nullable', 'email', 'max:255'],
             'packaging_notes' => ['nullable', 'string', 'max:2000'],
+            'order_notes' => ['nullable', 'string', 'max:2000'],
         ], [
             'customer_number.digits_between' => 'Klantnummer mag uit 1 tot 4 cijfers bestaan.',
             'customer_number.unique' => 'Dit klantnummer is al in gebruik.',

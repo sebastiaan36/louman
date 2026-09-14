@@ -29,6 +29,7 @@ interface Customer {
     contact_person: string | null;
     customer_category: string | null;
     discount_percentage: string | null;
+    order_notes: string | null;
     favorite_product_ids: number[];
     delivery_addresses: DeliveryAddress[];
 }
@@ -109,6 +110,10 @@ const selectCustomer = (customer: Customer) => {
     showCustomerDropdown.value = false;
     favoriteProductIds.value = new Set(customer.favorite_product_ids);
 
+    // The customer's standing order note is the starting point; it stays
+    // editable for this particular order.
+    notes.value = customer.order_notes ?? '';
+
     // Auto-select default delivery address
     const defaultAddr = customer.delivery_addresses.find(a => a.is_default)
         ?? customer.delivery_addresses[0]
@@ -151,6 +156,7 @@ const clearCustomer = () => {
     favoriteProductIds.value = new Set();
     customPrices.value = {};
     orderItems.value = [];
+    notes.value = '';
 };
 
 // Delivery address

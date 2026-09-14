@@ -37,6 +37,7 @@ class Customer extends Model
         'vat_number',
         'packing_slip_email',
         'packaging_notes',
+        'order_notes',
         'customer_category',
         'discount_percentage',
         'delivery_day',

@@ -59,6 +59,7 @@ interface Customer {
     mobile_number: string | null;
     packing_slip_email: string | null;
     packaging_notes: string | null;
+    order_notes: string | null;
     kvk_number: string;
     vat_number: string;
     bank_account: string;
@@ -468,6 +469,7 @@ const form = useForm({
     city: props.customer.city,
     packing_slip_email: props.customer.packing_slip_email || '',
     packaging_notes: props.customer.packaging_notes || '',
+    order_notes: props.customer.order_notes || '',
 });
 
 const openEditCustomerDialog = () => {
@@ -485,6 +487,7 @@ const openEditCustomerDialog = () => {
     form.city = props.customer.city;
     form.packing_slip_email = props.customer.packing_slip_email || '';
     form.packaging_notes = props.customer.packaging_notes || '';
+    form.order_notes = props.customer.order_notes || '';
     form.clearErrors();
     editCustomerDialogOpen.value = true;
 };
@@ -806,6 +809,13 @@ const deleteAddress = (addressId: number) => {
                             <div>
                                 <p class="text-sm font-medium">Kortingspercentage</p>
                                 <p class="text-sm text-muted-foreground">{{ customer.discount_percentage }}%</p>
+                            </div>
+                        </div>
+                        <div v-if="customer.order_notes" class="flex items-start gap-3">
+                            <FileText class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">Vaste bestelnotitie</p>
+                                <p class="text-sm text-muted-foreground whitespace-pre-line">{{ customer.order_notes }}</p>
                             </div>
                         </div>
                         <div v-if="customer.delivery_day" class="flex items-start gap-3">
@@ -1363,6 +1373,21 @@ const deleteAddress = (addressId: number) => {
                                 Wordt getoond op het bestellingenoverzicht.
                             </p>
                             <InputError :message="form.errors.packaging_notes" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="order_notes">Vaste bestelnotitie</Label>
+                            <Textarea
+                                id="order_notes"
+                                v-model="form.order_notes"
+                                class="mt-1"
+                                rows="3"
+                                placeholder="Bijv. altijd voor 7 uur bezorgen (optioneel)"
+                            />
+                            <p class="mt-1 text-xs text-muted-foreground">
+                                Wordt vooraf ingevuld als bestelnotitie bij een handmatige bestelling en blijft daar aanpasbaar.
+                            </p>
+                            <InputError :message="form.errors.order_notes" class="mt-2" />
                         </div>
 
                     </div>

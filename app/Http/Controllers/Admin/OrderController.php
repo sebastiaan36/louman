@@ -107,6 +107,7 @@ class OrderController extends Controller
                 'contact_person' => $customer->contact_person,
                 'customer_category' => $customer->customer_category,
                 'discount_percentage' => $customer->discount_percentage,
+                'order_notes' => $customer->order_notes,
                 'favorite_product_ids' => $customer->favoriteProducts->pluck('id')->all(),
                 'delivery_addresses' => $customer->deliveryAddresses->map(fn ($addr) => [
                     'id' => $addr->id,
