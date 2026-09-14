@@ -105,6 +105,8 @@ class OrderController extends Controller
                 'company_name' => $customer->company_name,
                 'customer_number' => $customer->customer_number,
                 'contact_person' => $customer->contact_person,
+                'phone_number' => $customer->phone_number,
+                'mobile_number' => $customer->mobile_number,
                 'customer_category' => $customer->customer_category,
                 'discount_percentage' => $customer->discount_percentage,
                 'order_notes' => $customer->order_notes,

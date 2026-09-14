@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ShoppingCart, Plus, Trash2, Search, Zap } from 'lucide-vue-next';
+import { ShoppingCart, Plus, Trash2, Search, Zap, Phone, Smartphone } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,8 @@ interface Customer {
     company_name: string;
     customer_number: string | null;
     contact_person: string | null;
+    phone_number: string | null;
+    mobile_number: string | null;
     customer_category: string | null;
     discount_percentage: string | null;
     order_notes: string | null;
@@ -381,11 +383,23 @@ const submit = (createAnother = false) => {
                     <p v-if="errors.customer" class="text-sm text-destructive">{{ errors.customer }}</p>
 
                     <!-- Selected customer info -->
-                    <div v-if="selectedCustomer" class="rounded-md bg-muted px-4 py-3 text-sm flex items-center justify-between">
-                        <div>
-                            <span class="font-medium">{{ selectedCustomer.company_name }}</span>
-                            <span class="text-muted-foreground ml-2">{{ selectedCustomer.contact_person }}</span>
-                            <span v-if="selectedCustomer.customer_category" class="ml-2 text-xs text-muted-foreground capitalize">({{ selectedCustomer.customer_category }})</span>
+                    <div v-if="selectedCustomer" class="rounded-md bg-muted px-4 py-3 text-sm flex items-start justify-between gap-4">
+                        <div class="space-y-1">
+                            <div>
+                                <span class="font-medium">{{ selectedCustomer.company_name }}</span>
+                                <span class="text-muted-foreground ml-2">{{ selectedCustomer.contact_person }}</span>
+                                <span v-if="selectedCustomer.customer_category" class="ml-2 text-xs text-muted-foreground capitalize">({{ selectedCustomer.customer_category }})</span>
+                            </div>
+                            <div v-if="selectedCustomer.phone_number || selectedCustomer.mobile_number" class="flex flex-wrap gap-x-4 gap-y-1">
+                                <a v-if="selectedCustomer.phone_number" :href="`tel:${selectedCustomer.phone_number.replace(/[^\d+]/g, '')}`" class="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                                    <Phone class="h-3.5 w-3.5" />
+                                    {{ selectedCustomer.phone_number }}
+                                </a>
+                                <a v-if="selectedCustomer.mobile_number" :href="`tel:${selectedCustomer.mobile_number.replace(/[^\d+]/g, '')}`" class="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                                    <Smartphone class="h-3.5 w-3.5" />
+                                    {{ selectedCustomer.mobile_number }}
+                                </a>
+                            </div>
                         </div>
                         <button type="button" @click="clearCustomer" class="text-muted-foreground hover:text-foreground text-xs">&times; Wissen</button>
                     </div>

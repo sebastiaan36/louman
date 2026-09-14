@@ -118,3 +118,24 @@ test('de productlijst van het bestelscherm is op titel gesorteerd', function () 
             ->where('products.2.title', 'Zeeuws spek')
         );
 });
+
+test('het bestelscherm krijgt het telefoonnummer van de klant mee en toont het als bel-link', function () {
+    Customer::factory()->approved()->create([
+        'phone_number' => '020-4470930',
+        'mobile_number' => '06-12345678',
+    ]);
+
+    $this->actingAs(adminUser())
+        ->get('/admin/orders/create')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('customers.0.phone_number', '020-4470930')
+            ->where('customers.0.mobile_number', '06-12345678')
+        );
+
+    $scherm = file_get_contents(dirname(__DIR__, 3).'/resources/js/pages/admin/CreateOrder.vue');
+
+    expect($scherm)
+        ->toContain('`tel:${selectedCustomer.phone_number.replace(/[^\d+]/g, \'\')}`')
+        ->toContain('`tel:${selectedCustomer.mobile_number.replace(/[^\d+]/g, \'\')}`');
+});
