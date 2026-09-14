@@ -1265,33 +1265,17 @@ const deleteAddress = (addressId: number) => {
                     </div>
 
                     <div class="mt-6">
-                        <Label class="mb-3 block">Verpakking</Label>
-                        <div class="space-y-2">
-                            <div class="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    id="edit_packaging_none"
-                                    value=""
-                                    v-model="editPackagingType"
-                                    class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                />
-                                <Label for="edit_packaging_none" class="cursor-pointer font-normal">
-                                    Niet ingesteld
-                                </Label>
-                            </div>
-                            <div v-for="type in packagingTypes" :key="type.value" class="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    :id="`edit_packaging_${type.value}`"
-                                    :value="type.value"
-                                    v-model="editPackagingType"
-                                    class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                />
-                                <Label :for="`edit_packaging_${type.value}`" class="cursor-pointer font-normal">
-                                    {{ type.label }}
-                                </Label>
-                            </div>
-                        </div>
+                        <Label for="edit_packaging_type" class="mb-2 block">Verpakking</Label>
+                        <select
+                            id="edit_packaging_type"
+                            v-model="editPackagingType"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        >
+                            <option value="">Niet ingesteld</option>
+                            <option v-for="type in packagingTypes" :key="type.value" :value="type.value">
+                                {{ type.label }}
+                            </option>
+                        </select>
                     </div>
 
                     <div class="mt-6 flex items-center space-x-2">

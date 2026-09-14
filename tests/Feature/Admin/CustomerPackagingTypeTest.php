@@ -124,6 +124,7 @@ test('het klantdetail heeft een kopje Verpakking met de drie opties', function (
 
     expect($detail)
         ->toContain('<p class="text-sm font-medium">Verpakking</p>')
-        ->toContain('v-for="type in packagingTypes"')
+        ->toContain('id="edit_packaging_type"')
+        ->toContain('<option v-for="type in packagingTypes" :key="type.value" :value="type.value">')
         ->toContain("import { PACKAGING_TYPES } from '@/lib/packagingTypes';");
 });
