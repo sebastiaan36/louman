@@ -47,7 +47,7 @@ class OrderController extends Controller
                 return [
                     'id' => $order->id,
                     'order_number' => '#'.$order->id,
-                    'created_at' => $order->created_at->format('d-m-Y H:i'),
+                    'created_at' => $order->created_at->formatLocal('d-m-Y H:i'),
                     'total' => $order->total,
                     'status' => $order->status,
                     'status_label' => OrderStatus::label($order->status),
@@ -98,7 +98,7 @@ class OrderController extends Controller
             'order' => [
                 'id' => $order->id,
                 'order_number' => '#'.$order->id,
-                'created_at' => $order->created_at->format('d-m-Y H:i'),
+                'created_at' => $order->created_at->formatLocal('d-m-Y H:i'),
                 'total' => $order->total,
                 'status' => $order->status,
                 'status_label' => OrderStatus::label($order->status),

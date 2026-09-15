@@ -198,7 +198,7 @@
                     </div>
                     <div class="info-row">
                         <div class="info-label">Besteldatum:</div>
-                        <div class="info-value">{{ $order->created_at->format('d-m-Y H:i') }}</div>
+                        <div class="info-value">{{ $order->created_at->formatLocal('d-m-Y H:i') }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">Status:</div>

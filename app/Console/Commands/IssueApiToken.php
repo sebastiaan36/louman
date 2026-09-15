@@ -66,7 +66,7 @@ class IssueApiToken extends Command
         $this->components->twoColumnDetail('Rechten', implode(', ', $abilities));
         $this->components->twoColumnDetail(
             'Geldig tot',
-            $expiresAt?->format('d-m-Y H:i') ?? 'geen vervaldatum',
+            $expiresAt?->formatLocal('d-m-Y H:i') ?? 'geen vervaldatum',
         );
         $this->components->twoColumnDetail(
             'Toegestane IP-adressen',

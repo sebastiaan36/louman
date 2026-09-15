@@ -52,7 +52,7 @@ class CustomerApprovalController extends Controller
                 'vat_number' => $customer->vat_number,
                 'bank_account' => $customer->bank_account,
                 'city' => $customer->city,
-                'registered_at' => $customer->created_at->format('d-m-Y H:i'),
+                'registered_at' => $customer->created_at->formatLocal('d-m-Y H:i'),
             ]);
 
         return Inertia::render('admin/PendingCustomers', [
@@ -91,7 +91,7 @@ class CustomerApprovalController extends Controller
                 'has_account' => $customer->user !== null,
                 'phone_number' => $customer->phone_number,
                 'city' => $customer->city,
-                'approved_at' => $customer->approved_at->format('d-m-Y'),
+                'approved_at' => $customer->approved_at->formatLocal('d-m-Y'),
                 'is_active' => $customer->isActive(),
             ]);
 
@@ -272,8 +272,8 @@ class CustomerApprovalController extends Controller
 
         return [
             'email' => $invitation->email,
-            'sent_at' => $invitation->created_at->format('d-m-Y H:i'),
-            'expires_at' => $invitation->expires_at->format('d-m-Y'),
+            'sent_at' => $invitation->created_at->formatLocal('d-m-Y H:i'),
+            'expires_at' => $invitation->expires_at->formatLocal('d-m-Y'),
             'is_expired' => $invitation->isExpired(),
         ];
     }
@@ -362,10 +362,10 @@ class CustomerApprovalController extends Controller
             'packaging_type' => $customer->packaging_type,
             'packaging_type_label' => PackagingType::label($customer->packaging_type),
             'show_on_map' => $customer->show_on_map,
-            'approved_at' => $customer->approved_at?->format('d-m-Y H:i'),
-            'created_at' => $customer->created_at->format('d-m-Y H:i'),
+            'approved_at' => $customer->approved_at?->formatLocal('d-m-Y H:i'),
+            'created_at' => $customer->created_at->formatLocal('d-m-Y H:i'),
             'is_active' => $customer->isActive(),
-            'deactivated_at' => $customer->deactivated_at?->format('d-m-Y H:i'),
+            'deactivated_at' => $customer->deactivated_at?->formatLocal('d-m-Y H:i'),
             'can_delete' => ! $customer->orders()->exists(),
         ];
 
@@ -385,7 +385,7 @@ class CustomerApprovalController extends Controller
             ->get()
             ->map(fn ($order) => [
                 'id' => $order->id,
-                'created_at' => $order->created_at->format('d-m-Y H:i'),
+                'created_at' => $order->created_at->formatLocal('d-m-Y H:i'),
                 'total' => number_format((float) $order->total, 2, '.', ''),
                 'status' => $order->status,
                 'items_count' => $order->items->count(),
@@ -796,7 +796,7 @@ class CustomerApprovalController extends Controller
             fclose($handle);
         }, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="klanten-'.now()->format('Y-m-d').'.csv"',
+            'Content-Disposition' => 'attachment; filename="klanten-'.now()->formatLocal('Y-m-d').'.csv"',
         ]);
     }
 

@@ -205,7 +205,7 @@
                 </div>
                 <div class="meta-row">
                     <div class="meta-label">Besteldatum:</div>
-                    <div class="meta-value">{{ $order->created_at->format('d-m-Y \o\m H:i') }}</div>
+                    <div class="meta-value">{{ $order->created_at->formatLocal('d-m-Y \o\m H:i') }}</div>
                 </div>
                 <div class="meta-row">
                     <div class="meta-label">Status:</div>

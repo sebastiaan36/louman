@@ -146,7 +146,7 @@
             </p>
 
             <p class="expiry">
-                Deze uitnodiging is geldig tot {{ $expiresAt->format('d-m-Y') }}.
+                Deze uitnodiging is geldig tot {{ $expiresAt->formatLocal('d-m-Y') }}.
             </p>
         </div>
 

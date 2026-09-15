@@ -218,7 +218,7 @@
                 <div class="document-title">PAKBON</div>
                 <div class="document-info">
                     Nummer: #{{ $order->id }}<br>
-                    Datum: {{ $order->created_at->format('d-m-Y') }}
+                    Datum: {{ $order->created_at->formatLocal('d-m-Y') }}
                 </div>
             </div>
         </div>
@@ -264,7 +264,7 @@
                 </tr>
                 <tr>
                     <td>Besteldatum:</td>
-                    <td>{{ $order->created_at->format('d-m-Y H:i') }}</td>
+                    <td>{{ $order->created_at->formatLocal('d-m-Y H:i') }}</td>
                 </tr>
                 <tr>
                     <td>Status:</td>

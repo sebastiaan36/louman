@@ -193,7 +193,7 @@ class DeliveryRouteController extends Controller
             fclose($handle);
         }, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="rijroute-'.$fileSuffix.'-'.now()->format('Y-m-d').'.csv"',
+            'Content-Disposition' => 'attachment; filename="rijroute-'.$fileSuffix.'-'.now()->formatLocal('Y-m-d').'.csv"',
         ]);
     }
 

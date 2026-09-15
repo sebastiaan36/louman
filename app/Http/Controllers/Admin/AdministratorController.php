@@ -24,7 +24,7 @@ class AdministratorController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'created_at' => $user->created_at->format('d-m-Y'),
+                'created_at' => $user->created_at->formatLocal('d-m-Y'),
                 'is_self' => $user->id === auth()->id(),
             ]);
 

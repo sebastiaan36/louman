@@ -432,7 +432,7 @@ class ProductController extends Controller
             fclose($handle);
         }, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="producten-'.now()->format('Y-m-d').'.csv"',
+            'Content-Disposition' => 'attachment; filename="producten-'.now()->formatLocal('Y-m-d').'.csv"',
         ]);
     }
 

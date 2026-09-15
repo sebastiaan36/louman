@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Listeners\AddCcToOutgoingMail;
 use App\Listeners\SetReplyToOnOutgoingMail;
 use App\Models\CartItem;
+use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -121,9 +123,27 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * Timestamps are stored in UTC (the application timezone) but shown to
+     * people in Amsterdam time. Every screen, mail and PDF formats a date
+     * through formatLocal() so the conversion lives in exactly one place;
+     * a test guards that no view or controller calls format() directly.
+     */
+    protected function registerLocalDateFormatting(): void
+    {
+        $formatLocal = function (string $format): string {
+            /** @var CarbonInterface $this */
+            return $this->copy()->setTimezone(config('app.business_timezone'))->format($format);
+        };
+
+        Carbon::macro('formatLocal', $formatLocal);
+        CarbonImmutable::macro('formatLocal', $formatLocal);
+    }
+
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+        $this->registerLocalDateFormatting();
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),

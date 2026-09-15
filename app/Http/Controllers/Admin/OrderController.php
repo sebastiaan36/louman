@@ -69,7 +69,7 @@ class OrderController extends Controller
                 'order_number' => '#'.$order->id,
                 'customer_name' => $order->customer->company_name,
                 'customer_delivery_day' => $order->customer->delivery_day,
-                'created_at' => $order->created_at->format('d-m-Y H:i'),
+                'created_at' => $order->created_at->formatLocal('d-m-Y H:i'),
                 'total' => $order->total,
                 'status' => $order->status,
                 'status_label' => OrderStatus::label($order->status),
@@ -330,9 +330,9 @@ class OrderController extends Controller
                 'dayGroups' => $dayGroups,
                 'orderCount' => $orders->count(),
                 'customerCount' => $allCustomers->count(),
-                'generatedAt' => now()->format('d-m-Y H:i'),
+                'generatedAt' => now()->formatLocal('d-m-Y H:i'),
             ])
-            ->stream('bestellingenoverzicht-'.now()->format('Y-m-d').'.pdf');
+            ->stream('bestellingenoverzicht-'.now()->formatLocal('Y-m-d').'.pdf');
     }
 
     /**
@@ -391,10 +391,10 @@ class OrderController extends Controller
             'title' => $title,
             'products' => $products,
             'orderCount' => $orders->count(),
-            'generatedAt' => now()->format('d-m-Y H:i'),
+            'generatedAt' => now()->formatLocal('d-m-Y H:i'),
         ]);
 
-        return $pdf->stream($filename.'-'.now()->format('Y-m-d').'.pdf');
+        return $pdf->stream($filename.'-'.now()->formatLocal('Y-m-d').'.pdf');
     }
 
     /**
@@ -437,7 +437,7 @@ class OrderController extends Controller
             'order' => [
                 'id' => $order->id,
                 'order_number' => '#'.$order->id,
-                'created_at' => $order->created_at->format('d-m-Y H:i'),
+                'created_at' => $order->created_at->formatLocal('d-m-Y H:i'),
                 'total' => $order->total,
                 'status' => $order->status,
                 'status_label' => OrderStatus::label($order->status),
