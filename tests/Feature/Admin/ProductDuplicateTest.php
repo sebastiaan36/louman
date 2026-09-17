@@ -25,7 +25,6 @@ function sourceProductForDuplicate(): Product
         'weight' => '250 gram',
         'photo' => 'products/bron.jpg',
         'is_private_label' => true,
-        'from_butchery' => true,
     ]);
     $product->visibleToCustomers()->sync([$customer->id]);
 
@@ -51,7 +50,6 @@ test('het duplicaatformulier is gevuld met alle gegevens behalve het artikelnumm
             ->where('product.nutrition_facts.energy', '900')
             ->where('product.weight', '250 gram')
             ->where('product.is_private_label', true)
-            ->where('product.from_butchery', true)
             ->where('product.visible_customer_ids', $product->visibleToCustomers()->pluck('customers.id')->all())
             ->where('product.photo_url', $product->photo_url)
         );
@@ -67,7 +65,6 @@ test('opslaan van een duplicaat maakt een nieuw product met een kopie van de fot
             'price' => '4.50',
             'duplicate_of' => $product->id,
             'is_private_label' => '1',
-            'from_butchery' => '1',
             'visible_customer_ids' => $product->visibleToCustomers()->pluck('customers.id')->all(),
         ]))
         ->assertRedirect('/admin/products')
@@ -78,7 +75,7 @@ test('opslaan van een duplicaat maakt een nieuw product met een kopie van de fot
     expect($copy->id)->not->toBe($product->id)
         ->and($copy->photo)->not->toBeNull()
         ->and($copy->photo)->not->toBe($product->photo)
-        ->and($copy->from_butchery)->toBeTrue()
+        ->and($copy->is_private_label)->toBeTrue()
         ->and($copy->visibleToCustomers()->pluck('customers.id')->all())->toBe($product->visibleToCustomers()->pluck('customers.id')->all());
 
     Storage::disk('public')->assertExists($copy->photo);

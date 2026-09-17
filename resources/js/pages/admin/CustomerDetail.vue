@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
-import { Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit, Plus, Trash2, Ban, CheckCircle2, KeyRound, AlertTriangle } from 'lucide-vue-next';
+import { Beef, Building2, MapPin, Phone, Mail, CreditCard, FileText, Package, Edit, Plus, Trash2, Ban, CheckCircle2, KeyRound, AlertTriangle } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -75,6 +75,7 @@ interface Customer {
     delivery_day: string | null;
     packaging_type: string | null;
     packaging_type_label: string | null;
+    from_butchery: boolean;
     show_on_map: boolean;
     approved_at: string;
     created_at: string;
@@ -420,6 +421,7 @@ const editCategory = ref<string>('');
 const editDiscount = ref<string>('');
 const editDeliveryDay = ref<string>('');
 const editPackagingType = ref<string>('');
+const editFromButchery = ref<boolean>(false);
 const editShowOnMap = ref<boolean>(true);
 const processing = ref(false);
 
@@ -431,6 +433,7 @@ const openEditDialog = () => {
     editDiscount.value = props.customer.discount_percentage || '';
     editDeliveryDay.value = props.customer.delivery_day || '';
     editPackagingType.value = props.customer.packaging_type || '';
+    editFromButchery.value = props.customer.from_butchery ?? false;
     editShowOnMap.value = props.customer.show_on_map ?? true;
     editDialogOpen.value = true;
 };
@@ -448,6 +451,7 @@ const updateCategoryAndDiscount = () => {
             discount_percentage: editDiscount.value,
             delivery_day: editDeliveryDay.value,
             packaging_type: editPackagingType.value || null,
+            from_butchery: editFromButchery.value,
             show_on_map: editShowOnMap.value,
         },
         {
@@ -871,6 +875,13 @@ const deleteAddress = (addressId: number) => {
                             <div>
                                 <p class="text-sm font-medium">Leverdag</p>
                                 <p class="text-sm text-muted-foreground capitalize">{{ customer.delivery_day ?? 'Niet ingesteld' }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <Beef class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">Uit de slagerij</p>
+                                <p class="text-sm text-muted-foreground">{{ customer.from_butchery ? 'Ja, ook op het bestellingenoverzicht slagerij' : 'Nee' }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -1307,6 +1318,22 @@ const deleteAddress = (addressId: number) => {
                                 {{ type.label }}
                             </option>
                         </select>
+                    </div>
+
+                    <div class="mt-6 flex items-start space-x-2">
+                        <Checkbox
+                            id="edit_from_butchery"
+                            v-model="editFromButchery"
+                            class="mt-0.5"
+                        />
+                        <div>
+                            <Label for="edit_from_butchery" class="cursor-pointer font-normal leading-snug">
+                                Uit de slagerij
+                            </Label>
+                            <p class="text-xs text-muted-foreground">
+                                De bestellingen van deze klant staan ook op het bestellingenoverzicht slagerij.
+                            </p>
+                        </div>
                     </div>
 
                     <div class="mt-6 flex items-center space-x-2">

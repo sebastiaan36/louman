@@ -221,16 +221,16 @@ const downloadBulkPackingSlips = () => {
                             Productielijst
                         </Button>
                     </a>
-                    <a href="/admin/orders/production-list/slagerij" target="_blank">
-                        <Button variant="outline">
-                            <Beef class="h-4 w-4 mr-2" />
-                            Productielijst slagerij
-                        </Button>
-                    </a>
                     <a href="/admin/orders/customer-overview" target="_blank">
                         <Button variant="outline">
                             <LayoutGrid class="h-4 w-4 mr-2" />
                             Bestellingenoverzicht
+                        </Button>
+                    </a>
+                    <a href="/admin/orders/customer-overview/slagerij" target="_blank">
+                        <Button variant="outline">
+                            <Beef class="h-4 w-4 mr-2" />
+                            Bestellingenoverzicht slagerij
                         </Button>
                     </a>
                     <Link href="/admin/orders/create">

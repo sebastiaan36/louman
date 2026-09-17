@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $title ?? 'Productielijst' }}</title>
+    <title>Productielijst</title>
     <style>
         * {
             margin: 0;
@@ -113,7 +113,7 @@
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <div class="title">{{ $title ?? 'PRODUCTIELIJST' }}</div>
+                <div class="title">PRODUCTIELIJST</div>
                 <div class="meta">Gegenereerd op {{ $generatedAt }}</div>
             </div>
             <div class="header-right">
@@ -141,7 +141,7 @@
                 </tbody>
             </table>
         @else
-            <div class="empty">Geen producten voor deze lijst in de bevestigde bestellingen.</div>
+            <div class="empty">Geen bestellingen in behandeling.</div>
         @endif
     </div>
 </body>

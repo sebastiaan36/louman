@@ -166,9 +166,6 @@ class ProductController extends Controller
         $duplicateOf = $data['duplicate_of'] ?? null;
         unset($data['duplicate_of']);
 
-        // "Uit de slagerij" only means something for a private-label product.
-        $data['from_butchery'] = ($data['is_private_label'] ?? false) && ($data['from_butchery'] ?? false);
-
         // A new photo wins; a duplicate without a new photo gets a copy of the
         // source's photo, so the two products never share one file.
         if ($request->hasFile('photo')) {
@@ -220,9 +217,6 @@ class ProductController extends Controller
 
         $visibleCustomerIds = $data['visible_customer_ids'] ?? [];
         unset($data['visible_customer_ids']);
-
-        // "Uit de slagerij" only means something for a private-label product.
-        $data['from_butchery'] = ($data['is_private_label'] ?? false) && ($data['from_butchery'] ?? false);
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
@@ -406,7 +400,6 @@ class ProductController extends Controller
             'photo_url' => $product->photo_url,
             'is_active' => $product->is_active,
             'is_private_label' => $product->is_private_label,
-            'from_butchery' => $product->from_butchery,
             'visible_customer_ids' => $product->visibleToCustomers()->pluck('customers.id')->all(),
         ];
     }

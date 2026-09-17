@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Bestellingenoverzicht</title>
+    <title>{{ $title ?? 'Bestellingenoverzicht' }}</title>
     <style>
         @include('pdf.partials.overview-css')
     </style>
@@ -29,7 +29,7 @@
                     <div class="meta">
                         {{ count($dayGroups[$day]) }} {{ count($dayGroups[$day]) === 1 ? 'klant' : 'klanten' }}
                         &nbsp;|&nbsp;
-                        Bestellingenoverzicht &mdash; {{ $generatedAt }}
+                        {{ $title ?? 'Bestellingenoverzicht' }} &mdash; {{ $generatedAt }}
                     </div>
                 </div>
                 <div class="page-header-right">

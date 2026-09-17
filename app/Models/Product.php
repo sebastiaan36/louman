@@ -37,7 +37,6 @@ class Product extends Model
         'in_stock',
         'is_active',
         'is_private_label',
-        'from_butchery',
         'suggested_retail_price',
     ];
 
@@ -58,7 +57,6 @@ class Product extends Model
             'in_stock' => 'boolean',
             'is_active' => 'boolean',
             'is_private_label' => 'boolean',
-            'from_butchery' => 'boolean',
             'synced_at' => 'datetime',
         ];
     }

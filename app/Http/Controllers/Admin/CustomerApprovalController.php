@@ -361,6 +361,7 @@ class CustomerApprovalController extends Controller
             'delivery_day' => $customer->delivery_day,
             'packaging_type' => $customer->packaging_type,
             'packaging_type_label' => PackagingType::label($customer->packaging_type),
+            'from_butchery' => $customer->from_butchery,
             'show_on_map' => $customer->show_on_map,
             'approved_at' => $customer->approved_at?->formatLocal('d-m-Y H:i'),
             'created_at' => $customer->created_at->formatLocal('d-m-Y H:i'),
@@ -491,6 +492,7 @@ class CustomerApprovalController extends Controller
             'discount_percentage' => ['nullable', 'in:1,2,3,4,5'],
             'delivery_day' => ['required', DeliveryDay::rule()],
             'packaging_type' => ['nullable', PackagingType::rule()],
+            'from_butchery' => ['boolean'],
             'show_on_map' => ['boolean'],
         ], [
             'customer_category.required' => 'Selecteer een klantcategorie.',
@@ -505,6 +507,7 @@ class CustomerApprovalController extends Controller
             'discount_percentage' => $validated['discount_percentage'] ?? null,
             'delivery_day' => $validated['delivery_day'],
             'packaging_type' => $validated['packaging_type'] ?? null,
+            'from_butchery' => $validated['from_butchery'] ?? false,
             'show_on_map' => $validated['show_on_map'],
         ]);
 
@@ -513,6 +516,7 @@ class CustomerApprovalController extends Controller
             'discount_percentage' => $validated['discount_percentage'] ?? null,
             'delivery_day' => $validated['delivery_day'],
             'packaging_type' => $validated['packaging_type'] ?? null,
+            'from_butchery' => $validated['from_butchery'] ?? false,
             'show_on_map' => $validated['show_on_map'],
         ]);
 

@@ -59,7 +59,6 @@ interface Product {
     photo_url: string | null;
     is_active: boolean;
     is_private_label: boolean;
-    from_butchery: boolean;
     visible_customer_ids: number[];
 }
 
@@ -121,7 +120,6 @@ const form = ref({
     in_stock: props.product?.in_stock ?? true,
     is_active: props.product?.is_active ?? true,
     is_private_label: props.product?.is_private_label ?? false,
-    from_butchery: props.product?.from_butchery ?? false,
     visible_customer_ids: props.product?.visible_customer_ids ?? [],
     nutrition_facts: {
         energy: props.product?.nutrition_facts?.energy || '',
@@ -320,7 +318,6 @@ const submit = () => {
     formData.append('in_stock', form.value.in_stock ? '1' : '0');
     formData.append('is_active', form.value.is_active ? '1' : '0');
     formData.append('is_private_label', form.value.is_private_label ? '1' : '0');
-    formData.append('from_butchery', form.value.is_private_label && form.value.from_butchery ? '1' : '0');
     if (form.value.is_private_label) {
         form.value.visible_customer_ids.forEach((id) => {
             formData.append('visible_customer_ids[]', id.toString());
@@ -782,17 +779,6 @@ const cancel = () => {
                             Private label product (alleen zichtbaar voor geselecteerde klanten)
                         </Label>
                     </div>
-
-                    <div v-if="form.is_private_label" class="flex items-start space-x-2">
-                        <Checkbox id="from_butchery" v-model="form.from_butchery" class="mt-0.5" />
-                        <div>
-                            <Label for="from_butchery" class="cursor-pointer">Uit de slagerij</Label>
-                            <p class="text-xs text-muted-foreground">
-                                Dit product komt op de aparte productielijst slagerij en niet op de gewone productielijst.
-                            </p>
-                        </div>
-                    </div>
-                    <InputError :message="errors?.from_butchery" />
 
                     <div v-if="form.is_private_label" class="space-y-2">
                         <div class="flex items-center justify-between">

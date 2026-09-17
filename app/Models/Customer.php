@@ -39,6 +39,7 @@ class Customer extends Model
         'packing_slip_email',
         'packaging_notes',
         'packaging_type',
+        'from_butchery',
         'order_notes',
         'customer_category',
         'discount_percentage',
@@ -71,6 +72,7 @@ class Customer extends Model
             'deactivated_at' => 'datetime',
             'terms_accepted_at' => 'datetime',
             'show_on_map' => 'boolean',
+            'from_butchery' => 'boolean',
             'synced_at' => 'datetime',
         ];
     }

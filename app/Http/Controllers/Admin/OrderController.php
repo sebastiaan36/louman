@@ -260,8 +260,33 @@ class OrderController extends Controller
      */
     public function customerOverview(): \Illuminate\Http\Response
     {
+        return $this->renderCustomerOverview(false, 'Bestellingenoverzicht', 'bestellingenoverzicht');
+    }
+
+    /**
+     * The same overview, limited to the customers marked "Uit de slagerij".
+     * Those customers appear on both overviews.
+     */
+    public function butcheryCustomerOverview(): \Illuminate\Http\Response
+    {
+        return $this->renderCustomerOverview(true, 'Bestellingenoverzicht slagerij', 'bestellingenoverzicht-slagerij');
+    }
+
+    /**
+     * Build the per-customer overview of confirmed orders, grouped by delivery
+     * day, and stream it as a PDF.
+     */
+    protected function renderCustomerOverview(bool $onlyButchery, string $title, string $filename): \Illuminate\Http\Response
+    {
+        // Load ALL approved customers sorted by route order then name
+        $allCustomers = Customer::approved()
+            ->when($onlyButchery, fn ($query) => $query->where('from_butchery', true))
+            ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
+            ->get();
+
         $orders = Order::with(['customer', 'items.product'])
             ->where('status', 'confirmed')
+            ->whereIn('customer_id', $allCustomers->pluck('id'))
             ->get();
 
         // Build product map per customer from confirmed orders
@@ -286,11 +311,6 @@ class OrderController extends Controller
                 $customerOrders[$customerId][$productId]['quantity'] += $item->quantity;
             }
         }
-
-        // Load ALL approved customers sorted by route order then name
-        $allCustomers = Customer::approved()
-            ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
-            ->get();
 
         // Group customers by delivery day
         $dayOrder = DeliveryDay::ALL;
@@ -327,38 +347,19 @@ class OrderController extends Controller
 
         return app(MpdfRenderer::class)
             ->loadView('pdf.customer-overview-mpdf', [
+                'title' => $title,
                 'dayGroups' => $dayGroups,
                 'orderCount' => $orders->count(),
                 'customerCount' => $allCustomers->count(),
                 'generatedAt' => now()->formatLocal('d-m-Y H:i'),
             ])
-            ->stream('bestellingenoverzicht-'.now()->formatLocal('Y-m-d').'.pdf');
+            ->stream($filename.'-'.now()->formatLocal('Y-m-d').'.pdf');
     }
 
     /**
-     * Generate the production list PDF for all confirmed orders, without the
-     * private-label products that are made in the butchery.
+     * Generate the production list PDF for all confirmed orders.
      */
     public function productionList(): \Illuminate\Http\Response
-    {
-        return $this->renderProductionList(false, 'PRODUCTIELIJST', 'productielijst');
-    }
-
-    /**
-     * Generate the separate production list for the private-label products
-     * marked "Uit de slagerij".
-     */
-    public function butcheryProductionList(): \Illuminate\Http\Response
-    {
-        return $this->renderProductionList(true, 'PRODUCTIELIJST SLAGERIJ', 'productielijst-slagerij');
-    }
-
-    /**
-     * Aggregate the confirmed order lines per product and render them as a PDF.
-     * Only products whose "from_butchery" flag matches the requested list are
-     * included, so each product appears on exactly one of the two lists.
-     */
-    protected function renderProductionList(bool $fromButchery, string $title, string $filename): \Illuminate\Http\Response
     {
         $orders = Order::with(['items.product'])
             ->where('status', 'confirmed')
@@ -367,10 +368,6 @@ class OrderController extends Controller
         $products = [];
         foreach ($orders as $order) {
             foreach ($order->items as $item) {
-                if ($item->product === null || (bool) $item->product->from_butchery !== $fromButchery) {
-                    continue;
-                }
-
                 $productId = $item->product_id;
                 if (! isset($products[$productId])) {
                     $products[$productId] = [
@@ -388,13 +385,12 @@ class OrderController extends Controller
         usort($products, fn ($a, $b) => strnatcmp($a['article_number'], $b['article_number']));
 
         $pdf = Pdf::loadView('pdf.production-list', [
-            'title' => $title,
             'products' => $products,
             'orderCount' => $orders->count(),
             'generatedAt' => now()->formatLocal('d-m-Y H:i'),
         ]);
 
-        return $pdf->stream($filename.'-'.now()->formatLocal('Y-m-d').'.pdf');
+        return $pdf->stream('productielijst-'.now()->formatLocal('Y-m-d').'.pdf');
     }
 
     /**
