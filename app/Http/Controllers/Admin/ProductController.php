@@ -128,6 +128,32 @@ class ProductController extends Controller
     }
 
     /**
+     * Open the create form filled with everything from an existing product
+     * except the article number, which has to be unique and is left blank.
+     * Nothing is saved until the form is submitted.
+     */
+    public function duplicate(Request $request, Product $product): Response
+    {
+        $categories = Category::with('children')
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        $source = $this->productFormData($product);
+        $source['id'] = null;
+        $source['article_number'] = '';
+
+        return Inertia::render('admin/ProductForm', [
+            'product' => $source,
+            'duplicateOf' => $product->id,
+            'categories' => $categories,
+            'customers' => $this->customersForSelect(),
+            'filters' => $request->only(['search', 'sort', 'private_label']),
+        ]);
+    }
+
+    /**
      * Store a newly created product.
      */
     public function store(ProductRequest $request): RedirectResponse
@@ -137,12 +163,18 @@ class ProductController extends Controller
         $visibleCustomerIds = $data['visible_customer_ids'] ?? [];
         unset($data['visible_customer_ids']);
 
+        $duplicateOf = $data['duplicate_of'] ?? null;
+        unset($data['duplicate_of']);
+
         // "Uit de slagerij" only means something for a private-label product.
         $data['from_butchery'] = ($data['is_private_label'] ?? false) && ($data['from_butchery'] ?? false);
 
-        // Handle photo upload
+        // A new photo wins; a duplicate without a new photo gets a copy of the
+        // source's photo, so the two products never share one file.
         if ($request->hasFile('photo')) {
             $data['photo'] = $this->handlePhotoUpload($request->file('photo'));
+        } elseif ($duplicateOf !== null) {
+            $data['photo'] = $this->copyPhoto(Product::findOrFail($duplicateOf));
         }
 
         // Convert comma-separated strings to arrays
@@ -171,27 +203,7 @@ class ProductController extends Controller
             ->get();
 
         return Inertia::render('admin/ProductForm', [
-            'product' => [
-                'id' => $product->id,
-                'category_id' => $product->category_id,
-                'subcategory_id' => $product->subcategory_id,
-                'title' => $product->title,
-                'price' => $product->price,
-                'price_per_kg' => $product->price_per_kg,
-                'suggested_retail_price' => $product->suggested_retail_price,
-                'description' => $product->description,
-                'ingredients' => implode(', ', $product->ingredients ?? []),
-                'allergens' => implode(', ', $product->allergens ?? []),
-                'nutrition_facts' => $product->nutrition_facts,
-                'weight' => $product->weight,
-                'article_number' => $product->article_number,
-                'in_stock' => $product->in_stock,
-                'photo_url' => $product->photo_url,
-                'is_active' => $product->is_active,
-                'is_private_label' => $product->is_private_label,
-                'from_butchery' => $product->from_butchery,
-                'visible_customer_ids' => $product->visibleToCustomers()->pluck('customers.id')->all(),
-            ],
+            'product' => $this->productFormData($product),
             'categories' => $categories,
             'customers' => $this->customersForSelect(),
             // Carry the list's sort/search/filter so editing returns to it.
@@ -369,6 +381,58 @@ class ProductController extends Controller
     /**
      * Handle photo upload and thumbnail generation.
      */
+    /**
+     * The product as the form expects it, shared by edit and duplicate.
+     *
+     * @return array<string, mixed>
+     */
+    private function productFormData(Product $product): array
+    {
+        return [
+            'id' => $product->id,
+            'category_id' => $product->category_id,
+            'subcategory_id' => $product->subcategory_id,
+            'title' => $product->title,
+            'price' => $product->price,
+            'price_per_kg' => $product->price_per_kg,
+            'suggested_retail_price' => $product->suggested_retail_price,
+            'description' => $product->description,
+            'ingredients' => implode(', ', $product->ingredients ?? []),
+            'allergens' => implode(', ', $product->allergens ?? []),
+            'nutrition_facts' => $product->nutrition_facts,
+            'weight' => $product->weight,
+            'article_number' => $product->article_number,
+            'in_stock' => $product->in_stock,
+            'photo_url' => $product->photo_url,
+            'is_active' => $product->is_active,
+            'is_private_label' => $product->is_private_label,
+            'from_butchery' => $product->from_butchery,
+            'visible_customer_ids' => $product->visibleToCustomers()->pluck('customers.id')->all(),
+        ];
+    }
+
+    /**
+     * Copy a product's photo and thumbnail to fresh filenames.
+     */
+    private function copyPhoto(Product $source): ?string
+    {
+        if (! $source->photo || ! Storage::disk('public')->exists($source->photo)) {
+            return null;
+        }
+
+        $filename = uniqid().'.'.pathinfo($source->photo, PATHINFO_EXTENSION);
+        $path = 'products/'.$filename;
+
+        Storage::disk('public')->copy($source->photo, $path);
+
+        $sourceThumb = 'products/thumbs/'.basename($source->photo);
+        if (Storage::disk('public')->exists($sourceThumb)) {
+            Storage::disk('public')->copy($sourceThumb, 'products/thumbs/'.$filename);
+        }
+
+        return $path;
+    }
+
     private function handlePhotoUpload($file): string
     {
         $manager = new ImageManager(new Driver);

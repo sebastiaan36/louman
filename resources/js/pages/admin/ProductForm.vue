@@ -70,13 +70,16 @@ interface CustomerOption {
 
 const props = defineProps<{
     product?: Product;
+    duplicateOf?: number | null;
     categories: Category[];
     customers: CustomerOption[];
     errors?: Record<string, string>;
     filters?: { search?: string | null; sort?: string | null; private_label?: string | boolean | null };
 }>();
 
-const isEdit = computed(() => !!props.product);
+// Duplicating opens the form filled in but without an id: it saves as a new product.
+const isEdit = computed(() => !!props.product?.id);
+const isDuplicate = computed(() => !!props.duplicateOf);
 
 // The list's active sort/search/filter as a query string, so saving or
 // cancelling returns to the same list view.
@@ -99,7 +102,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: `/admin/products${listQuery.value}`,
     },
     {
-        title: isEdit.value ? 'Product bewerken' : 'Product toevoegen',
+        title: isEdit.value ? 'Product bewerken' : isDuplicate.value ? 'Product dupliceren' : 'Product toevoegen',
     },
 ];
 
@@ -366,6 +369,11 @@ const submit = () => {
         formData.append('_method', 'PUT');
     }
 
+    // Without a new photo the copy takes over the source's photo.
+    if (isDuplicate.value && props.duplicateOf) {
+        formData.append('duplicate_of', props.duplicateOf.toString());
+    }
+
     router.post(url, formData, {
         preserveScroll: true,
         onFinish: () => {
@@ -380,16 +388,16 @@ const cancel = () => {
 </script>
 
 <template>
-    <Head :title="isEdit ? 'Product bewerken' : 'Product toevoegen'" />
+    <Head :title="isEdit ? 'Product bewerken' : isDuplicate ? 'Product dupliceren' : 'Product toevoegen'" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6">
             <div>
                 <h1 class="text-2xl font-bold">
-                    {{ isEdit ? 'Product bewerken' : 'Product toevoegen' }}
+                    {{ isEdit ? 'Product bewerken' : isDuplicate ? 'Product dupliceren' : 'Product toevoegen' }}
                 </h1>
                 <p class="text-sm text-muted-foreground">
-                    {{ isEdit ? 'Wijzig de productgegevens' : 'Voeg een nieuw product toe aan de catalogus' }}
+                    {{ isEdit ? 'Wijzig de productgegevens' : isDuplicate ? 'Alle gegevens zijn overgenomen. Vul een nieuw artikelnummer in en sla op.' : 'Voeg een nieuw product toe aan de catalogus' }}
                 </p>
             </div>
 
@@ -482,8 +490,8 @@ const cancel = () => {
                     <div class="grid gap-4">
                         <div class="grid gap-2">
                             <Label for="photo">
-                                Foto {{ isEdit ? '' : '(verplicht)' }}
-                                <span v-if="!isEdit" class="text-destructive">*</span>
+                                Foto {{ isEdit || isDuplicate ? '' : '(verplicht)' }}
+                                <span v-if="!isEdit && !isDuplicate" class="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="photo"

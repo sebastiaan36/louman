@@ -29,8 +29,11 @@ class ProductRequest extends FormRequest
             'category_id' => ['nullable', 'exists:categories,id'],
             'subcategory_id' => ['nullable', 'exists:categories,id'],
             'title' => ['required', 'string', 'max:255'],
+            // A duplicate inherits the source's photo, so only a brand-new
+            // product has to upload one.
+            'duplicate_of' => ['nullable', 'integer', 'exists:products,id'],
             'photo' => [
-                $this->isMethod('POST') ? 'required' : 'nullable',
+                $this->isMethod('POST') && ! $this->filled('duplicate_of') ? 'required' : 'nullable',
                 'image',
                 'mimes:jpeg,png,jpg,webp',
                 'max:5120', // 5MB

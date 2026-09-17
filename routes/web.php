@@ -164,6 +164,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->names('admin.categories');
     Route::get('products/export', [ProductController::class, 'export'])->name('admin.products.export');
     Route::post('products/import', [ProductController::class, 'import'])->name('admin.products.import');
+    Route::get('products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('admin.products.duplicate');
     Route::resource('products', ProductController::class)
         ->names('admin.products');
 

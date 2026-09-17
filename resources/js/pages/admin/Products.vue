@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ImageOff, Search } from 'lucide-vue-next';
+import { Copy, ImageOff, Search } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -291,6 +291,12 @@ const deleteProduct = (id: number) => {
                                 <div class="flex gap-2 justify-end">
                                     <Link :href="`/admin/products/${product.id}/edit${listQuery}`">
                                         <Button size="sm" variant="outline">Bewerken</Button>
+                                    </Link>
+                                    <Link :href="`/admin/products/${product.id}/duplicate${listQuery}`">
+                                        <Button size="sm" variant="outline" title="Nieuw product met dezelfde gegevens, zonder artikelnummer">
+                                            <Copy class="h-4 w-4 mr-1" />
+                                            Dupliceren
+                                        </Button>
                                     </Link>
                                     <Button
                                         size="sm"
