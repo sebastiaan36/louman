@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Trash2, Search } from 'lucide-vue-next';
+import { Minus, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -50,6 +50,7 @@ interface OrderItem {
 interface Product {
     id: number;
     title: string;
+    article_number: string | null;
     price: string;
 }
 
@@ -118,15 +119,46 @@ const editForm = useForm({
     notes: props.order.notes || '',
 });
 
+// Search on title or article number; an exact or leading article-number
+// match comes first, so typing "12" shows article 12 before "Kaas 120".
 const filteredProducts = computed(() => {
     if (!productSearchQuery.value) {
         return props.availableProducts.slice(0, 10); // Show first 10 when no search
     }
     const query = productSearchQuery.value.toLowerCase();
+
+    const rank = (product: Product): number => {
+        const article = product.article_number?.toLowerCase() ?? '';
+        if (article === query) return 0;
+        if (article.startsWith(query)) return 1;
+        if (product.title.toLowerCase().startsWith(query)) return 2;
+        return 3;
+    };
+
     return props.availableProducts
-        .filter(product => product.title.toLowerCase().includes(query))
+        .filter(product =>
+            product.title.toLowerCase().includes(query) ||
+            (product.article_number?.toLowerCase().includes(query) ?? false)
+        )
+        .sort((a, b) => rank(a) - rank(b))
         .slice(0, 10); // Limit to 10 results
 });
+
+// Quantity steppers: the field itself stays editable, the buttons make a
+// change possible without typing. Anything below 1 is pulled back to 1.
+const adjustQuantity = (index: number, delta: number) => {
+    const item = editForm.items[index];
+    if (!item) return;
+    const current = Number(item.quantity) || 0;
+    item.quantity = Math.max(1, current + delta);
+};
+
+const normaliseQuantity = (index: number) => {
+    const item = editForm.items[index];
+    if (!item) return;
+    const value = Math.floor(Number(item.quantity));
+    item.quantity = Number.isFinite(value) && value >= 1 ? value : 1;
+};
 
 const canEditOrder = () => {
     return !['completed', 'cancelled'].includes(props.order.status);
@@ -398,7 +430,7 @@ const backToOrders = () => {
                                 <Input
                                     v-model="productSearchQuery"
                                     type="text"
-                                    placeholder="Zoek product om toe te voegen..."
+                                    placeholder="Zoek op artikelnummer of productnaam..."
                                     class="pl-10"
                                     @focus="onSearchFocus"
                                     @blur="onSearchBlur"
@@ -417,7 +449,10 @@ const backToOrders = () => {
                                     class="px-3 py-2 hover:bg-accent cursor-pointer flex items-center justify-between"
                                     @click="addItem(product.id)"
                                 >
-                                    <span class="font-medium">{{ product.title }}</span>
+                                    <span>
+                                        <span v-if="product.article_number" class="mr-2 font-mono text-xs text-muted-foreground">{{ product.article_number }}</span>
+                                        <span class="font-medium">{{ product.title }}</span>
+                                    </span>
                                     <span class="text-sm text-muted-foreground">{{ formatPrice(product.price) }}</span>
                                 </div>
                             </div>
@@ -436,7 +471,7 @@ const backToOrders = () => {
                                 <TableRow>
                                     <TableHead>Product</TableHead>
                                     <TableHead>Prijs</TableHead>
-                                    <TableHead class="w-32">Aantal</TableHead>
+                                    <TableHead class="w-40">Aantal</TableHead>
                                     <TableHead class="w-20"></TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -457,13 +492,40 @@ const backToOrders = () => {
                                         }}
                                     </TableCell>
                                     <TableCell>
-                                        <Input
-                                            type="number"
-                                            v-model.number="formItem.quantity"
-                                            min="1"
-                                            step="1"
-                                            :disabled="editForm.processing"
-                                        />
+                                        <div class="flex items-center gap-1">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                class="h-8 w-8 shrink-0"
+                                                :disabled="editForm.processing || formItem.quantity <= 1"
+                                                aria-label="Eén minder"
+                                                @click="adjustQuantity(index, -1)"
+                                            >
+                                                <Minus class="h-4 w-4" />
+                                            </Button>
+                                            <input
+                                                v-model.number="formItem.quantity"
+                                                type="number"
+                                                inputmode="numeric"
+                                                min="1"
+                                                step="1"
+                                                class="no-spinner h-8 w-16 rounded-md border border-input bg-background px-2 text-center text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                :disabled="editForm.processing"
+                                                @blur="normaliseQuantity(index)"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                class="h-8 w-8 shrink-0"
+                                                :disabled="editForm.processing"
+                                                aria-label="Eén meer"
+                                                @click="adjustQuantity(index, 1)"
+                                            >
+                                                <Plus class="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                         <InputError :message="editForm.errors[`items.${index}.quantity`]" class="mt-1" />
                                     </TableCell>
                                     <TableCell>

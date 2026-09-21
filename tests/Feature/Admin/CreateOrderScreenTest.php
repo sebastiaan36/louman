@@ -140,3 +140,34 @@ test('het bestelscherm toont het hoofdnummer van de klant als bel-link', functio
         ->toContain('`tel:${selectedCustomer.phone_number.replace(/[^\d+]/g, \'\')}`')
         ->not->toContain('selectedCustomer.mobile_number');
 });
+
+test('bij het bewerken van een bestelling kan op artikelnummer gezocht worden', function () {
+    $customer = Customer::factory()->approved()->create();
+    $order = Order::factory()->create(['customer_id' => $customer->id]);
+    Product::factory()->create(['title' => 'Grillworst', 'article_number' => '77', 'is_active' => true]);
+
+    $this->actingAs(adminUser())
+        ->get("/admin/orders/{$order->id}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('availableProducts.0.title', 'Grillworst')
+            ->where('availableProducts.0.article_number', '77')
+        );
+
+    $scherm = file_get_contents(dirname(__DIR__, 3).'/resources/js/pages/admin/OrderDetail.vue');
+
+    expect($scherm)
+        ->toContain('(product.article_number?.toLowerCase().includes(query) ?? false)')
+        ->toContain('Zoek op artikelnummer of productnaam...');
+});
+
+test('het aantal bij het bewerken van een bestelling heeft min- en plusknoppen en een leesbaar veld', function () {
+    $scherm = file_get_contents(dirname(__DIR__, 3).'/resources/js/pages/admin/OrderDetail.vue');
+
+    expect($scherm)
+        ->toContain('@click="adjustQuantity(index, -1)"')
+        ->toContain('@click="adjustQuantity(index, 1)"')
+        ->toContain('class="no-spinner h-8 w-16 rounded-md border border-input')
+        ->toContain('@blur="normaliseQuantity(index)"')
+        ->not->toContain("<Input\n                                            type=\"number\"");
+});

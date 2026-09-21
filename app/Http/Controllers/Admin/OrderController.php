@@ -426,6 +426,7 @@ class OrderController extends Controller
             ->map(fn ($product) => [
                 'id' => $product->id,
                 'title' => $product->title,
+                'article_number' => $product->article_number,
                 'price' => $product->getPriceForCustomer($order->customer),
             ]);
 
