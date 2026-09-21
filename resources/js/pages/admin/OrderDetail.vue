@@ -122,8 +122,9 @@ const editForm = useForm({
 // Search on title or article number; an exact or leading article-number
 // match comes first, so typing "12" shows article 12 before "Kaas 120".
 const filteredProducts = computed(() => {
-    if (!productSearchQuery.value) {
-        return props.availableProducts.slice(0, 10); // Show first 10 when no search
+    // The list only opens once at least one character has been typed.
+    if (productSearchQuery.value.trim() === '') {
+        return [];
     }
     const query = productSearchQuery.value.toLowerCase();
 

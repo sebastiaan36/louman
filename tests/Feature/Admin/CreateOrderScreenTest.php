@@ -158,7 +158,10 @@ test('bij het bewerken van een bestelling kan op artikelnummer gezocht worden', 
 
     expect($scherm)
         ->toContain('(product.article_number?.toLowerCase().includes(query) ?? false)')
-        ->toContain('Zoek op artikelnummer of productnaam...');
+        ->toContain('Zoek op artikelnummer of productnaam...')
+        // De lijst verschijnt pas na minstens één getypt teken.
+        ->toContain("if (productSearchQuery.value.trim() === '') {\n        return [];")
+        ->not->toContain('Show first 10 when no search');
 });
 
 test('het aantal bij het bewerken van een bestelling heeft min- en plusknoppen en een leesbaar veld', function () {
