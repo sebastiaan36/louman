@@ -318,7 +318,8 @@ class OrderController extends Controller
         foreach ($allCustomers as $customer) {
             $day = $customer->delivery_day ?: 'onbekend';
             $products = $customerOrders[$customer->id] ?? [];
-            usort($products, fn ($a, $b) => strcmp($a['article_number'], $b['article_number']));
+            // Alphabetical on product name, case-insensitive, on both overviews.
+            usort($products, fn ($a, $b) => strnatcasecmp($a['title'], $b['title']));
             $rawGroups[$day][] = [
                 'id' => $customer->id,
                 'number' => $customer->customer_number,
