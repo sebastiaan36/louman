@@ -440,12 +440,11 @@ class CustomerApprovalController extends Controller
         $validated = $request->validate([
             'customer_category' => ['required', 'in:groothandel,broodjeszaak,horeca'],
             'discount_percentage' => ['nullable', 'in:1,2,3,4,5'],
-            'delivery_day' => ['required', DeliveryDay::rule()],
+            'delivery_day' => ['nullable', DeliveryDay::rule()],
         ], [
             'customer_category.required' => 'Selecteer een klantcategorie.',
             'customer_category.in' => 'Ongeldige klantcategorie.',
             'discount_percentage.in' => 'Ongeldig kortingspercentage.',
-            'delivery_day.required' => 'Selecteer een leverdag.',
             'delivery_day.in' => 'Ongeldige leverdag.',
             'packaging_type.in' => 'Ongeldige verpakking.',
         ]);
@@ -458,7 +457,7 @@ class CustomerApprovalController extends Controller
         $customer->update([
             'customer_category' => $validated['customer_category'],
             'discount_percentage' => $validated['discount_percentage'] ?? null,
-            'delivery_day' => $validated['delivery_day'],
+            'delivery_day' => $validated['delivery_day'] ?? null,
         ]);
 
         // Direct verzenden; een mailstoring mag de goedkeuring niet terugdraaien.
@@ -476,7 +475,7 @@ class CustomerApprovalController extends Controller
         AuditLog::record('customer.approved', "Klant {$customer->company_name} goedgekeurd", $customer, [
             'customer_category' => $validated['customer_category'],
             'discount_percentage' => $validated['discount_percentage'] ?? null,
-            'delivery_day' => $validated['delivery_day'],
+            'delivery_day' => $validated['delivery_day'] ?? null,
         ]);
 
         return back()->with('success', "Klant {$customer->company_name} is goedgekeurd.");
@@ -490,7 +489,7 @@ class CustomerApprovalController extends Controller
         $validated = $request->validate([
             'customer_category' => ['required', 'in:groothandel,broodjeszaak,horeca'],
             'discount_percentage' => ['nullable', 'in:1,2,3,4,5'],
-            'delivery_day' => ['required', DeliveryDay::rule()],
+            'delivery_day' => ['nullable', DeliveryDay::rule()],
             'packaging_type' => ['nullable', PackagingType::rule()],
             'from_butchery' => ['boolean'],
             'show_on_map' => ['boolean'],
@@ -498,14 +497,13 @@ class CustomerApprovalController extends Controller
             'customer_category.required' => 'Selecteer een klantcategorie.',
             'customer_category.in' => 'Ongeldige klantcategorie.',
             'discount_percentage.in' => 'Ongeldig kortingspercentage.',
-            'delivery_day.required' => 'Selecteer een leverdag.',
             'delivery_day.in' => 'Ongeldige leverdag.',
         ]);
 
         $customer->update([
             'customer_category' => $validated['customer_category'],
             'discount_percentage' => $validated['discount_percentage'] ?? null,
-            'delivery_day' => $validated['delivery_day'],
+            'delivery_day' => $validated['delivery_day'] ?? null,
             'packaging_type' => $validated['packaging_type'] ?? null,
             'from_butchery' => $validated['from_butchery'] ?? false,
             'show_on_map' => $validated['show_on_map'],
@@ -514,7 +512,7 @@ class CustomerApprovalController extends Controller
         AuditLog::record('customer.updated', "Klantinstellingen bijgewerkt voor {$customer->company_name}", $customer, [
             'customer_category' => $validated['customer_category'],
             'discount_percentage' => $validated['discount_percentage'] ?? null,
-            'delivery_day' => $validated['delivery_day'],
+            'delivery_day' => $validated['delivery_day'] ?? null,
             'packaging_type' => $validated['packaging_type'] ?? null,
             'from_butchery' => $validated['from_butchery'] ?? false,
             'show_on_map' => $validated['show_on_map'],

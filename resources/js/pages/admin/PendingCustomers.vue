@@ -20,7 +20,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { DELIVERY_DAYS } from '@/lib/deliveryDays';
+import { DELIVERY_DAY_UNKNOWN, DELIVERY_DAY_UNKNOWN_LABEL, DELIVERY_DAYS } from '@/lib/deliveryDays';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
@@ -79,7 +79,7 @@ const approveCustomer = () => {
         {
             customer_category: selectedCategory.value,
             discount_percentage: selectedDiscount.value,
-            delivery_day: selectedDeliveryDay.value,
+            delivery_day: selectedDeliveryDay.value === DELIVERY_DAY_UNKNOWN ? null : selectedDeliveryDay.value,
         },
         {
             preserveScroll: true,
@@ -288,6 +288,7 @@ const approveCustomer = () => {
                         <option v-for="day in deliveryDays" :key="day.value" :value="day.value">
                             {{ day.label }}
                         </option>
+                        <option :value="DELIVERY_DAY_UNKNOWN">{{ DELIVERY_DAY_UNKNOWN_LABEL }} (later bepalen)</option>
                     </select>
                 </div>
 

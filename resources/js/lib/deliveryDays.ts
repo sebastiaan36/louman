@@ -14,3 +14,10 @@ export const DELIVERY_DAYS = [
     { value: 'vrijdag', label: 'Vrijdag' },
     { value: 'ophalen', label: 'Ophalen' },
 ] as const;
+
+/**
+ * Value of the extra "Niet bekend" choice in the admin day selects. It is not
+ * a delivery day: choosing it sends null, so the day can be decided later.
+ */
+export const DELIVERY_DAY_UNKNOWN = 'onbekend';
+export const DELIVERY_DAY_UNKNOWN_LABEL = 'Niet bekend';

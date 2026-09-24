@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { DELIVERY_DAYS } from '@/lib/deliveryDays';
+import { DELIVERY_DAY_UNKNOWN, DELIVERY_DAY_UNKNOWN_LABEL, DELIVERY_DAYS } from '@/lib/deliveryDays';
 import { orderStatusClasses, orderStatusLabel } from '@/lib/orderStatus';
 import { PACKAGING_TYPES } from '@/lib/packagingTypes';
 import { formatPrice } from '@/lib/price';
@@ -431,7 +431,7 @@ const packagingTypes = PACKAGING_TYPES;
 const openEditDialog = () => {
     editCategory.value = props.customer.customer_category || '';
     editDiscount.value = props.customer.discount_percentage || '';
-    editDeliveryDay.value = props.customer.delivery_day || '';
+    editDeliveryDay.value = props.customer.delivery_day || DELIVERY_DAY_UNKNOWN;
     editPackagingType.value = props.customer.packaging_type || '';
     editFromButchery.value = props.customer.from_butchery ?? false;
     editShowOnMap.value = props.customer.show_on_map ?? true;
@@ -449,7 +449,7 @@ const updateCategoryAndDiscount = () => {
         {
             customer_category: editCategory.value,
             discount_percentage: editDiscount.value,
-            delivery_day: editDeliveryDay.value,
+            delivery_day: editDeliveryDay.value === DELIVERY_DAY_UNKNOWN ? null : editDeliveryDay.value,
             packaging_type: editPackagingType.value || null,
             from_butchery: editFromButchery.value,
             show_on_map: editShowOnMap.value,
@@ -874,7 +874,7 @@ const deleteAddress = (addressId: number) => {
                             <MapPin class="h-4 w-4 text-muted-foreground mt-0.5" />
                             <div>
                                 <p class="text-sm font-medium">Leverdag</p>
-                                <p class="text-sm text-muted-foreground capitalize">{{ customer.delivery_day ?? 'Niet ingesteld' }}</p>
+                                <p class="text-sm text-muted-foreground capitalize">{{ customer.delivery_day ?? 'Niet bekend' }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -1303,6 +1303,7 @@ const deleteAddress = (addressId: number) => {
                             <option v-for="day in deliveryDays" :key="day.value" :value="day.value">
                                 {{ day.label }}
                             </option>
+                            <option :value="DELIVERY_DAY_UNKNOWN">{{ DELIVERY_DAY_UNKNOWN_LABEL }} (later bepalen)</option>
                         </select>
                     </div>
 
