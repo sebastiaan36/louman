@@ -110,7 +110,7 @@ test('het bestellingenoverzicht toont de verpakking per klant', function () {
         ->get('/admin/orders/customer-overview')
         ->assertOk();
 
-    $card = collect($overview->data['dayGroups']['maandag'])->firstWhere('company_name', 'Koffiehuis De Markt');
+    $card = collect($overview->data['dayGroups']['alle'])->firstWhere('company_name', 'Koffiehuis De Markt');
 
     expect($card['packaging_type'])->toBe('Krat');
 

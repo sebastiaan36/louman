@@ -158,6 +158,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.delivery-route.update-order');
     Route::patch('/delivery-route/{customer}/flag', [DeliveryRouteController::class, 'updateFlag'])
         ->name('admin.delivery-route.update-flag');
+    Route::get('/delivery-route/orders-overview', [AdminOrderController::class, 'dailyCustomerOverview'])
+        ->name('admin.delivery-route.orders-overview');
 
     Route::resource('categories', CategoryController::class)
         ->except(['show', 'create', 'edit'])

@@ -134,7 +134,7 @@ test('het vinkje staat bij de klant en niet meer bij het product', function () {
         ->and(Schema::hasColumn('customers', 'from_butchery'))->toBeTrue();
 });
 
-test('beide bestellingenoverzichten sorteren de producten per klant op alfabet', function () {
+test('alle bestellingenoverzichten sorteren de producten per klant op alfabet', function () {
     $customer = Customer::factory()->approved()->create(['company_name' => 'Slagerijklant', 'delivery_day' => 'maandag', 'from_butchery' => true]);
     $order = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
 
@@ -143,12 +143,12 @@ test('beide bestellingenoverzichten sorteren de producten per klant op alfabet',
         OrderItem::factory()->create(['order_id' => $order->id, 'product_id' => $product->id, 'quantity' => 1]);
     }
 
-    foreach (['/admin/orders/customer-overview', '/admin/orders/customer-overview/slagerij'] as $url) {
+    foreach (['/admin/orders/customer-overview', '/admin/orders/customer-overview/slagerij', '/admin/delivery-route/orders-overview'] as $url) {
         $overview = captureButcheryOverviewPdf();
 
         $this->actingAs(adminUser())->get($url)->assertOk();
 
-        $card = collect($overview->data['dayGroups']['maandag'])->firstWhere('company_name', 'Slagerijklant');
+        $card = collect($overview->data['dayGroups'])->flatten(1)->firstWhere('company_name', 'Slagerijklant');
 
         expect(array_column($card['products'], 'title'))->toBe(['achterham', 'Kiprollade', 'Zeeuws spek']);
     }

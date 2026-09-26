@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { Download, GripVertical, Phone } from 'lucide-vue-next';
+import { Download, GripVertical, LayoutGrid, Phone } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import DeliveryRouteCustomerActions, { type RouteFlag } from '@/components/DeliveryRouteCustomerActions.vue';
 import { Button } from '@/components/ui/button';
@@ -151,6 +151,12 @@ const saveOrder = () => {
                         <Button variant="outline">
                             <Download class="h-4 w-4 mr-2" />
                             Download rijroute
+                        </Button>
+                    </a>
+                    <a href="/admin/delivery-route/orders-overview" target="_blank">
+                        <Button variant="outline">
+                            <LayoutGrid class="h-4 w-4 mr-2" />
+                            Bestellingenoverzicht per dag
                         </Button>
                     </a>
                 </div>

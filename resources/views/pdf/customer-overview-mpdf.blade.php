@@ -25,7 +25,7 @@
         <htmlpageheader name="{{ $headerName }}">
             <div class="page-header">
                 <div class="page-header-left">
-                    <div class="day-title">{{ $day === 'onbekend' ? 'Geen leverdag ingesteld' : ucfirst($day) }}</div>
+                    <div class="day-title">{{ ($groupTitles ?? [])[$day] ?? ($day === 'onbekend' ? 'Geen leverdag ingesteld' : ucfirst($day)) }}</div>
                     <div class="meta">
                         {{ count($dayGroups[$day]) }} {{ count($dayGroups[$day]) === 1 ? 'klant' : 'klanten' }}
                         &nbsp;|&nbsp;
@@ -71,7 +71,7 @@
         @endforeach
     @endforeach
 @else
-    <div style="padding: 40px; text-align: center; color: #777; font-size: 9pt;">
+    <div style="padding: 40px; text-align: center; color: #000; font-size: 9pt;">
         Geen goedgekeurde klanten gevonden.
     </div>
 @endif

@@ -25,6 +25,11 @@ use Inertia\Response;
 class OrderController extends Controller
 {
     /**
+     * Key of the single group used by the alphabetical overview.
+     */
+    private const ALPHABETICAL_GROUP = 'alle';
+
+    /**
      * Display a listing of all orders.
      */
     public function index(Request $request): Response
@@ -256,33 +261,50 @@ class OrderController extends Controller
     }
 
     /**
-     * Generate customer order overview PDF for all confirmed orders.
+     * The order overview on the orders page: every customer in alphabetical
+     * order, each card showing its delivery day.
      */
     public function customerOverview(): \Illuminate\Http\Response
     {
-        return $this->renderCustomerOverview(false, 'Bestellingenoverzicht', 'bestellingenoverzicht');
+        return $this->renderCustomerOverview(false, false, 'Bestellingenoverzicht', 'bestellingenoverzicht');
     }
 
     /**
-     * The same overview, limited to the customers marked "Uit de slagerij".
-     * Those customers appear on both overviews.
+     * The same alphabetical overview, limited to the customers marked "Uit de
+     * slagerij". Those customers appear on both overviews.
      */
     public function butcheryCustomerOverview(): \Illuminate\Http\Response
     {
-        return $this->renderCustomerOverview(true, 'Bestellingenoverzicht slagerij', 'bestellingenoverzicht-slagerij');
+        return $this->renderCustomerOverview(true, false, 'Bestellingenoverzicht slagerij', 'bestellingenoverzicht-slagerij');
     }
 
     /**
-     * Build the per-customer overview of confirmed orders, grouped by delivery
-     * day, and stream it as a PDF.
+     * The overview grouped per delivery day in route order, downloaded from
+     * the delivery-route page.
      */
-    protected function renderCustomerOverview(bool $onlyButchery, string $title, string $filename): \Illuminate\Http\Response
+    public function dailyCustomerOverview(): \Illuminate\Http\Response
     {
-        // Load ALL approved customers sorted by route order then name
+        return $this->renderCustomerOverview(false, true, 'Bestellingenoverzicht per dag', 'bestellingenoverzicht-per-dag');
+    }
+
+    /**
+     * Build the per-customer overview of confirmed orders and stream it as a
+     * PDF. Grouped per delivery day in route order, or as one alphabetical
+     * list in which each card names the customer's delivery day.
+     */
+    protected function renderCustomerOverview(bool $onlyButchery, bool $groupByDay, string $title, string $filename): \Illuminate\Http\Response
+    {
+        // Load ALL approved customers: per day in route order, otherwise by name.
         $allCustomers = Customer::approved()
             ->when($onlyButchery, fn ($query) => $query->where('from_butchery', true))
             ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
             ->get();
+
+        if (! $groupByDay) {
+            $allCustomers = $allCustomers
+                ->sort(fn (Customer $a, Customer $b) => strnatcasecmp($a->company_name, $b->company_name))
+                ->values();
+        }
 
         $orders = Order::with(['customer', 'items.product'])
             ->where('status', 'confirmed')
@@ -316,7 +338,7 @@ class OrderController extends Controller
         $dayOrder = DeliveryDay::ALL;
         $rawGroups = [];
         foreach ($allCustomers as $customer) {
-            $day = $customer->delivery_day ?: 'onbekend';
+            $day = $groupByDay ? ($customer->delivery_day ?: 'onbekend') : self::ALPHABETICAL_GROUP;
             $products = $customerOrders[$customer->id] ?? [];
             // Alphabetical on product name, case-insensitive, on both overviews.
             usort($products, fn ($a, $b) => strnatcasecmp($a['title'], $b['title']));
@@ -326,6 +348,9 @@ class OrderController extends Controller
                 'company_name' => $customer->company_name,
                 'phone_number' => $customer->primaryPhoneNumber(),
                 'is_pickup' => $customer->delivery_day === 'ophalen',
+                // Only the alphabetical overview names the day on the card;
+                // per day it is already the page heading.
+                'delivery_day' => $groupByDay ? null : ($customer->delivery_day ? DeliveryDay::label($customer->delivery_day) : 'Niet bekend'),
                 'products' => array_values($products),
                 'notes' => $customerNotes[$customer->id] ?? [],
                 'packaging_type' => PackagingType::label($customer->packaging_type),
@@ -350,6 +375,7 @@ class OrderController extends Controller
             ->loadView('pdf.customer-overview-mpdf', [
                 'title' => $title,
                 'dayGroups' => $dayGroups,
+                'groupTitles' => [self::ALPHABETICAL_GROUP => 'Alle klanten A–Z'],
                 'orderCount' => $orders->count(),
                 'customerCount' => $allCustomers->count(),
                 'generatedAt' => now()->formatLocal('d-m-Y H:i'),

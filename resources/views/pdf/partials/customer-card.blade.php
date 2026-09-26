@@ -12,6 +12,9 @@
                             if (! empty($customer['number'])) {
                                 $contactParts[] = 'Klantnr. <strong>'.e($customer['number']).'</strong>';
                             }
+                            if (! empty($customer['delivery_day'])) {
+                                $contactParts[] = 'Leverdag <strong>'.e($customer['delivery_day']).'</strong>';
+                            }
                             if (! empty($customer['phone_number'])) {
                                 $contactParts[] = 'Tel. '.e($customer['phone_number']);
                             }
