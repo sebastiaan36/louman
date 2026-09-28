@@ -1,11 +1,9 @@
 body {
     font-family: 'dejavusans', sans-serif;
     font-size: 8pt;
-    color: #000;
+    color: #222;
     line-height: 1.3;
 }
-
-/* All text is black for readability; only borders and dividers are grey. */
 
 /* Repeating page header (mPDF running header) */
 .page-header {
@@ -35,7 +33,7 @@ body {
 
 .meta {
     font-size: 7pt;
-    color: #000;
+    color: #555;
     margin-top: 2px;
 }
 
@@ -93,12 +91,12 @@ table.card-header > tbody > tr > td {
 
 .card-phone {
     font-size: 6.5pt;
-    color: #000;
+    color: #555;
 }
 
 .card-empty-label {
     font-size: 6.5pt;
-    color: #000;
+    color: #aaa;
     font-style: italic;
     margin-top: 2px;
 }
@@ -134,14 +132,14 @@ table.product td {
 }
 
 table.product .art {
-    color: #000;
+    color: #888;
     width: 59px;
     padding-left: 7px;
     padding-right: 5px;
 }
 
 table.product .weight {
-    color: #000;
+    color: #999;
 }
 
 /* Het aantal staat tussen artikelnummer en omschrijving; rechts uitgelijnd
@@ -175,10 +173,10 @@ table.notes {
 table.notes td {
     padding: 3px 7px 0 7px;
     font-size: 6.5pt;
-    color: #000;
+    color: #444;
     line-height: 1.25;
 }
 
 table.notes strong {
-    color: #000;
+    color: #222;
 }
