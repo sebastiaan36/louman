@@ -185,3 +185,14 @@ test('het overzicht slagerij is één alfabetische lijst met de leverdag per kla
         ->and(array_column($regular->data['dayGroups']['maandag'], 'company_name'))->toBe(['Zuivelhuis', 'Koffiehuis'])
         ->and($regular->data['dayGroups']['maandag'][0]['delivery_day'])->toBeNull();
 });
+
+test('de bestellingenoverzichten gebruiken alleen zwarte tekst', function () {
+    $css = file_get_contents(dirname(__DIR__, 3).'/resources/views/pdf/partials/overview-css.blade.php');
+
+    preg_match_all('/(?<![-\w])color:\s*(#[0-9a-fA-F]{3,6})/', $css, $colors);
+    $unique = array_values(array_unique($colors[1]));
+    sort($unique);
+
+    // Zwart, plus wit voor de tekst op het donkere Ophalen-label.
+    expect($unique)->toBe(['#000', '#fff']);
+});

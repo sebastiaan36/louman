@@ -71,7 +71,7 @@
         @endforeach
     @endforeach
 @else
-    <div style="padding: 40px; text-align: center; color: #777; font-size: 9pt;">
+    <div style="padding: 40px; text-align: center; color: #000; font-size: 9pt;">
         Geen goedgekeurde klanten gevonden.
     </div>
 @endif
