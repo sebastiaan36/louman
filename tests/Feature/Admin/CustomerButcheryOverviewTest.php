@@ -153,3 +153,28 @@ test('beide bestellingenoverzichten sorteren de producten per klant op alfabet',
         expect(array_column($card['products'], 'title'))->toBe(['achterham', 'Kiprollade', 'Zeeuws spek']);
     }
 });
+
+test('het overzicht slagerij zet de klanten per dag op alfabet, het gewone overzicht op rijroute', function () {
+    $product = Product::factory()->create();
+
+    foreach ([['Zuivelhuis', 1], ['bakkerij Aarts', 3], ['Koffiehuis', 2]] as [$name, $routeOrder]) {
+        $customer = Customer::factory()->approved()->create([
+            'company_name' => $name,
+            'delivery_day' => 'maandag',
+            'route_order' => $routeOrder,
+            'from_butchery' => true,
+        ]);
+        $order = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
+        OrderItem::factory()->create(['order_id' => $order->id, 'product_id' => $product->id, 'quantity' => 1]);
+    }
+
+    $butchery = captureButcheryOverviewPdf();
+    $this->actingAs(adminUser())->get('/admin/orders/customer-overview/slagerij')->assertOk();
+    expect(array_column($butchery->data['dayGroups']['maandag'], 'company_name'))
+        ->toBe(['bakkerij Aarts', 'Koffiehuis', 'Zuivelhuis']);
+
+    $regular = captureButcheryOverviewPdf();
+    $this->actingAs(adminUser())->get('/admin/orders/customer-overview')->assertOk();
+    expect(array_column($regular->data['dayGroups']['maandag'], 'company_name'))
+        ->toBe(['Zuivelhuis', 'Koffiehuis', 'bakkerij Aarts']);
+});

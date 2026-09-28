@@ -284,6 +284,14 @@ class OrderController extends Controller
             ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
             ->get();
 
+        // The butchery overview lists customers alphabetically within each
+        // day instead of in driving order.
+        if ($onlyButchery) {
+            $allCustomers = $allCustomers
+                ->sort(fn (Customer $a, Customer $b) => strnatcasecmp($a->company_name, $b->company_name))
+                ->values();
+        }
+
         $orders = Order::with(['customer', 'items.product'])
             ->where('status', 'confirmed')
             ->whereIn('customer_id', $allCustomers->pluck('id'))
