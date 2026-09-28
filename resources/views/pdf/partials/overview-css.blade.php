@@ -89,6 +89,12 @@ table.card-header > tbody > tr > td {
     font-weight: bold;
 }
 
+/* Leverdag naast de klantnaam, alleen op het alfabetische overzicht slagerij. */
+.card-day {
+    font-weight: normal;
+    color: #222;
+}
+
 .card-phone {
     font-size: 6.5pt;
     color: #555;

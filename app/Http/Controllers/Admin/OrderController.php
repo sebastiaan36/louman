@@ -284,8 +284,8 @@ class OrderController extends Controller
             ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
             ->get();
 
-        // The butchery overview lists customers alphabetically within each
-        // day instead of in driving order.
+        // The butchery overview is one alphabetical list, not grouped per
+        // delivery day; each card names the customer's day instead.
         if ($onlyButchery) {
             $allCustomers = $allCustomers
                 ->sort(fn (Customer $a, Customer $b) => strnatcasecmp($a->company_name, $b->company_name))
@@ -324,7 +324,7 @@ class OrderController extends Controller
         $dayOrder = DeliveryDay::ALL;
         $rawGroups = [];
         foreach ($allCustomers as $customer) {
-            $day = $customer->delivery_day ?: 'onbekend';
+            $day = $onlyButchery ? 'alle' : ($customer->delivery_day ?: 'onbekend');
             $products = $customerOrders[$customer->id] ?? [];
             // Alphabetical on product name, case-insensitive, on both overviews.
             usort($products, fn ($a, $b) => strnatcasecmp($a['title'], $b['title']));
@@ -334,6 +334,7 @@ class OrderController extends Controller
                 'company_name' => $customer->company_name,
                 'phone_number' => $customer->primaryPhoneNumber(),
                 'is_pickup' => $customer->delivery_day === 'ophalen',
+                'delivery_day' => $onlyButchery ? ($customer->delivery_day ? DeliveryDay::label($customer->delivery_day) : 'Niet bekend') : null,
                 'products' => array_values($products),
                 'notes' => $customerNotes[$customer->id] ?? [],
                 'packaging_type' => PackagingType::label($customer->packaging_type),
@@ -358,6 +359,7 @@ class OrderController extends Controller
             ->loadView('pdf.customer-overview-mpdf', [
                 'title' => $title,
                 'dayGroups' => $dayGroups,
+                'groupTitles' => ['alle' => 'Alle klanten A–Z'],
                 'orderCount' => $orders->count(),
                 'customerCount' => $allCustomers->count(),
                 'generatedAt' => now()->formatLocal('d-m-Y H:i'),

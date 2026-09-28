@@ -4,7 +4,7 @@
             <table class="card-header">
                 <tr>
                     <td class="card-header-left">
-                        <div class="card-name">{{ $customer['company_name'] }}</div>
+                        <div class="card-name">{{ $customer['company_name'] }}@if(! empty($customer['delivery_day'])) <span class="card-day">&middot; {{ $customer['delivery_day'] }}</span>@endif</div>
                     </td>
                     <td class="card-header-right">
                         @php

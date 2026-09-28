@@ -148,19 +148,19 @@ test('beide bestellingenoverzichten sorteren de producten per klant op alfabet',
 
         $this->actingAs(adminUser())->get($url)->assertOk();
 
-        $card = collect($overview->data['dayGroups']['maandag'])->firstWhere('company_name', 'Slagerijklant');
+        $card = collect($overview->data['dayGroups'])->flatten(1)->firstWhere('company_name', 'Slagerijklant');
 
         expect(array_column($card['products'], 'title'))->toBe(['achterham', 'Kiprollade', 'Zeeuws spek']);
     }
 });
 
-test('het overzicht slagerij zet de klanten per dag op alfabet, het gewone overzicht op rijroute', function () {
+test('het overzicht slagerij is één alfabetische lijst met de leverdag per klant, het gewone overzicht blijft per dag', function () {
     $product = Product::factory()->create();
 
-    foreach ([['Zuivelhuis', 1], ['bakkerij Aarts', 3], ['Koffiehuis', 2]] as [$name, $routeOrder]) {
+    foreach ([['Zuivelhuis', 'maandag', 1], ['bakkerij Aarts', 'vrijdag', 1], ['Koffiehuis', 'maandag', 2], ['Nieuwe klant', null, null]] as [$name, $day, $routeOrder]) {
         $customer = Customer::factory()->approved()->create([
             'company_name' => $name,
-            'delivery_day' => 'maandag',
+            'delivery_day' => $day,
             'route_order' => $routeOrder,
             'from_butchery' => true,
         ]);
@@ -170,11 +170,18 @@ test('het overzicht slagerij zet de klanten per dag op alfabet, het gewone overz
 
     $butchery = captureButcheryOverviewPdf();
     $this->actingAs(adminUser())->get('/admin/orders/customer-overview/slagerij')->assertOk();
-    expect(array_column($butchery->data['dayGroups']['maandag'], 'company_name'))
-        ->toBe(['bakkerij Aarts', 'Koffiehuis', 'Zuivelhuis']);
+
+    expect(array_keys($butchery->data['dayGroups']))->toBe(['alle']);
+    $cards = $butchery->data['dayGroups']['alle'];
+    expect(array_column($cards, 'company_name'))->toBe(['bakkerij Aarts', 'Koffiehuis', 'Nieuwe klant', 'Zuivelhuis'])
+        ->and(array_column($cards, 'delivery_day'))->toBe(['Vrijdag', 'Maandag', 'Niet bekend', 'Maandag']);
+
+    $html = view('pdf.partials.customer-card', ['customer' => $cards[0]])->render();
+    expect($html)->toContain('bakkerij Aarts <span class="card-day">&middot; Vrijdag</span>');
 
     $regular = captureButcheryOverviewPdf();
     $this->actingAs(adminUser())->get('/admin/orders/customer-overview')->assertOk();
-    expect(array_column($regular->data['dayGroups']['maandag'], 'company_name'))
-        ->toBe(['Zuivelhuis', 'Koffiehuis', 'bakkerij Aarts']);
+    expect(array_keys($regular->data['dayGroups']))->toBe(['maandag', 'vrijdag', 'onbekend'])
+        ->and(array_column($regular->data['dayGroups']['maandag'], 'company_name'))->toBe(['Zuivelhuis', 'Koffiehuis'])
+        ->and($regular->data['dayGroups']['maandag'][0]['delivery_day'])->toBeNull();
 });
