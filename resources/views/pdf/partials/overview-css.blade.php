@@ -5,7 +5,10 @@ body {
     line-height: 1.3;
 }
 
-/* All text is black for readability; only borders and dividers are grey. */
+/* All text is black for readability; only borders and dividers are grey.
+   Article numbers, "geen bestelling" and the route status also carry an
+   inline color in customer-card, as class colours were printed light grey
+   on the live PDFs. */
 
 /* Repeating page header (mPDF running header) */
 .page-header {
@@ -103,9 +106,9 @@ table.card-header > tbody > tr > td {
 }
 
 .card-empty-label {
-    font-size: 6.5pt;
+    font-size: 7pt;
     color: #000;
-    font-style: italic;
+    font-weight: bold;
     margin-top: 2px;
 }
 
@@ -118,6 +121,22 @@ table.card-header > tbody > tr > td {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 1px 5px;
+    border-radius: 3px;
+}
+
+/* Status van de rijroute voor deze week (terugbellen / niet bestellen).
+   Lichtgrijs gevuld zodat hij niet verward wordt met het zwarte Ophalen-label;
+   een vulling in plaats van een rand, want randen tekent mPDF live niet altijd. */
+.route-flag-badge {
+    display: inline-block;
+    background-color: #d5d5d5;
+    color: #000;
+    font-size: 6pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1px 5px;
+    margin-top: 2px;
     border-radius: 3px;
 }
 
@@ -141,6 +160,7 @@ table.product td {
 
 table.product .art {
     color: #000;
+    font-weight: bold;
     width: 59px;
     padding-left: 7px;
     padding-right: 5px;

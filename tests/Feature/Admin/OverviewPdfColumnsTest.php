@@ -8,7 +8,7 @@
 test('de kolommen staan in de volgorde artikelnummer, aantal, omschrijving', function () {
     $kaart = file_get_contents(dirname(__DIR__, 3).'/resources/views/pdf/partials/customer-card.blade.php');
 
-    $art = strpos($kaart, '<td class="art">');
+    $art = strpos($kaart, '<td class="art"');
     $qty = strpos($kaart, '<td class="qty">');
     $name = strpos($kaart, '<td class="name">');
 

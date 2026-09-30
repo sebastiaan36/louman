@@ -20,8 +20,11 @@
                         @if($customer['is_pickup'])
                             <div class="pickup-badge">Ophalen</div>
                         @endif
+                        @if(! empty($customer['route_flag_label']))
+                            <div class="route-flag-badge" style="color: #000;">{{ $customer['route_flag_label'] }}</div>
+                        @endif
                         @if(empty($customer['products']))
-                            <div class="card-empty-label">geen bestelling</div>
+                            <div class="card-empty-label" style="color: #000;">geen bestelling</div>
                         @endif
                     </td>
                 </tr>
@@ -32,7 +35,7 @@
                          (cell borders are not drawn on the production mPDF build). --}}
                     <table class="product @unless($loop->first) product-divider @endunless">
                         <tr>
-                            <td class="art">{{ $product['article_number'] }}</td>
+                            <td class="art" style="color: #000;">{{ $product['article_number'] }}</td>
                             <td class="qty">{{ $product['quantity'] }}</td>
                             <td class="name">{{ $product['title'] }}@if(! empty($product['weight'])) <span class="weight">— {{ $product['weight'] }}</span>@endif</td>
                         </tr>

@@ -334,6 +334,7 @@ class OrderController extends Controller
                 'company_name' => $customer->company_name,
                 'phone_number' => $customer->primaryPhoneNumber(),
                 'is_pickup' => $customer->delivery_day === 'ophalen',
+                'route_flag_label' => $this->routeFlagLabel($customer->activeRouteFlag()),
                 'delivery_day' => $onlyButchery ? ($customer->delivery_day ? DeliveryDay::label($customer->delivery_day) : 'Niet bekend') : null,
                 'products' => array_values($products),
                 'notes' => $customerNotes[$customer->id] ?? [],
@@ -365,6 +366,19 @@ class OrderController extends Controller
                 'generatedAt' => now()->formatLocal('d-m-Y H:i'),
             ])
             ->stream($filename.'-'.now()->formatLocal('Y-m-d').'.pdf');
+    }
+
+    /**
+     * The label on the overview for the marker set on the delivery route this
+     * week, so the packers can see why a customer has no order.
+     */
+    private function routeFlagLabel(?string $flag): ?string
+    {
+        return match ($flag) {
+            Customer::ROUTE_FLAG_SKIP_WEEK => 'Deze week niet bestellen',
+            Customer::ROUTE_FLAG_CALLBACK => 'Terugbellen',
+            default => null,
+        };
     }
 
     /**

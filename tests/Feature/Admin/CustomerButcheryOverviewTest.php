@@ -196,3 +196,50 @@ test('de bestellingenoverzichten gebruiken alleen zwarte tekst', function () {
     // Zwart, plus wit voor de tekst op het donkere Ophalen-label.
     expect($unique)->toBe(['#000', '#fff']);
 });
+
+test('de status van de rijroute van deze week staat op beide bestellingenoverzichten', function () {
+    $skipping = Customer::factory()->approved()->create(['company_name' => 'Zuivelhoeve', 'delivery_day' => 'maandag', 'from_butchery' => true]);
+    $callback = Customer::factory()->approved()->create(['company_name' => 'Bakkerij', 'delivery_day' => 'maandag', 'from_butchery' => true]);
+    $lastWeek = Customer::factory()->approved()->create(['company_name' => 'Vorige week', 'delivery_day' => 'maandag', 'from_butchery' => true]);
+    $unflagged = Customer::factory()->approved()->create(['company_name' => 'Geen status', 'delivery_day' => 'maandag', 'from_butchery' => true]);
+
+    $skipping->setRouteFlag(Customer::ROUTE_FLAG_SKIP_WEEK);
+    $callback->setRouteFlag(Customer::ROUTE_FLAG_CALLBACK);
+    $lastWeek->forceFill(['route_flag' => Customer::ROUTE_FLAG_SKIP_WEEK, 'route_flag_week' => '2000-W01'])->save();
+
+    foreach (['/admin/orders/customer-overview', '/admin/orders/customer-overview/slagerij'] as $url) {
+        $pdf = captureButcheryOverviewPdf();
+        $this->actingAs(adminUser())->get($url)->assertOk();
+
+        $labels = collect($pdf->data['dayGroups'])->flatten(1)->pluck('route_flag_label', 'company_name')->all();
+        expect($labels)->toMatchArray([
+            'Zuivelhoeve' => 'Deze week niet bestellen',
+            'Bakkerij' => 'Terugbellen',
+            'Vorige week' => null,
+            'Geen status' => null,
+        ]);
+    }
+
+    $card = collect($pdf->data['dayGroups'])->flatten(1)->firstWhere('company_name', 'Zuivelhoeve');
+    expect(view('pdf.partials.customer-card', ['customer' => $card])->render())
+        ->toContain('<div class="route-flag-badge" style="color: #000;">Deze week niet bestellen</div>');
+});
+
+test('artikelnummers en geen bestelling staan vet en zwart op de klantkaart', function () {
+    $customer = [
+        'company_name' => 'Klant', 'number' => '1', 'phone_number' => null, 'is_pickup' => false,
+        'route_flag_label' => null, 'delivery_day' => null, 'notes' => [], 'packaging_type' => null, 'packaging_notes' => null,
+    ];
+
+    $empty = view('pdf.partials.customer-card', ['customer' => [...$customer, 'products' => []]])->render();
+    $withProducts = view('pdf.partials.customer-card', ['customer' => [...$customer, 'products' => [
+        ['article_number' => '10234', 'title' => 'Rookworst', 'weight' => null, 'quantity' => 1],
+    ]]])->render();
+
+    expect($empty)->toContain('<div class="card-empty-label" style="color: #000;">geen bestelling</div>')
+        ->and($withProducts)->toContain('<td class="art" style="color: #000;">10234</td>');
+
+    $css = file_get_contents(dirname(__DIR__, 3).'/resources/views/pdf/partials/overview-css.blade.php');
+    expect($css)->toMatch('/\.card-empty-label \{[^}]*font-weight: bold;/')
+        ->toMatch('/table\.product \.art \{[^}]*font-weight: bold;/');
+});
