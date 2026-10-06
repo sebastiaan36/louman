@@ -128,6 +128,7 @@ const props = defineProps<{
     orders: Order[];
     favoriteProducts: FavoriteProduct[];
     availableProducts: AvailableProduct[];
+    customerCategories: { value: string; label: string }[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -1174,40 +1175,20 @@ const deleteAddress = (addressId: number) => {
                     <div>
                         <Label class="mb-3 block">Klantcategorie *</Label>
                         <div class="space-y-2">
-                            <div class="flex items-center space-x-2">
+                            <div
+                                v-for="category in customerCategories"
+                                :key="category.value"
+                                class="flex items-center space-x-2"
+                            >
                                 <input
                                     type="radio"
-                                    id="edit_groothandel"
-                                    value="groothandel"
+                                    :id="`edit_category_${category.value}`"
+                                    :value="category.value"
                                     v-model="editCategory"
                                     class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
                                 />
-                                <Label for="edit_groothandel" class="cursor-pointer font-normal">
-                                    Groothandel
-                                </Label>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    id="edit_broodjeszaak"
-                                    value="broodjeszaak"
-                                    v-model="editCategory"
-                                    class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                />
-                                <Label for="edit_broodjeszaak" class="cursor-pointer font-normal">
-                                    Broodjeszaak
-                                </Label>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    id="edit_horeca"
-                                    value="horeca"
-                                    v-model="editCategory"
-                                    class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                                />
-                                <Label for="edit_horeca" class="cursor-pointer font-normal">
-                                    Horeca
+                                <Label :for="`edit_category_${category.value}`" class="cursor-pointer font-normal">
+                                    {{ category.label }}
                                 </Label>
                             </div>
                         </div>

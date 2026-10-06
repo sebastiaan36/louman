@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreCustomerRequest;
 use App\Mail\CustomerInvitation;
 use App\Models\AuditLog;
 use App\Models\Customer;
+use App\Models\CustomerCategory;
 use App\Models\CustomerInvitation as CustomerInvitationModel;
 use App\Models\DeliveryAddress;
 use App\Models\Product;
@@ -57,6 +58,7 @@ class CustomerApprovalController extends Controller
 
         return Inertia::render('admin/PendingCustomers', [
             'customers' => $pendingCustomers,
+            'customerCategories' => CustomerCategory::options(),
         ]);
     }
 
@@ -421,6 +423,7 @@ class CustomerApprovalController extends Controller
 
         return Inertia::render('admin/CustomerDetail', [
             'customer' => $customerData,
+            'customerCategories' => CustomerCategory::options(),
             'deliveryAddresses' => $deliveryAddresses,
             'orders' => $orders,
             'favoriteProducts' => $favoriteProducts,
@@ -438,12 +441,12 @@ class CustomerApprovalController extends Controller
         }
 
         $validated = $request->validate([
-            'customer_category' => ['required', 'in:groothandel,broodjeszaak,horeca'],
+            'customer_category' => ['required', CustomerCategory::rule()],
             'discount_percentage' => ['nullable', 'in:1,2,3,4,5'],
             'delivery_day' => ['nullable', DeliveryDay::rule()],
         ], [
             'customer_category.required' => 'Selecteer een klantcategorie.',
-            'customer_category.in' => 'Ongeldige klantcategorie.',
+            'customer_category.exists' => 'Ongeldige klantcategorie.',
             'discount_percentage.in' => 'Ongeldig kortingspercentage.',
             'delivery_day.in' => 'Ongeldige leverdag.',
             'packaging_type.in' => 'Ongeldige verpakking.',
@@ -487,7 +490,7 @@ class CustomerApprovalController extends Controller
     public function updateCategoryAndDiscount(Request $request, Customer $customer): RedirectResponse
     {
         $validated = $request->validate([
-            'customer_category' => ['required', 'in:groothandel,broodjeszaak,horeca'],
+            'customer_category' => ['required', CustomerCategory::rule()],
             'discount_percentage' => ['nullable', 'in:1,2,3,4,5'],
             'delivery_day' => ['nullable', DeliveryDay::rule()],
             'packaging_type' => ['nullable', PackagingType::rule()],
@@ -495,7 +498,7 @@ class CustomerApprovalController extends Controller
             'show_on_map' => ['boolean'],
         ], [
             'customer_category.required' => 'Selecteer een klantcategorie.',
-            'customer_category.in' => 'Ongeldige klantcategorie.',
+            'customer_category.exists' => 'Ongeldige klantcategorie.',
             'discount_percentage.in' => 'Ongeldig kortingspercentage.',
             'delivery_day.in' => 'Ongeldige leverdag.',
         ]);
@@ -893,7 +896,7 @@ class CustomerApprovalController extends Controller
      */
     private function buildCustomerUpdateData(array $data, array $headers, int $rowNumber, array &$skipped): array
     {
-        $validCategories = ['groothandel', 'broodjeszaak', 'horeca'];
+        $validCategories = CustomerCategory::query()->pluck('slug')->all();
         $validDiscounts = ['1', '2', '3', '4', '5'];
         $validDays = DeliveryDay::ALL;
 

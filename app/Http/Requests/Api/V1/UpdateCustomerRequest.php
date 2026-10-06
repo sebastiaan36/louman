@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1;
 
+use App\Models\CustomerCategory;
 use App\Support\DeliveryDay;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
@@ -50,7 +51,7 @@ class UpdateCustomerRequest extends ApiFormRequest
             'bank_account' => ['sometimes', 'nullable', 'string', 'max:34'],
             'packing_slip_email' => ['sometimes', 'nullable', 'email', 'max:255'],
             'invoice_email' => ['sometimes', 'nullable', 'email', 'max:255'],
-            'customer_category' => ['sometimes', 'nullable', 'in:groothandel,broodjeszaak,horeca'],
+            'customer_category' => ['sometimes', 'nullable', CustomerCategory::rule()],
             'discount_percentage' => ['sometimes', 'nullable', 'in:1,2,3,4,5'],
             'delivery_day' => ['sometimes', 'nullable', DeliveryDay::rule()],
             'route_order' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:9999'],
@@ -69,7 +70,7 @@ class UpdateCustomerRequest extends ApiFormRequest
             'customer_number.unique' => 'Dit klantnummer is al aan een andere klant gekoppeld.',
             'external_id.unique' => 'Deze externe id is al aan een andere klant gekoppeld.',
             'kvk_number.unique' => 'Dit KvK-nummer is al aan een andere klant gekoppeld.',
-            'customer_category.in' => 'Ongeldige klantcategorie. Kies groothandel, broodjeszaak of horeca.',
+            'customer_category.exists' => 'Ongeldige klantcategorie. Kies een categorie die bij Instellingen bestaat, bijvoorbeeld groothandel, broodjeszaak, horeca of detailhandel.',
             'discount_percentage.in' => 'Het kortingspercentage moet 1, 2, 3, 4 of 5 zijn.',
             'delivery_day.in' => 'Ongeldige bezorgdag.',
         ];

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateSettingsRequest;
+use App\Models\Customer;
+use App\Models\CustomerCategory;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -38,8 +40,21 @@ class SettingsController extends Controller
             $settings[$key] = Setting::get($key, $default);
         }
 
+        $customerCategories = CustomerCategory::query()
+            ->withCount('customers')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (CustomerCategory $category): array => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+                'customers_count' => $category->customers_count,
+            ]);
+
         return Inertia::render('admin/Settings', [
             'settings' => $settings,
+            'customerCategories' => $customerCategories,
+            'customersWithoutCategoryCount' => Customer::query()->whereNull('customer_category')->count(),
         ]);
     }
 

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdministratorController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerApprovalController;
+use App\Http\Controllers\Admin\CustomerCategoryController;
 use App\Http\Controllers\Admin\DeliveryRouteController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
@@ -95,6 +96,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.settings.edit');
     Route::patch('/settings', [SettingsController::class, 'update'])
         ->name('admin.settings.update');
+    Route::post('/settings/customer-categories', [CustomerCategoryController::class, 'store'])
+        ->name('admin.customer-categories.store');
+    Route::delete('/settings/customer-categories/{customerCategory}', [CustomerCategoryController::class, 'destroy'])
+        ->name('admin.customer-categories.destroy');
 
     // Administrators
     Route::get('/administrators', [AdministratorController::class, 'index'])

@@ -39,6 +39,7 @@ interface Customer {
 
 defineProps<{
     customers: Customer[];
+    customerCategories: { value: string; label: string }[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -164,40 +165,20 @@ const approveCustomer = () => {
                 <div class="py-4">
                     <Label class="mb-3 block">Klantcategorie *</Label>
                     <div class="space-y-2">
-                        <div class="flex items-center space-x-2">
+                        <div
+                            v-for="category in customerCategories"
+                            :key="category.value"
+                            class="flex items-center space-x-2"
+                        >
                             <input
                                 type="radio"
-                                id="groothandel"
-                                value="groothandel"
+                                :id="`category_${category.value}`"
+                                :value="category.value"
                                 v-model="selectedCategory"
                                 class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
                             />
-                            <Label for="groothandel" class="cursor-pointer font-normal">
-                                Groothandel
-                            </Label>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <input
-                                type="radio"
-                                id="broodjeszaak"
-                                value="broodjeszaak"
-                                v-model="selectedCategory"
-                                class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                            />
-                            <Label for="broodjeszaak" class="cursor-pointer font-normal">
-                                Broodjeszaak
-                            </Label>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <input
-                                type="radio"
-                                id="horeca"
-                                value="horeca"
-                                v-model="selectedCategory"
-                                class="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
-                            />
-                            <Label for="horeca" class="cursor-pointer font-normal">
-                                Horeca
+                            <Label :for="`category_${category.value}`" class="cursor-pointer font-normal">
+                                {{ category.label }}
                             </Label>
                         </div>
                     </div>

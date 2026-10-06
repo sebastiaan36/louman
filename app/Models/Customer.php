@@ -332,11 +332,14 @@ class Customer extends Model
      */
     public function getCategoryLabel(): ?string
     {
-        return match ($this->customer_category) {
-            'groothandel' => 'Groothandel',
-            'broodjeszaak' => 'Broodjeszaak',
-            'horeca' => 'Horeca',
-            default => null,
-        };
+        return $this->category?->name;
+    }
+
+    /**
+     * The customer's category; the customer stores the category's slug.
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(CustomerCategory::class, 'customer_category', 'slug');
     }
 }

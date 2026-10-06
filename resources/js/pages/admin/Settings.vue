@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
-import { Mail } from 'lucide-vue-next';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { Mail, Tags, Trash2 } from 'lucide-vue-next';
+import CustomerCategoryController from '@/actions/App/Http/Controllers/Admin/CustomerCategoryController';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,8 +22,17 @@ interface Settings {
     mail_reply_to: string | null;
 }
 
+interface CustomerCategory {
+    id: number;
+    name: string;
+    slug: string;
+    customers_count: number;
+}
+
 const props = defineProps<{
     settings: Settings;
+    customerCategories: CustomerCategory[];
+    customersWithoutCategoryCount: number;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -44,6 +54,23 @@ const form = useForm({
 
 const submit = () => {
     form.patch('/admin/settings', { preserveScroll: true });
+};
+
+const categoryForm = useForm({ name: '' });
+
+const addCategory = () => {
+    categoryForm.submit(CustomerCategoryController.store(), {
+        preserveScroll: true,
+        onSuccess: () => categoryForm.reset(),
+    });
+};
+
+const deleteCategory = (category: CustomerCategory) => {
+    if (!confirm(`Klantcategorie ${category.name} verwijderen?`)) {
+        return;
+    }
+
+    router.visit(CustomerCategoryController.destroy(category.id), { preserveScroll: true });
 };
 </script>
 
@@ -218,6 +245,70 @@ const submit = () => {
                     </Button>
                 </div>
             </form>
+
+            <section class="max-w-xl rounded-lg border p-6 space-y-5">
+                <div>
+                    <h2 class="text-lg font-semibold flex items-center gap-2">
+                        <Tags class="h-5 w-5" />
+                        Klantcategorieën
+                    </h2>
+                    <p class="text-sm text-muted-foreground">
+                        De categorieën die je bij een klant kunt kiezen onder Klantinstellingen.
+                    </p>
+                </div>
+
+                <ul class="divide-y rounded-md border">
+                    <li
+                        v-for="category in customerCategories"
+                        :key="category.id"
+                        class="flex items-center justify-between gap-3 px-4 py-2"
+                    >
+                        <span class="text-sm font-medium">{{ category.name }}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-muted-foreground">
+                                {{ category.customers_count }} {{ category.customers_count === 1 ? 'klant' : 'klanten' }}
+                            </span>
+                            <Button
+                                v-if="category.customers_count === 0"
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                class="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                :title="`${category.name} verwijderen`"
+                                @click="deleteCategory(category)"
+                            >
+                                <Trash2 class="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </li>
+                    <li
+                        v-if="customersWithoutCategoryCount > 0"
+                        class="flex items-center justify-between gap-3 px-4 py-2"
+                    >
+                        <span class="text-sm italic text-muted-foreground">Geen categorie</span>
+                        <span class="text-sm text-muted-foreground">
+                            {{ customersWithoutCategoryCount }} {{ customersWithoutCategoryCount === 1 ? 'klant' : 'klanten' }}
+                        </span>
+                    </li>
+                </ul>
+
+                <form class="grid gap-2" @submit.prevent="addCategory">
+                    <Label for="customer_category_name">Nieuwe categorie</Label>
+                    <div class="flex gap-2">
+                        <Input
+                            id="customer_category_name"
+                            v-model="categoryForm.name"
+                            type="text"
+                            maxlength="50"
+                            placeholder="Bijv. Detailhandel"
+                        />
+                        <Button type="submit" :disabled="categoryForm.processing || !categoryForm.name.trim()">
+                            Toevoegen
+                        </Button>
+                    </div>
+                    <InputError :message="categoryForm.errors.name" />
+                </form>
+            </section>
         </div>
     </AppLayout>
 </template>
