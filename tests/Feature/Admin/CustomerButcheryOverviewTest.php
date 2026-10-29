@@ -65,6 +65,33 @@ test('het gewone bestellingenoverzicht bevat alle klanten, ook die uit de slager
         ->and($overview->filename)->toStartWith('bestellingenoverzicht-');
 });
 
+test('het bestellingenoverzicht kan per leverdag worden geprint', function () {
+    $product = Product::factory()->create();
+    foreach (['Maandagklant' => 'maandag', 'Dinsdagklant' => 'dinsdag'] as $name => $day) {
+        $customer = Customer::factory()->approved()->create(['company_name' => $name, 'delivery_day' => $day]);
+        $order = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
+        OrderItem::factory()->create(['order_id' => $order->id, 'product_id' => $product->id, 'quantity' => 1]);
+    }
+    $overview = captureButcheryOverviewPdf();
+
+    $this->actingAs(adminUser())
+        ->get('/admin/orders/customer-overview?dag=dinsdag')
+        ->assertOk();
+
+    expect(array_keys($overview->data['dayGroups']))->toBe(['dinsdag'])
+        ->and(overviewCompanyNames($overview->data['dayGroups']))->toBe(['Dinsdagklant'])
+        ->and($overview->data['title'])->toBe('Bestellingenoverzicht Dinsdag')
+        ->and($overview->data['orderCount'])->toBe(1)
+        ->and($overview->data['customerCount'])->toBe(1)
+        ->and($overview->filename)->toStartWith('bestellingenoverzicht-dinsdag-');
+});
+
+test('het bestellingenoverzicht weigert een onbekende leverdag', function () {
+    $this->actingAs(adminUser())
+        ->get('/admin/orders/customer-overview?dag=zondag')
+        ->assertSessionHasErrors('dag');
+});
+
 test('het bestellingenoverzicht slagerij bevat alleen klanten uit de slagerij', function () {
     butcheryAndRegularCustomersWithOrders();
     $overview = captureButcheryOverviewPdf();
@@ -128,6 +155,7 @@ test('het vinkje staat bij de klant en niet meer bij het product', function () {
     expect(file_get_contents($root.'/resources/js/pages/admin/ProductForm.vue'))->not->toContain('from_butchery');
     expect(file_get_contents($root.'/resources/js/pages/admin/Orders.vue'))
         ->toContain('href="/admin/orders/customer-overview/slagerij"')
+        ->toContain('/admin/orders/customer-overview?dag=${day.value}')
         ->toContain('Bestellingenoverzicht slagerij')
         ->not->toContain('production-list/slagerij');
     expect(Schema::hasColumn('products', 'from_butchery'))->toBeFalse()
@@ -213,7 +241,7 @@ test('de status van de rijroute van deze week staat op beide bestellingenoverzic
 
         $labels = collect($pdf->data['dayGroups'])->flatten(1)->pluck('route_flag_label', 'company_name')->all();
         expect($labels)->toMatchArray([
-            'Zuivelhoeve' => 'Deze week niet bestellen',
+            'Zuivelhoeve' => 'Deze week geen bestelling',
             'Bakkerij' => 'Terugbellen',
             'Vorige week' => null,
             'Geen status' => null,
@@ -222,10 +250,10 @@ test('de status van de rijroute van deze week staat op beide bestellingenoverzic
 
     $card = collect($pdf->data['dayGroups'])->flatten(1)->firstWhere('company_name', 'Zuivelhoeve');
     expect(view('pdf.partials.customer-card', ['customer' => $card])->render())
-        ->toContain('<div class="route-flag-badge" style="color: #000;">Deze week niet bestellen</div>');
+        ->toContain('<div class="route-flag-badge" style="color: #000;">Deze week geen bestelling</div>');
 });
 
-test('artikelnummers en geen bestelling staan vet en zwart op de klantkaart', function () {
+test('artikelnummers staan vet en zwart en een lege klantkaart toont geen "geen bestelling"', function () {
     $customer = [
         'company_name' => 'Klant', 'number' => '1', 'phone_number' => null, 'is_pickup' => false,
         'route_flag_label' => null, 'delivery_day' => null, 'notes' => [], 'packaging_type' => null, 'packaging_notes' => null,
@@ -236,10 +264,9 @@ test('artikelnummers en geen bestelling staan vet en zwart op de klantkaart', fu
         ['article_number' => '10234', 'title' => 'Rookworst', 'weight' => null, 'quantity' => 1],
     ]]])->render();
 
-    expect($empty)->toContain('<div class="card-empty-label" style="color: #000;">geen bestelling</div>')
+    expect($empty)->not->toContain('geen bestelling')
         ->and($withProducts)->toContain('<td class="art" style="color: #000;">10234</td>');
 
     $css = file_get_contents(dirname(__DIR__, 3).'/resources/views/pdf/partials/overview-css.blade.php');
-    expect($css)->toMatch('/\.card-empty-label \{[^}]*font-weight: bold;/')
-        ->toMatch('/table\.product \.art \{[^}]*font-weight: bold;/');
+    expect($css)->toMatch('/table\.product \.art \{[^}]*font-weight: bold;/');
 });

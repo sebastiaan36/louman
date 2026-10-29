@@ -6,7 +6,7 @@ body {
 }
 
 /* All text is black for readability; only borders and dividers are grey.
-   Article numbers, "geen bestelling" and the route status also carry an
+   Article numbers and the route status also carry an
    inline color in customer-card, as class colours were printed light grey
    on the live PDFs. */
 
@@ -105,13 +105,6 @@ table.card-header > tbody > tr > td {
     color: #000;
 }
 
-.card-empty-label {
-    font-size: 7pt;
-    color: #000;
-    font-weight: bold;
-    margin-top: 2px;
-}
-
 .pickup-badge {
     display: inline-block;
     background-color: #222;
@@ -124,7 +117,7 @@ table.card-header > tbody > tr > td {
     border-radius: 3px;
 }
 
-/* Status van de rijroute voor deze week (terugbellen / niet bestellen).
+/* Status van de rijroute voor deze week (terugbellen / geen bestelling).
    Lichtgrijs gevuld zodat hij niet verward wordt met het zwarte Ophalen-label;
    een vulling in plaats van een rand, want randen tekent mPDF live niet altijd. */
 .route-flag-badge {

@@ -233,13 +233,13 @@ test('productielijst bevat alleen bevestigde bestellingen', function () {
     expect($captured['products'][0]['weight'])->toBe('500 gram');
 });
 
-test('productielijst sorteert op artikelnummer in natuurlijke volgorde', function () {
+test('productielijst sorteert op productnaam in alfabetische volgorde', function () {
     $admin = adminUser();
     $customer = approvedCustomer();
     $order = Order::factory()->confirmed()->create(['customer_id' => $customer->id]);
 
-    foreach (['100', '2', '10'] as $articleNumber) {
-        $product = Product::factory()->create(['article_number' => $articleNumber]);
+    foreach (['1' => 'rookworst', '2' => 'Gehakt', '3' => 'Leverworst'] as $articleNumber => $title) {
+        $product = Product::factory()->create(['article_number' => $articleNumber, 'title' => $title]);
         OrderItem::factory()->create([
             'order_id' => $order->id,
             'product_id' => $product->id,
@@ -263,7 +263,7 @@ test('productielijst sorteert op artikelnummer in natuurlijke volgorde', functio
         ->get('/admin/orders/production-list')
         ->assertOk();
 
-    expect(array_column($captured['products'], 'article_number'))->toBe(['2', '10', '100']);
+    expect(array_column($captured['products'], 'title'))->toBe(['Gehakt', 'Leverworst', 'rookworst']);
 });
 
 test('bestellingenoverzicht bevat alleen bevestigde bestellingen', function () {

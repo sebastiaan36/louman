@@ -23,9 +23,6 @@
                         @if(! empty($customer['route_flag_label']))
                             <div class="route-flag-badge" style="color: #000;">{{ $customer['route_flag_label'] }}</div>
                         @endif
-                        @if(empty($customer['products']))
-                            <div class="card-empty-label" style="color: #000;">geen bestelling</div>
-                        @endif
                     </td>
                 </tr>
             </table>

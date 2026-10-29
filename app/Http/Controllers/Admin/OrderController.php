@@ -256,10 +256,18 @@ class OrderController extends Controller
     }
 
     /**
-     * Generate customer order overview PDF for all confirmed orders.
+     * Generate customer order overview PDF for all confirmed orders, or for a
+     * single delivery day when ?dag=maandag etc. is given.
      */
-    public function customerOverview(): \Illuminate\Http\Response
+    public function customerOverview(Request $request): \Illuminate\Http\Response
     {
+        $request->validate(['dag' => ['nullable', DeliveryDay::rule()]]);
+        $day = $request->query('dag');
+
+        if ($day) {
+            return $this->renderCustomerOverview(false, 'Bestellingenoverzicht '.DeliveryDay::label($day), 'bestellingenoverzicht-'.$day, $day);
+        }
+
         return $this->renderCustomerOverview(false, 'Bestellingenoverzicht', 'bestellingenoverzicht');
     }
 
@@ -276,11 +284,12 @@ class OrderController extends Controller
      * Build the per-customer overview of confirmed orders, grouped by delivery
      * day, and stream it as a PDF.
      */
-    protected function renderCustomerOverview(bool $onlyButchery, string $title, string $filename): \Illuminate\Http\Response
+    protected function renderCustomerOverview(bool $onlyButchery, string $title, string $filename, ?string $day = null): \Illuminate\Http\Response
     {
         // Load ALL approved customers sorted by route order then name
         $allCustomers = Customer::approved()
             ->when($onlyButchery, fn ($query) => $query->where('from_butchery', true))
+            ->when($day, fn ($query) => $query->where('delivery_day', $day))
             ->orderByRaw('CASE WHEN route_order IS NULL THEN 1 ELSE 0 END, route_order ASC, company_name ASC')
             ->get();
 
@@ -375,7 +384,7 @@ class OrderController extends Controller
     private function routeFlagLabel(?string $flag): ?string
     {
         return match ($flag) {
-            Customer::ROUTE_FLAG_SKIP_WEEK => 'Deze week niet bestellen',
+            Customer::ROUTE_FLAG_SKIP_WEEK => 'Deze week geen bestelling',
             Customer::ROUTE_FLAG_CALLBACK => 'Terugbellen',
             default => null,
         };
@@ -406,8 +415,8 @@ class OrderController extends Controller
             }
         }
 
-        // Sort by article number in natural (numeric-aware) order: 1, 2, 10, 105.
-        usort($products, fn ($a, $b) => strnatcmp($a['article_number'], $b['article_number']));
+        // Alphabetical on product name, case-insensitive, like the overviews.
+        usort($products, fn ($a, $b) => strnatcasecmp($a['title'], $b['title']));
 
         $pdf = Pdf::loadView('pdf.production-list', [
             'products' => $products,

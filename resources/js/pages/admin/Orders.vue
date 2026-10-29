@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ShoppingCart, Download, CheckSquare, FileArchive, Search, Plus, ClipboardList, LayoutGrid, Beef } from 'lucide-vue-next';
+import { ShoppingCart, Download, CheckSquare, FileArchive, Search, Plus, ClipboardList, LayoutGrid, Beef, ChevronDown } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
 import Pagination from '@/components/Pagination.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -82,6 +89,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Bestellingen',
     },
+];
+
+const overviewDays = [
+    { value: 'maandag', label: 'Maandag' },
+    { value: 'dinsdag', label: 'Dinsdag' },
+    { value: 'woensdag', label: 'Woensdag' },
+    { value: 'donderdag', label: 'Donderdag' },
+    { value: 'vrijdag', label: 'Vrijdag' },
+    { value: 'ophalen', label: 'Ophalen' },
 ];
 
 const selectedStatus = ref(props.filters.status || 'all');
@@ -221,12 +237,25 @@ const downloadBulkPackingSlips = () => {
                             Productielijst
                         </Button>
                     </a>
-                    <a href="/admin/orders/customer-overview" target="_blank">
-                        <Button variant="outline">
-                            <LayoutGrid class="h-4 w-4 mr-2" />
-                            Bestellingenoverzicht
-                        </Button>
-                    </a>
+                    <!-- Per leverdag printen, of alles in één PDF. -->
+                    <DropdownMenu>
+                        <DropdownMenuTrigger :as-child="true">
+                            <Button variant="outline">
+                                <LayoutGrid class="h-4 w-4 mr-2" />
+                                Bestellingenoverzicht
+                                <ChevronDown class="h-4 w-4 ml-2" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem :as-child="true">
+                                <a href="/admin/orders/customer-overview" target="_blank" class="cursor-pointer">Alles</a>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem v-for="day in overviewDays" :key="day.value" :as-child="true">
+                                <a :href="`/admin/orders/customer-overview?dag=${day.value}`" target="_blank" class="cursor-pointer">{{ day.label }}</a>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <a href="/admin/orders/customer-overview/slagerij" target="_blank">
                         <Button variant="outline">
                             <Beef class="h-4 w-4 mr-2" />
