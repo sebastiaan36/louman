@@ -60,6 +60,7 @@ interface Customer {
     mobile_number: string | null;
     primary_phone: 'phone' | 'mobile';
     packing_slip_email: string | null;
+    invoice_email: string | null;
     packaging_notes: string | null;
     order_notes: string | null;
     kvk_number: string;
@@ -482,6 +483,7 @@ const form = useForm({
     postal_code: props.customer.postal_code,
     city: props.customer.city,
     packing_slip_email: props.customer.packing_slip_email || '',
+    invoice_email: props.customer.invoice_email || '',
     packaging_notes: props.customer.packaging_notes || '',
     order_notes: props.customer.order_notes || '',
 });
@@ -501,6 +503,7 @@ const openEditCustomerDialog = () => {
     form.postal_code = props.customer.postal_code;
     form.city = props.customer.city;
     form.packing_slip_email = props.customer.packing_slip_email || '';
+    form.invoice_email = props.customer.invoice_email || '';
     form.packaging_notes = props.customer.packaging_notes || '';
     form.order_notes = props.customer.order_notes || '';
     form.clearErrors();
@@ -766,6 +769,13 @@ const deleteAddress = (addressId: number) => {
                             <div>
                                 <p class="text-sm font-medium">Pakbon Email</p>
                                 <p class="text-sm text-muted-foreground">{{ customer.packing_slip_email }}</p>
+                            </div>
+                        </div>
+                        <div v-if="customer.invoice_email" class="flex items-start gap-3">
+                            <Mail class="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                                <p class="text-sm font-medium">Factuur Email</p>
+                                <p class="text-sm text-muted-foreground">{{ customer.invoice_email }}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -1455,6 +1465,18 @@ const deleteAddress = (addressId: number) => {
                                 placeholder="optioneel"
                             />
                             <InputError :message="form.errors.packing_slip_email" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <Label for="invoice_email">Factuur Email</Label>
+                            <Input
+                                id="invoice_email"
+                                v-model="form.invoice_email"
+                                type="email"
+                                class="mt-1"
+                                placeholder="optioneel"
+                            />
+                            <InputError :message="form.errors.invoice_email" class="mt-2" />
                         </div>
 
                         <div>

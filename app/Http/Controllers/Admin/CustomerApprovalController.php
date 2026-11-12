@@ -357,6 +357,7 @@ class CustomerApprovalController extends Controller
             'postal_code' => $customer->postal_code,
             'city' => $customer->city,
             'packing_slip_email' => $customer->packing_slip_email,
+            'invoice_email' => $customer->invoice_email,
             'customer_category' => $customer->customer_category,
             'customer_category_label' => $customer->getCategoryLabel(),
             'discount_percentage' => $customer->discount_percentage,
@@ -544,12 +545,14 @@ class CustomerApprovalController extends Controller
             'postal_code' => ['nullable', 'string', 'max:7'],
             'city' => ['nullable', 'string', 'max:255'],
             'packing_slip_email' => ['nullable', 'email', 'max:255'],
+            'invoice_email' => ['nullable', 'email', 'max:255'],
             'packaging_notes' => ['nullable', 'string', 'max:2000'],
             'order_notes' => ['nullable', 'string', 'max:2000'],
         ], [
             'customer_number.digits_between' => 'Klantnummer mag uit 1 tot 4 cijfers bestaan.',
             'customer_number.unique' => 'Dit klantnummer is al in gebruik.',
             'packing_slip_email.email' => 'Pakbon email moet een geldig email adres zijn.',
+            'invoice_email.email' => 'Factuur email moet een geldig email adres zijn.',
             'primary_phone.in' => 'Kies het vaste of het mobiele nummer als hoofdnummer.',
         ]);
 
@@ -766,7 +769,7 @@ class CustomerApprovalController extends Controller
             fputcsv($handle, [
                 'id', 'customer_number', 'company_name', 'contact_person', 'email', 'phone_number', 'mobile_number',
                 'street_name', 'house_number', 'postal_code', 'city',
-                'kvk_number', 'bank_account', 'vat_number', 'packing_slip_email',
+                'kvk_number', 'bank_account', 'vat_number', 'packing_slip_email', 'invoice_email',
                 'customer_category', 'discount_percentage', 'delivery_day',
                 'route_order', 'show_on_map',
             ], ';');
@@ -790,6 +793,7 @@ class CustomerApprovalController extends Controller
                     $customer->bank_account,
                     $customer->vat_number,
                     $customer->packing_slip_email ?? '',
+                    $customer->invoice_email ?? '',
                     $customer->customer_category ?? '',
                     $customer->discount_percentage ?? '',
                     $customer->delivery_day ?? '',
@@ -911,6 +915,7 @@ class CustomerApprovalController extends Controller
             'postal_code' => ['postal_code'],
             'city' => ['city'],
             'packing_slip_email' => ['packing_slip_email'],
+            'invoice_email' => ['invoice_email'],
             'customer_category' => ['customer_category'],
             'discount_percentage' => ['discount_percentage'],
             'delivery_day' => ['delivery_day'],
@@ -957,7 +962,7 @@ class CustomerApprovalController extends Controller
                 $updateData[$field] = $value !== '' ? (bool) (int) $value : true;
             } elseif ($field === 'route_order') {
                 $updateData[$field] = $value !== '' ? (int) $value : null;
-            } elseif (in_array($field, ['discount_percentage', 'packing_slip_email', 'customer_category', 'delivery_day'])) {
+            } elseif (in_array($field, ['discount_percentage', 'packing_slip_email', 'invoice_email', 'customer_category', 'delivery_day'])) {
                 $updateData[$field] = $value !== '' ? $value : null;
             } else {
                 // String fields: only update if non-empty to avoid accidentally blanking them

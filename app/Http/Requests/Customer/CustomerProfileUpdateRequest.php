@@ -49,6 +49,7 @@ class CustomerProfileUpdateRequest extends FormRequest
             'city' => $this->cityRules(),
             'bank_account' => $this->bankAccountRules(),
             'packing_slip_email' => ['nullable', 'email', 'max:255'],
+            'invoice_email' => ['nullable', 'email', 'max:255'],
         ];
     }
 
@@ -72,6 +73,7 @@ class CustomerProfileUpdateRequest extends FormRequest
             'city' => 'plaats',
             'bank_account' => 'rekeningnummer',
             'packing_slip_email' => 'pakbon e-mailadres',
+            'invoice_email' => 'factuur e-mailadres',
         ];
     }
 
@@ -87,6 +89,7 @@ class CustomerProfileUpdateRequest extends FormRequest
             'email.unique' => 'Dit e-mailadres is al in gebruik.',
             'kvk_number.unique' => 'Dit KvK nummer is al geregistreerd.',
             'packing_slip_email.email' => 'Vul een geldig pakbon e-mailadres in.',
+            'invoice_email.email' => 'Vul een geldig factuur e-mailadres in.',
         ];
     }
 }

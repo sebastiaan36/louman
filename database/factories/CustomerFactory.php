@@ -28,6 +28,7 @@ class CustomerFactory extends Factory
             'vat_number' => 'NL'.fake()->numerify('#########').'B01',
             'bank_account' => 'NL'.fake()->numerify('##').'TEST'.fake()->numerify('##########'),
             'packing_slip_email' => null,
+            'invoice_email' => null,
             'approved_at' => null,
             'approved_by' => null,
             'customer_category' => null,
