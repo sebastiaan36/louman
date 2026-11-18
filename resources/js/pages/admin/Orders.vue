@@ -30,6 +30,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { DELIVERY_DAYS } from '@/lib/deliveryDays';
 import { orderStatusClasses } from '@/lib/orderStatus';
 import { formatEuro as formatPrice } from '@/lib/price';
 import { dashboard } from '@/routes';
@@ -91,14 +92,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const overviewDays = [
-    { value: 'maandag', label: 'Maandag' },
-    { value: 'dinsdag', label: 'Dinsdag' },
-    { value: 'woensdag', label: 'Woensdag' },
-    { value: 'donderdag', label: 'Donderdag' },
-    { value: 'vrijdag', label: 'Vrijdag' },
-    { value: 'ophalen', label: 'Ophalen' },
-];
+const overviewDays = DELIVERY_DAYS;
 
 const selectedStatus = ref(props.filters.status || 'all');
 const searchQuery = ref(props.filters.search || '');

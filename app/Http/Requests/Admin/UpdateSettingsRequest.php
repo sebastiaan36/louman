@@ -23,6 +23,7 @@ class UpdateSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'mail_order_notification_enabled' => ['boolean'],
             'mail_order_notification' => ['nullable', 'email', 'max:255'],
             'mail_registration_notification' => ['nullable', 'email', 'max:255'],
             'mail_registration_cc' => ['nullable', 'email', 'max:255'],

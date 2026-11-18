@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { DELIVERY_DAYS } from '@/lib/deliveryDays';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
@@ -43,14 +44,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Rijroute' },
 ];
 
-const DAY_LABELS: Record<string, string> = {
-    maandag: 'Maandag',
-    dinsdag: 'Dinsdag',
-    woensdag: 'Woensdag',
-    donderdag: 'Donderdag',
-    vrijdag: 'Vrijdag',
-    ophalen: 'Ophalen',
-};
+const DAY_LABELS: Record<string, string> = Object.fromEntries(DELIVERY_DAYS.map((day) => [day.value, day.label]));
 
 // Export scope: a specific day or all days
 const exportDay = ref<string>(props.selectedDay);

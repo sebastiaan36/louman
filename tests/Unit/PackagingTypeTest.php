@@ -2,9 +2,11 @@
 
 use App\Support\PackagingType;
 
-test('de verpakkingssoorten zijn tas, doos en krat', function () {
-    expect(PackagingType::ALL)->toBe(['tas', 'doos', 'krat'])
-        ->and(PackagingType::rule())->toBe('in:tas,doos,krat')
+test('de verpakkingssoorten zijn tas, doos, krat, zwarte CBL en rood E2', function () {
+    expect(PackagingType::ALL)->toBe(['tas', 'doos', 'krat', 'zwarte_cbl', 'rood_e2'])
+        ->and(PackagingType::rule())->toBe('in:tas,doos,krat,zwarte_cbl,rood_e2')
+        ->and(PackagingType::label('zwarte_cbl'))->toBe('Zwarte CBL')
+        ->and(PackagingType::label('rood_e2'))->toBe('Rood E2')
         ->and(PackagingType::label('doos'))->toBe('Doos')
         ->and(PackagingType::label(null))->toBeNull()
         ->and(PackagingType::label('zak'))->toBeNull();

@@ -14,7 +14,7 @@ class PackagingType
      *
      * @var list<string>
      */
-    public const ALL = ['tas', 'doos', 'krat'];
+    public const ALL = ['tas', 'doos', 'krat', 'zwarte_cbl', 'rood_e2'];
 
     /**
      * Get the Dutch label for a packaging type.
@@ -25,12 +25,14 @@ class PackagingType
             'tas' => 'Tas',
             'doos' => 'Doos',
             'krat' => 'Krat',
+            'zwarte_cbl' => 'Zwarte CBL',
+            'rood_e2' => 'Rood E2',
             default => null,
         };
     }
 
     /**
-     * The validation rule for a packaging type, e.g. "in:tas,doos,krat".
+     * The validation rule for a packaging type, e.g. "in:tas,doos,krat,zwarte_cbl,rood_e2".
      */
     public static function rule(): string
     {

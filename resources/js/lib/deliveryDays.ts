@@ -13,6 +13,7 @@ export const DELIVERY_DAYS = [
     { value: 'donderdag', label: 'Donderdag' },
     { value: 'vrijdag', label: 'Vrijdag' },
     { value: 'ophalen', label: 'Ophalen' },
+    { value: 'slagerij', label: 'Slagerij' },
 ] as const;
 
 /**

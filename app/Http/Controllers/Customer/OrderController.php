@@ -206,9 +206,11 @@ class OrderController extends Controller
 
         // Send mails after transaction — mail errors should not block order creation
         try {
-            $orderNotificationEmail = Setting::get(Setting::MAIL_ORDER_NOTIFICATION, 'info@louman-jordaan.nl');
-            Mail::to($orderNotificationEmail)
-                ->send(new OrderPlacedNotification($order));
+            if (Setting::orderNotificationEnabled()) {
+                $orderNotificationEmail = Setting::get(Setting::MAIL_ORDER_NOTIFICATION, 'info@louman-jordaan.nl');
+                Mail::to($orderNotificationEmail)
+                    ->send(new OrderPlacedNotification($order));
+            }
         } catch (\Exception $e) {
             \Log::error('Failed to send admin order notification', [
                 'order_id' => $order->id,

@@ -147,3 +147,34 @@ test('zonder ingesteld annuleringsadres wordt er geen annuleringsmail verstuurd'
 
     Mail::assertNotQueued(OrderCancelled::class);
 });
+
+test('de bestelnotificatie staat standaard aan', function () {
+    $this->actingAs(adminUser())
+        ->get('/admin/settings')
+        ->assertInertia(fn ($page) => $page->where('settings.mail_order_notification_enabled', true));
+});
+
+test('beheerder kan de bestelnotificatie uitzetten', function () {
+    $this->actingAs(adminUser())
+        ->patch('/admin/settings', ['mail_order_notification_enabled' => false])
+        ->assertSessionHasNoErrors();
+
+    expect(Setting::orderNotificationEnabled())->toBeFalse();
+});
+
+test('met de bestelnotificatie uit gaat er geen bestelmail meer uit', function () {
+    Mail::fake();
+    Setting::set(Setting::MAIL_ORDER_NOTIFICATION, 'worstmakerij@zaak.nl');
+    Setting::set(Setting::MAIL_ORDER_NOTIFICATION_ENABLED, '0');
+
+    $user = customerUser();
+    $customer = approvedCustomer($user);
+    $product = Product::factory()->create();
+    $address = DeliveryAddress::factory()->create(['customer_id' => $customer->id]);
+    CartItem::create(['customer_id' => $customer->id, 'product_id' => $product->id, 'quantity' => 1]);
+
+    $this->actingAs($user)->post('/customer/orders', ['delivery_address_id' => $address->id]);
+
+    expect(Order::count())->toBe(1);
+    Mail::assertNotSent(OrderPlacedNotification::class);
+});

@@ -122,7 +122,7 @@ test('de rijroute-pagina biedt zaterdag en zondag niet meer aan', function () {
 test('de export van alle dagen bevat elke bezorgdag', function () {
     $admin = adminUser();
 
-    foreach (['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'ophalen'] as $index => $day) {
+    foreach (['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'ophalen', 'slagerij'] as $index => $day) {
         Customer::factory()->approved()->create([
             'company_name' => 'Klant '.$day,
             'delivery_day' => $day,
@@ -132,7 +132,7 @@ test('de export van alle dagen bevat elke bezorgdag', function () {
 
     $csv = csvFromExport($this->actingAs($admin)->get('/admin/delivery-route/export?day=all'));
 
-    foreach (['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'ophalen'] as $day) {
+    foreach (['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'ophalen', 'slagerij'] as $day) {
         expect($csv)->toContain('Klant '.$day);
     }
 });

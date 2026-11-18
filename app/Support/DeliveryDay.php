@@ -15,7 +15,7 @@ class DeliveryDay
      *
      * @var list<string>
      */
-    public const ALL = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'ophalen'];
+    public const ALL = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'ophalen', 'slagerij'];
 
     /**
      * Get the Dutch label for a delivery day.
@@ -29,6 +29,7 @@ class DeliveryDay
             'donderdag' => 'Donderdag',
             'vrijdag' => 'Vrijdag',
             'ophalen' => 'Ophalen',
+            'slagerij' => 'Slagerij',
             default => $day,
         };
     }

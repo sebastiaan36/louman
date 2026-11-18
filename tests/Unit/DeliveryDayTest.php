@@ -6,7 +6,7 @@ test('zaterdag en zondag zijn geen bezorgdag meer', function () {
     expect(DeliveryDay::ALL)
         ->not->toContain('zaterdag')
         ->not->toContain('zondag')
-        ->toBe(['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'ophalen']);
+        ->toBe(['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'ophalen', 'slagerij']);
 });
 
 test('elke bezorgdag heeft een label', function (string $day) {
@@ -14,7 +14,7 @@ test('elke bezorgdag heeft een label', function (string $day) {
 })->with(DeliveryDay::ALL);
 
 test('de validatieregel dekt precies de toegestane dagen', function () {
-    expect(DeliveryDay::rule())->toBe('in:maandag,dinsdag,woensdag,donderdag,vrijdag,ophalen');
+    expect(DeliveryDay::rule())->toBe('in:maandag,dinsdag,woensdag,donderdag,vrijdag,ophalen,slagerij');
 });
 
 /**

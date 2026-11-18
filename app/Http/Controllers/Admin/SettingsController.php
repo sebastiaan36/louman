@@ -39,6 +39,7 @@ class SettingsController extends Controller
         foreach (self::MAIL_SETTINGS as $key => $default) {
             $settings[$key] = Setting::get($key, $default);
         }
+        $settings[Setting::MAIL_ORDER_NOTIFICATION_ENABLED] = Setting::orderNotificationEnabled();
 
         $customerCategories = CustomerCategory::query()
             ->withCount('customers')
@@ -66,6 +67,7 @@ class SettingsController extends Controller
         foreach (array_keys(self::MAIL_SETTINGS) as $key) {
             Setting::set($key, $request->input($key) ?: null);
         }
+        Setting::set(Setting::MAIL_ORDER_NOTIFICATION_ENABLED, $request->boolean(Setting::MAIL_ORDER_NOTIFICATION_ENABLED) ? '1' : '0');
 
         return back()->with('success', 'Instellingen opgeslagen.');
     }

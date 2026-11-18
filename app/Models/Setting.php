@@ -11,6 +11,12 @@ class Setting extends Model
 
     public const MAIL_ORDER_NOTIFICATION = 'mail_order_notification';
 
+    /**
+     * Whether a mail goes out for every new order ('1') or not ('0'). Louman
+     * works from the portal itself, so the mail can be switched off.
+     */
+    public const MAIL_ORDER_NOTIFICATION_ENABLED = 'mail_order_notification_enabled';
+
     public const MAIL_REGISTRATION_NOTIFICATION = 'mail_registration_notification';
 
     public const MAIL_REGISTRATION_CC = 'mail_registration_cc';
@@ -40,6 +46,14 @@ class Setting extends Model
         $value = self::cached()[$key] ?? null;
 
         return ($value === null || $value === '') ? $default : $value;
+    }
+
+    /**
+     * Whether the new-order notification mail should be sent (on by default).
+     */
+    public static function orderNotificationEnabled(): bool
+    {
+        return self::get(self::MAIL_ORDER_NOTIFICATION_ENABLED, '1') === '1';
     }
 
     /**

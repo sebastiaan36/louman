@@ -1,1 +1,0 @@
-const a=[{value:"maandag",label:"Maandag"},{value:"dinsdag",label:"Dinsdag"},{value:"woensdag",label:"Woensdag"},{value:"donderdag",label:"Donderdag"},{value:"vrijdag",label:"Vrijdag"},{value:"ophalen",label:"Ophalen"}],e="onbekend",l="Niet bekend";export{a as D,e as a,l as b};

@@ -4,6 +4,7 @@ import { Mail, Tags, Trash2 } from 'lucide-vue-next';
 import CustomerCategoryController from '@/actions/App/Http/Controllers/Admin/CustomerCategoryController';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -11,6 +12,7 @@ import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 
 interface Settings {
+    mail_order_notification_enabled: boolean;
     mail_order_notification: string | null;
     mail_registration_notification: string | null;
     mail_registration_cc: string | null;
@@ -41,6 +43,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const form = useForm({
+    mail_order_notification_enabled: props.settings.mail_order_notification_enabled,
     mail_order_notification: props.settings.mail_order_notification ?? '',
     mail_registration_notification: props.settings.mail_registration_notification ?? '',
     mail_registration_cc: props.settings.mail_registration_cc ?? '',
@@ -102,14 +105,22 @@ const deleteCategory = (category: CustomerCategory) => {
 
                     <div class="grid gap-2">
                         <Label for="mail_order_notification">Nieuwe bestelling</Label>
+                        <div class="flex items-center gap-2">
+                            <Checkbox id="mail_order_notification_enabled" v-model="form.mail_order_notification_enabled" />
+                            <Label for="mail_order_notification_enabled" class="font-normal">
+                                Mail versturen bij elke nieuwe bestelling
+                            </Label>
+                        </div>
                         <Input
                             id="mail_order_notification"
                             v-model="form.mail_order_notification"
                             type="email"
                             placeholder="info@louman-jordaan.nl"
+                            :disabled="!form.mail_order_notification_enabled"
                         />
                         <p class="text-xs text-muted-foreground">
-                            Adres dat een melding krijgt zodra een klant een bestelling plaatst.
+                            Adres dat een melding krijgt zodra een klant een bestelling plaatst. Uitgevinkt gaat er geen
+                            bestelmail meer uit; de bestellingen staan dan alleen in het portaal.
                         </p>
                         <InputError :message="form.errors.mail_order_notification" />
                     </div>
