@@ -3,7 +3,6 @@
 namespace App\Actions\Orders;
 
 use App\Mail\OrderCancelled;
-use App\Mail\OrderShipped;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Services\WebhookDispatcher;
@@ -21,6 +20,10 @@ class ApplyOrderStatusChange
      * Persist the new status and send any notifications the transition
      * triggers. Returns the status the order had before the change, so the
      * caller can record it in its own audit trail.
+     *
+     * Completing an order deliberately sends the customer nothing: the shop
+     * only marks orders completed at the end of the week, so the customer
+     * relies on the confirmation sent when the order is placed.
      */
     public function handle(Order $order, string $newStatus): string
     {
@@ -32,10 +35,6 @@ class ApplyOrderStatusChange
 
         $order->update(['status' => $newStatus]);
 
-        if ($newStatus === 'completed') {
-            $this->notifyCustomerOfShipment($order);
-        }
-
         if ($newStatus === 'cancelled') {
             $this->notifyOfCancellation($order);
         }
@@ -43,29 +42,6 @@ class ApplyOrderStatusChange
         app(WebhookDispatcher::class)->orderStatusChanged($order, $previousStatus);
 
         return $previousStatus;
-    }
-
-    /**
-     * Let the customer know their order is on its way.
-     */
-    private function notifyCustomerOfShipment(Order $order): void
-    {
-        $order->load(['customer.user', 'deliveryAddress', 'items.product']);
-
-        $recipient = $order->customer->packing_slip_email ?: $order->customer->user?->email;
-
-        if (! $recipient) {
-            return;
-        }
-
-        try {
-            Mail::to($recipient)->send(new OrderShipped($order));
-        } catch (\Exception $e) {
-            Log::error('Failed to send order shipped notification', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
     }
 
     /**

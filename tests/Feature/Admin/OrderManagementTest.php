@@ -1,7 +1,6 @@
 <?php
 
 use App\Mail\OrderConfirmation;
-use App\Mail\OrderShipped;
 use App\Models\Customer;
 use App\Models\CustomerProductPrice;
 use App\Models\Order;
@@ -104,7 +103,7 @@ test('admin kan bestelstatus wijzigen', function () {
     Mail::assertNothingSent();
 });
 
-test('verzonden mail wordt verstuurd bij status voltooid', function () {
+test('bij status voltooid krijgt de klant geen mail', function () {
     Mail::fake();
 
     $admin = adminUser();
@@ -123,12 +122,10 @@ test('verzonden mail wordt verstuurd bij status voltooid', function () {
 
     expect($order->fresh()->status)->toBe('completed');
 
-    Mail::assertSent(OrderShipped::class, function (OrderShipped $mail) use ($order) {
-        return $mail->order->id === $order->id;
-    });
+    Mail::assertNothingSent();
 });
 
-test('verzonden mail gaat naar packing_slip_email als die is ingesteld', function () {
+test('ook met packing_slip_email gaat er bij voltooien geen mail uit', function () {
     Mail::fake();
 
     $admin = adminUser();
@@ -147,7 +144,7 @@ test('verzonden mail gaat naar packing_slip_email als die is ingesteld', functio
     $this->actingAs($admin)
         ->patch("/admin/orders/{$order->id}/status", ['status' => 'completed']);
 
-    Mail::assertSent(OrderShipped::class, fn ($mail) => $mail->hasTo('verzending@klant.nl'));
+    Mail::assertNothingSent();
 });
 
 test('admin kan bestelling aanpassen als niet voltooid', function () {
@@ -416,7 +413,7 @@ test('order voltooien voor klant zonder account verstuurt geen mail en crasht ni
     expect($order->fresh()->status)->toBe('completed');
 });
 
-test('bulk voltooien verstuurt verzendmail per order', function () {
+test('bulk voltooien verstuurt geen mail naar klanten', function () {
     Mail::fake();
     $admin = adminUser();
     $customer = approvedCustomer();
@@ -430,7 +427,7 @@ test('bulk voltooien verstuurt verzendmail per order', function () {
         ])
         ->assertRedirect();
 
-    Mail::assertSent(OrderShipped::class, 2);
+    Mail::assertNothingSent();
     expect($first->fresh()->status)->toBe('completed');
 });
 

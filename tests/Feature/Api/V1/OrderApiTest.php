@@ -1,6 +1,5 @@
 <?php
 
-use App\Mail\OrderShipped;
 use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -48,7 +47,7 @@ it('rejects an unknown status filter', function () {
         ->assertJsonValidationErrors('status');
 });
 
-it('writes the status back and notifies the customer when an order is completed', function () {
+it('writes the status back without mailing the customer when an order is completed', function () {
     Mail::fake();
 
     $customer = approvedCustomer();
@@ -64,7 +63,7 @@ it('writes the status back and notifies the customer when an order is completed'
 
     expect($order->fresh()->status)->toBe('completed');
 
-    Mail::assertSent(OrderShipped::class, fn (OrderShipped $mail) => $mail->hasTo('pakbon@klant.nl'));
+    Mail::assertNothingSent();
 });
 
 it('does not resend the notification when the status is unchanged', function () {
